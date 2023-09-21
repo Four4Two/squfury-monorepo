@@ -30,7 +30,7 @@ contract ZenBullNettingBaseSetup is Test {
     address public constant CRAB = 0x3B960E47784150F5a63777201ee2B15253D713e8;
     address public constant FLASH_ZEN = 0x11A56a3A7A6Eb768A9125798B1eABE9EBD9EcE02;
 
-    address public ethSqueethPool = 0x82c427AdFDf2d245Ec51D8046b41c4ee87F0d29C;
+    address public ethSquFuryPool = 0x82c427AdFDf2d245Ec51D8046b41c4ee87F0d29C;
     address public ethUsdcPool = 0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8;
 
     uint256 public deployerPk;
@@ -102,7 +102,7 @@ contract ZenBullNettingBaseSetup is Test {
             ORACLE,
             CRAB,
             ethUsdcPool,
-            ethSqueethPool,
+            ethSquFuryPool,
             WPOWERPERP,
             USDC,
             WETH,

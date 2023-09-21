@@ -18,11 +18,11 @@ describe("Crab Strategy", function () {
   let depositor: SignerWithAddress;
   let depositor2: SignerWithAddress;
 
-  let squeeth: MockWPowerPerp;
+  let squfury: MockWPowerPerp;
   let weth: WETH9;
-  let wSqueethEthPool: MockUniswapV3Pool;
+  let wSquFuryEthPool: MockUniswapV3Pool;
   let ethUSDPool: MockUniswapV3Pool;
-  let shortSqueeth: MockShortPowerPerp;
+  let shortSquFury: MockShortPowerPerp;
   let controller: MockController;
   let oracle: MockOracle;
   let crabStrategy: CrabStrategy;
@@ -43,10 +43,10 @@ describe("Crab Strategy", function () {
     weth = (await WETH9Contract.deploy()) as WETH9;
 
     const MockSQUContract = await ethers.getContractFactory("MockWPowerPerp");
-    squeeth = (await MockSQUContract.deploy()) as MockWPowerPerp;
+    squfury = (await MockSQUContract.deploy()) as MockWPowerPerp;
 
     const MockUniswapV3PoolContract = await ethers.getContractFactory("MockUniswapV3Pool");
-    wSqueethEthPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
+    wSquFuryEthPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
     ethUSDPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
 
     const MockErc20Contract = await ethers.getContractFactory("MockErc20");
@@ -56,12 +56,12 @@ describe("Crab Strategy", function () {
     oracle = (await MockOracle.deploy()) as MockOracle;
 
     const NFTContract = await ethers.getContractFactory("MockShortPowerPerp");
-    shortSqueeth = (await NFTContract.deploy()) as MockShortPowerPerp;
+    shortSquFury = (await NFTContract.deploy()) as MockShortPowerPerp;
 
     const ControllerContract = await ethers.getContractFactory("MockController");
     controller = (await ControllerContract.deploy()) as MockController;
 
-    await controller.connect(owner).init(shortSqueeth.address, squeeth.address, ethUSDPool.address, usdc.address);
+    await controller.connect(owner).init(shortSquFury.address, squfury.address, ethUSDPool.address, usdc.address);
   })
 
   describe("Deployment", async () => {
@@ -73,7 +73,7 @@ describe("Crab Strategy", function () {
         oracle.address, 
         ethers.constants.AddressZero, 
         random.address, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         hedgeTimeTolerance, 
         hedgePriceTolerance, 
         auctionTime, 
@@ -88,7 +88,7 @@ describe("Crab Strategy", function () {
         oracle.address, 
         weth.address, 
         random.address, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         hedgeTimeTolerance, 
         hedgePriceTolerance, 
         auctionTime, 
@@ -103,7 +103,7 @@ describe("Crab Strategy", function () {
         ethers.constants.AddressZero, 
         weth.address, 
         random.address, 
-        wSqueethEthPool.address,
+        wSquFuryEthPool.address,
         hedgeTimeTolerance, 
         hedgePriceTolerance, 
         auctionTime, 
@@ -118,14 +118,14 @@ describe("Crab Strategy", function () {
         oracle.address, 
         weth.address, 
         ethers.constants.AddressZero, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         hedgeTimeTolerance, 
         hedgePriceTolerance, 
         auctionTime, minAuctionSlippage, 
         maxAuctionSlippage)).to.be.revertedWith("invalid factory address");
     });
 
-    it("Should revert if wSqueethEth pool is address 0", async function () {
+    it("Should revert if wSquFuryEth pool is address 0", async function () {
       const CrabStrategyContract = await ethers.getContractFactory("CrabStrategy");
       await expect(CrabStrategyContract.deploy(
         controller.address,
@@ -137,7 +137,7 @@ describe("Crab Strategy", function () {
         hedgePriceTolerance, 
         auctionTime, 
         minAuctionSlippage, 
-        maxAuctionSlippage)).to.be.revertedWith("invalid ETH:WSqueeth address");
+        maxAuctionSlippage)).to.be.revertedWith("invalid ETH:WSquFury address");
     });
 
     it("Should revert if hedge time tolerrance is 0", async function () {
@@ -147,7 +147,7 @@ describe("Crab Strategy", function () {
         oracle.address, 
         weth.address, 
         random.address, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         0, 
         hedgePriceTolerance, 
         auctionTime, 
@@ -162,7 +162,7 @@ describe("Crab Strategy", function () {
         oracle.address, 
         weth.address, 
         random.address, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         hedgeTimeTolerance, 
         0, 
         auctionTime, 
@@ -177,7 +177,7 @@ describe("Crab Strategy", function () {
         oracle.address, 
         weth.address, 
         random.address, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         hedgeTimeTolerance, 
         hedgePriceTolerance, 
         0, 
@@ -192,7 +192,7 @@ describe("Crab Strategy", function () {
         oracle.address, 
         weth.address, 
         random.address, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         hedgeTimeTolerance, 
         hedgePriceTolerance, 
         auctionTime, 
@@ -207,7 +207,7 @@ describe("Crab Strategy", function () {
         oracle.address, 
         weth.address, 
         random.address, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         hedgeTimeTolerance, 
         hedgePriceTolerance, 
         auctionTime, 
@@ -222,7 +222,7 @@ describe("Crab Strategy", function () {
         oracle.address, 
         weth.address, 
         random.address, 
-        wSqueethEthPool.address, 
+        wSquFuryEthPool.address, 
         hedgeTimeTolerance, 
         hedgePriceTolerance, 
         auctionTime, 
@@ -233,7 +233,7 @@ describe("Crab Strategy", function () {
     
     it("Deployment", async function () {
       const CrabStrategyContract = await ethers.getContractFactory("CrabStrategy");
-      crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, random.address, wSqueethEthPool.address, hedgeTimeTolerance, hedgePriceTolerance, auctionTime, minAuctionSlippage, maxAuctionSlippage)) as CrabStrategy;
+      crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, random.address, wSquFuryEthPool.address, hedgeTimeTolerance, hedgePriceTolerance, auctionTime, minAuctionSlippage, maxAuctionSlippage)) as CrabStrategy;
     });
   });
 
@@ -260,11 +260,11 @@ describe("Crab Strategy", function () {
 
   describe("set strategy cap", async () => {
     const strategyCap = ethers.utils.parseUnits("100")
-    const wSqueethEthPrice = BigNumber.from('3030').mul(one).div(oracleScaleFactor)
+    const wSquFuryEthPrice = BigNumber.from('3030').mul(one).div(oracleScaleFactor)
     const ethUSDPrice = BigNumber.from('3000').mul(one)
 
     before(async () => {
-      await oracle.connect(owner).setPrice(wSqueethEthPool.address, wSqueethEthPrice)
+      await oracle.connect(owner).setPrice(wSquFuryEthPool.address, wSquFuryEthPrice)
       await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPrice)  // usdc per 1 eth
     })
 
@@ -443,22 +443,22 @@ describe("Crab Strategy", function () {
   });
 
   describe("Deposit into strategy", async () => {
-    const wSqueethEthPrice = BigNumber.from('3030').mul(one).div(oracleScaleFactor)
+    const wSquFuryEthPrice = BigNumber.from('3030').mul(one).div(oracleScaleFactor)
     const ethUSDPrice = BigNumber.from('3000').mul(one)
     
     before(async () => {
-      await oracle.connect(owner).setPrice(wSqueethEthPool.address, wSqueethEthPrice)
+      await oracle.connect(owner).setPrice(wSquFuryEthPool.address, wSquFuryEthPrice)
       await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPrice)  // usdc per 1 eth
     })
 
     it("Should deposit and mint correct LP when initial debt = 0", async () => {
       const normFactor = BigNumber.from(1)
       const ethToDeposit = BigNumber.from(60).mul(one)
-      const squeethDelta = wSqueethEthPrice.mul(2);
+      const squfuryDelta = wSquFuryEthPrice.mul(2);
       // const feeAdj = ethUSDPrice.mul(100).div(10000)
       const feeAdj = 0
-      const debtToMint = ethToDeposit.mul(one).div(squeethDelta.add(feeAdj));
-      const expectedMintedWsqueeth = debtToMint.mul(normFactor)
+      const debtToMint = ethToDeposit.mul(one).div(squfuryDelta.add(feeAdj));
+      const expectedMintedWsqufury = debtToMint.mul(normFactor)
 
       await crabStrategy.connect(depositor).deposit({value: ethToDeposit});
 
@@ -466,17 +466,17 @@ describe("Crab Strategy", function () {
       const depositorCrab = (await crabStrategy.balanceOf(depositor.address))
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const debtAmount = strategyVault.shortAmount
-      const depositorSqueethBalance = await squeeth.balanceOf(depositor.address)
-      const strategyContractSqueeth = await squeeth.balanceOf(crabStrategy.address)
+      const depositorSquFuryBalance = await squfury.balanceOf(depositor.address)
+      const strategyContractSquFury = await squfury.balanceOf(crabStrategy.address)
 
       expect(totalSupply.eq(ethToDeposit)).to.be.true
       expect(depositorCrab.eq(ethToDeposit)).to.be.true
       expect(isSimilar(debtAmount.toString(), debtToMint.toString(), 10)).to.be.true
-      expect(isSimilar(depositorSqueethBalance.toString(), expectedMintedWsqueeth.toString(), 10)).to.be.true
-      expect(strategyContractSqueeth.eq(BigNumber.from(0))).to.be.true
+      expect(isSimilar(depositorSquFuryBalance.toString(), expectedMintedWsqufury.toString(), 10)).to.be.true
+      expect(strategyContractSquFury.eq(BigNumber.from(0))).to.be.true
     })
 
-    it("Should deposit and mint correct LP when initial debt != 0 and return the correct amount of wSqueeth debt per crab strategy token", async () => {
+    it("Should deposit and mint correct LP when initial debt != 0 and return the correct amount of wSquFury debt per crab strategy token", async () => {
       const normFactor = BigNumber.from(1)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const strategyDebtBefore = strategyVault.shortAmount
@@ -486,12 +486,12 @@ describe("Crab Strategy", function () {
       const ethToDeposit = BigNumber.from(20).mul(one)
       const depositorShare = wdiv(ethToDeposit, (strategyCollateralBefore.add(ethToDeposit)))
       const expectedDepositorCrab = wdiv(wmul(totalCrabBefore, depositorShare), (one.sub(depositorShare)))
-    //   const squeethDelta = wSqueethEthPrice.mul(2);
+    //   const squfuryDelta = wSquFuryEthPrice.mul(2);
 
       // const feeAdj = ethUSDPrice.mul(100).div(10000)
       const feeAdj = 0
       const debtToMint = ethToDeposit.mul(strategyDebtBefore).div(strategyCollateralBefore.add(strategyDebtBefore.mul(feeAdj).div(one)));
-      const expectedMintedWsqueeth = debtToMint.mul(normFactor)
+      const expectedMintedWsqufury = debtToMint.mul(normFactor)
 
       await crabStrategy.connect(depositor2).deposit({value: ethToDeposit});
 
@@ -499,16 +499,16 @@ describe("Crab Strategy", function () {
       const depositorCrab = (await crabStrategy.balanceOf(depositor2.address))
       const strategyVaultAfter = await controller.vaults(await crabStrategy.vaultId());
       const debtAmount = strategyVaultAfter.shortAmount
-      const depositorSqueethBalance = await squeeth.balanceOf(depositor2.address)
-      const strategyContractSqueeth = await squeeth.balanceOf(crabStrategy.address)
-      const depositorWSqueethDebt = await crabStrategy.getWsqueethFromCrabAmount(depositorCrab)
+      const depositorSquFuryBalance = await squfury.balanceOf(depositor2.address)
+      const strategyContractSquFury = await squfury.balanceOf(crabStrategy.address)
+      const depositorWSquFuryDebt = await crabStrategy.getWsqufuryFromCrabAmount(depositorCrab)
 
       expect(totalCrabAfter.eq(totalCrabBefore.add(expectedDepositorCrab))).to.be.true
       expect(depositorCrab.eq(expectedDepositorCrab)).to.be.true
       expect(isSimilar(strategyDebtBefore.add(debtToMint).toString(), debtAmount.toString(), 10)).to.be.true
-      expect(isSimilar(depositorSqueethBalance.toString(), expectedMintedWsqueeth.toString(), 10)).to.be.true
-      expect(strategyContractSqueeth.eq(BigNumber.from(0))).to.be.true
-      expect(depositorWSqueethDebt.eq(depositorSqueethBalance))    
+      expect(isSimilar(depositorSquFuryBalance.toString(), expectedMintedWsqufury.toString(), 10)).to.be.true
+      expect(strategyContractSquFury.eq(BigNumber.from(0))).to.be.true
+      expect(depositorWSquFuryDebt.eq(depositorSquFuryBalance))    
     })
     it('should revert if cap is hit', async() => {
       const strategyCap = await crabStrategy.strategyCap()
@@ -521,11 +521,11 @@ describe("Crab Strategy", function () {
 
   describe("Withdraw from strategy", async () => {
     it("should revert withdrawing from a random account", async () => {
-      const depositorSqueethBalanceBefore = await squeeth.balanceOf(depositor.address)
+      const depositorSquFuryBalanceBefore = await squfury.balanceOf(depositor.address)
       const depositorCrabBefore = (await crabStrategy.balanceOf(depositor.address))
-      const wSqueethAmount = depositorSqueethBalanceBefore
+      const wSquFuryAmount = depositorSquFuryBalanceBefore
 
-      await squeeth.connect(random).approve(crabStrategy.address, depositorCrabBefore)
+      await squfury.connect(random).approve(crabStrategy.address, depositorCrabBefore)
 
       await expect(
         crabStrategy.connect(random).withdraw(depositorCrabBefore)
@@ -538,13 +538,13 @@ describe("Crab Strategy", function () {
       const strategyCollateralBefore = strategyVault.collateralAmount
       const totalCrabBefore = await crabStrategy.totalSupply()
       const depositorCrabBefore = (await crabStrategy.balanceOf(depositor.address))
-      const depositorSqueethBalanceBefore = await squeeth.balanceOf(depositor.address)
+      const depositorSquFuryBalanceBefore = await squfury.balanceOf(depositor.address)
       const depositorEthBalanceBefore = await provider.getBalance(depositor.address)
 
       const expectedCrabPercentage = wdiv(depositorCrabBefore, totalCrabBefore)
       const expectedEthToWithdraw = wmul(strategyCollateralBefore, expectedCrabPercentage)
 
-      await squeeth.connect(depositor).approve(crabStrategy.address, 0)
+      await squfury.connect(depositor).approve(crabStrategy.address, 0)
       await crabStrategy.connect(depositor).withdraw(0);  
 
       const strategyVaultAfter = await controller.vaults(await crabStrategy.vaultId());
@@ -552,10 +552,10 @@ describe("Crab Strategy", function () {
       const strategyDebtAfter = strategyVaultAfter.shortAmount
       const totalCrabAfter = await crabStrategy.totalSupply()
       const depositorCrabAfter = (await crabStrategy.balanceOf(depositor.address))
-      const depositorSqueethBalanceAfter = await squeeth.balanceOf(depositor.address)
+      const depositorSquFuryBalanceAfter = await squfury.balanceOf(depositor.address)
       const depositorEthBalanceAfter = await provider.getBalance(depositor.address)
 
-      expect(depositorSqueethBalanceAfter.eq(depositorSqueethBalanceBefore)).to.be.true
+      expect(depositorSquFuryBalanceAfter.eq(depositorSquFuryBalanceBefore)).to.be.true
       expect(depositorCrabAfter.eq(depositorCrabBefore)).to.be.true
       expect(totalCrabAfter.eq(totalCrabBefore)).to.be.true
       expect(strategyCollateralAfter.eq(strategyCollateralBefore)).to.be.true
@@ -569,13 +569,13 @@ describe("Crab Strategy", function () {
       const strategyCollateralBefore = strategyVault.collateralAmount
       const totalCrabBefore = await crabStrategy.totalSupply()
       const depositorCrabBefore = (await crabStrategy.balanceOf(depositor.address))
-      const depositorSqueethBalanceBefore = await squeeth.balanceOf(depositor.address)
+      const depositorSquFuryBalanceBefore = await squfury.balanceOf(depositor.address)
       const depositorEthBalanceBefore = await provider.getBalance(depositor.address)
 
       const expectedCrabPercentage = wdiv(depositorCrabBefore, totalCrabBefore)
       const expectedEthToWithdraw = wmul(strategyCollateralBefore, expectedCrabPercentage)
 
-      await squeeth.connect(depositor).approve(crabStrategy.address, depositorSqueethBalanceBefore)
+      await squfury.connect(depositor).approve(crabStrategy.address, depositorSquFuryBalanceBefore)
       await crabStrategy.connect(depositor).withdraw(depositorCrabBefore);  
 
       const strategyVaultAfter = await controller.vaults(await crabStrategy.vaultId());
@@ -583,15 +583,15 @@ describe("Crab Strategy", function () {
       const strategyDebtAfter = strategyVaultAfter.shortAmount
       const totalCrabAfter = await crabStrategy.totalSupply()
       const depositorCrabAfter = (await crabStrategy.balanceOf(depositor.address))
-      const depositorSqueethBalanceAfter = await squeeth.balanceOf(depositor.address)
+      const depositorSquFuryBalanceAfter = await squfury.balanceOf(depositor.address)
       const depositorEthBalanceAfter = await provider.getBalance(depositor.address)
 
-      expect(depositorSqueethBalanceAfter.eq(BigNumber.from(0))).to.be.true
-      expect(depositorSqueethBalanceBefore.gt(BigNumber.from(0))).to.be.true
+      expect(depositorSquFuryBalanceAfter.eq(BigNumber.from(0))).to.be.true
+      expect(depositorSquFuryBalanceBefore.gt(BigNumber.from(0))).to.be.true
       expect(depositorCrabAfter.eq(BigNumber.from(0))).to.be.true
       expect(totalCrabAfter.eq(totalCrabBefore.sub(depositorCrabBefore))).to.be.true
       expect(strategyCollateralAfter.eq(strategyCollateralBefore.sub(expectedEthToWithdraw))).to.be.true
-      expect(strategyDebtAfter.eq(strategyDebtBefore.sub(depositorSqueethBalanceBefore))).to.be.true
+      expect(strategyDebtAfter.eq(strategyDebtBefore.sub(depositorSquFuryBalanceBefore))).to.be.true
       expect(isSimilar(depositorEthBalanceAfter.sub(depositorEthBalanceBefore).toString(), expectedEthToWithdraw.toString())).to.be.true
     })
   })  

@@ -103,8 +103,8 @@ library VaultLib {
      * @param _normalizationFactor current _normalizationFactor
      * @param _ethQuoteCurrencyPrice current eth price scaled by 1e18
      * @param _minCollateral minimum collateral that needs to be in a vault
-     * @param _wsqueethPoolTick current price tick for wsqueeth pool
-     * @param _isWethToken0 whether weth is token0 in the wsqueeth pool
+     * @param _wsqufuryPoolTick current price tick for wsqufury pool
+     * @param _isWethToken0 whether weth is token0 in the wsqufury pool
      * @return true if the vault is sufficiently collateralized
      * @return true if the vault is considered as a dust vault
      */
@@ -114,7 +114,7 @@ library VaultLib {
         uint256 _normalizationFactor,
         uint256 _ethQuoteCurrencyPrice,
         uint256 _minCollateral,
-        int24 _wsqueethPoolTick,
+        int24 _wsqufuryPoolTick,
         bool _isWethToken0
     ) internal view returns (bool, bool) {
         if (_vault.shortAmount == 0) return (true, false);
@@ -127,7 +127,7 @@ library VaultLib {
             _positionManager,
             _normalizationFactor,
             _ethQuoteCurrencyPrice,
-            _wsqueethPoolTick,
+            _wsqufuryPoolTick,
             _isWethToken0
         );
 
@@ -143,8 +143,8 @@ library VaultLib {
      * @param _positionManager address of the uniswap position manager
      * @param _normalizationFactor current _normalizationFactor
      * @param _ethQuoteCurrencyPrice current eth price scaled by 1e18
-     * @param _wsqueethPoolTick current price tick for wsqueeth pool
-     * @param _isWethToken0 whether weth is token0 in the wsqueeth pool
+     * @param _wsqufuryPoolTick current price tick for wsqufury pool
+     * @param _isWethToken0 whether weth is token0 in the wsqufury pool
      * @return the total worth of collateral in the vault
      */
     function _getEffectiveCollateral(
@@ -152,24 +152,24 @@ library VaultLib {
         address _positionManager,
         uint256 _normalizationFactor,
         uint256 _ethQuoteCurrencyPrice,
-        int24 _wsqueethPoolTick,
+        int24 _wsqufuryPoolTick,
         bool _isWethToken0
     ) internal view returns (uint256) {
         if (_vault.NftCollateralId == 0) return _vault.collateralAmount;
 
-        // the user has deposited uniswap position token as collateral, see how much eth / wSqueeth the uniswap position token has
-        (uint256 nftEthAmount, uint256 nftWsqueethAmount) = _getUniPositionBalances(
+        // the user has deposited uniswap position token as collateral, see how much eth / wSquFury the uniswap position token has
+        (uint256 nftEthAmount, uint256 nftWsqufuryAmount) = _getUniPositionBalances(
             _positionManager,
             _vault.NftCollateralId,
-            _wsqueethPoolTick,
+            _wsqufuryPoolTick,
             _isWethToken0
         );
-        // convert squeeth amount from uniswap position token as equivalent amount of collateral
-        uint256 wSqueethIndexValueInEth = nftWsqueethAmount.mul(_normalizationFactor).mul(_ethQuoteCurrencyPrice).div(
+        // convert squfury amount from uniswap position token as equivalent amount of collateral
+        uint256 wSquFuryIndexValueInEth = nftWsqufuryAmount.mul(_normalizationFactor).mul(_ethQuoteCurrencyPrice).div(
             ONE_ONE
         );
         // add eth value from uniswap position token as collateral
-        return nftEthAmount.add(wSqueethIndexValueInEth).add(_vault.collateralAmount);
+        return nftEthAmount.add(wSquFuryIndexValueInEth).add(_vault.collateralAmount);
     }
 
     /**

@@ -15,7 +15,7 @@ import {
 } from "../../../typechain";
 import {
     deployUniswapV3,
-    deploySqueethCoreContracts,
+    deploySquFuryCoreContracts,
     deployWETHAndDai,
 } from "../../setup";
 import { oracleScaleFactor } from "../../utils";
@@ -24,7 +24,7 @@ BigNumberJs.set({ EXPONENTIAL_AT: 30 });
 
 describe("Crab v2 Integration test: Timelock", function () {
     const startingEthPrice = 3000;
-    const scaledStartingSqueethPrice = (startingEthPrice * 1.1) / oracleScaleFactor.toNumber(); // 0.3
+    const scaledStartingSquFuryPrice = (startingEthPrice * 1.1) / oracleScaleFactor.toNumber(); // 0.3
 
     const hedgeTimeThreshold = 86400; // 24h
     const hedgePriceThreshold = ethers.utils.parseUnits("0.01");
@@ -47,8 +47,8 @@ describe("Crab v2 Integration test: Timelock", function () {
     let swapRouter: Contract;
     let oracle: Oracle;
     let controller: Controller;
-    let wSqueethPool: Contract;
-    let wSqueeth: WPowerPerp;
+    let wSquFuryPool: Contract;
+    let wSquFury: WPowerPerp;
     let crabStrategy: CrabStrategyV2;
     let ethDaiPool: Contract;
     let timelock: Timelock;
@@ -76,20 +76,20 @@ describe("Crab v2 Integration test: Timelock", function () {
         swapRouter = uniDeployments.swapRouter;
 
         // this will not deploy a new pool, only reuse old onces
-        const squeethDeployments = await deploySqueethCoreContracts(
+        const squfuryDeployments = await deploySquFuryCoreContracts(
             weth,
             dai,
             positionManager,
             uniswapFactory,
-            scaledStartingSqueethPrice,
+            scaledStartingSquFuryPrice,
             startingEthPrice
         );
-        controller = squeethDeployments.controller;
-        wSqueeth = squeethDeployments.wsqueeth;
-        oracle = squeethDeployments.oracle;
-        // shortSqueeth = squeethDeployments.shortSqueeth
-        wSqueethPool = squeethDeployments.wsqueethEthPool;
-        ethDaiPool = squeethDeployments.ethDaiPool;
+        controller = squfuryDeployments.controller;
+        wSquFury = squfuryDeployments.wsqufury;
+        oracle = squfuryDeployments.oracle;
+        // shortSquFury = squfuryDeployments.shortSquFury
+        wSquFuryPool = squfuryDeployments.wsqufuryEthPool;
+        ethDaiPool = squfuryDeployments.ethDaiPool;
 
         await controller.connect(owner).setFeeRecipient(feeRecipient.address);
         await controller.connect(owner).setFeeRate(100);
@@ -103,7 +103,7 @@ describe("Crab v2 Integration test: Timelock", function () {
             oracle.address,
             weth.address,
             uniswapFactory.address,
-            wSqueethPool.address,
+            wSquFuryPool.address,
             timelock.address,
             crabMigration.address,
             hedgeTimeThreshold,
@@ -165,9 +165,9 @@ describe("Crab v2 Integration test: Timelock", function () {
 
         it("Should not allow user to withdraw post vault transfer", async () => {
             const depositorCrabBefore = await crabStrategy.balanceOf(depositor3.address);
-            const depositorSqueethBalanceBefore = await wSqueeth.balanceOf(depositor3.address);
+            const depositorSquFuryBalanceBefore = await wSquFury.balanceOf(depositor3.address);
 
-            await wSqueeth.connect(depositor3).approve(crabStrategy.address, depositorSqueethBalanceBefore);
+            await wSquFury.connect(depositor3).approve(crabStrategy.address, depositorSquFuryBalanceBefore);
             await expect(crabStrategy.connect(depositor).withdraw(depositorCrabBefore)).to.be.revertedWith("C20");
         });
     });

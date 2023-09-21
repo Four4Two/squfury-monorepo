@@ -1,4 +1,4 @@
-# Squeeth Frontend
+# SquFury Frontend
 
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
@@ -38,10 +38,10 @@ Check out the [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 ## Contributions
 
-We welcome contributions to the Squeeth Frontend! You can contribute by resolving existing issues, taking on feature requests, and refactoring code. Please feel free to open new issues / feature requests as well. You can find our [contribution guidelines here.](CONTRIBUTING.md) If you have questions about contributing, ping us on #dev in the [Opyn discord](http://tiny.cc/opyndiscord) :)
+We welcome contributions to the SquFury Frontend! You can contribute by resolving existing issues, taking on feature requests, and refactoring code. Please feel free to open new issues / feature requests as well. You can find our [contribution guidelines here.](CONTRIBUTING.md) If you have questions about contributing, ping us on #dev in the [Opyn discord](http://tiny.cc/opyndiscord) :)
 
 ## Branding
 
-Don't use the Opyn or Squeeth logo or name in anything dishonest or fraudulent. If you deploy another version of the interface, please make it clear that it is an interface to the Squeeth Protocol, but not affiliated with Opyn Inc.
+Don't use the Opyn or SquFury logo or name in anything dishonest or fraudulent. If you deploy another version of the interface, please make it clear that it is an interface to the SquFury Protocol, but not affiliated with Opyn Inc.
 
 Test

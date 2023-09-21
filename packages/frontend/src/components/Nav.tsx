@@ -125,7 +125,7 @@ const Nav: React.FC = () => {
   const classes = useStyles()
   const { data: balance } = useWalletBalance()
 
-  const { oSqueeth } = useAtomValue(addressesAtom)
+  const { oSquFury } = useAtomValue(addressesAtom)
   const [navOpen, setNavOpen] = useState(false)
   const [isCopied, setCopied] = useCopyClipboard()
   const { track } = useAmplitude()
@@ -147,10 +147,10 @@ const Nav: React.FC = () => {
                 path="/strategies/crab"
                 name="Strategies"
               />
-              <NavLink path="/squeeth" name="Squeeth" />
+              <NavLink path="/squfury" name="SquFury" />
               <NavLink path="/positions" name="Positions" />
               <a
-                href="https://squeethportal.xyz"
+                href="https://squfuryportal.xyz"
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => track(SITE_EVENTS.NAV_AUCTION)}
@@ -177,16 +177,16 @@ const Nav: React.FC = () => {
               variant="outlined"
               color="primary"
               onClick={() => {
-                setCopied(oSqueeth)
+                setCopied(oSquFury)
               }}
             >
               {isCopied ? (
                 <>Copied</>
               ) : (
                 <>
-                  <span style={{ textTransform: 'none' }}>oSQTH</span>
+                  <span style={{ textTransform: 'none' }}>oSQFU</span>
                   <Hidden mdDown>
-                    : {oSqueeth?.substring(0, 6)}...{oSqueeth?.substring(oSqueeth.length - 4)}
+                    : {oSquFury?.substring(0, 6)}...{oSquFury?.substring(oSquFury.length - 4)}
                   </Hidden>
                 </>
               )}
@@ -210,7 +210,7 @@ const Nav: React.FC = () => {
                 variant="outlined"
                 color="primary"
                 onClick={() => {
-                  setCopied(oSqueeth)
+                  setCopied(oSquFury)
                 }}
                 style={{
                   marginTop: '8px',
@@ -221,8 +221,8 @@ const Nav: React.FC = () => {
                   <>Copied</>
                 ) : (
                   <>
-                    <span style={{ textTransform: 'none' }}>oSQTH</span>: {oSqueeth?.substring(0, 6)}...
-                    {oSqueeth?.substring(oSqueeth.length - 4)}
+                    <span style={{ textTransform: 'none' }}>oSQFU</span>: {oSquFury?.substring(0, 6)}...
+                    {oSquFury?.substring(oSquFury.length - 4)}
                   </>
                 )}
               </Button>
@@ -231,10 +231,10 @@ const Nav: React.FC = () => {
                 path="/strategies/crab"
                 name="Strategies"
               />
-              <NavLink path="/squeeth" name="Squeeth" />
+              <NavLink path="/squfury" name="SquFury" />
               <NavLink path="/positions" name="Positions" />
               <a
-                href="https://squeethportal.xyz"
+                href="https://squfuryportal.xyz"
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => track(SITE_EVENTS.NAV_AUCTION)}
@@ -245,7 +245,7 @@ const Nav: React.FC = () => {
               </a>
               <NavLink path="/lp" name="LP" />
               <a
-                href="https://opyn.gitbook.io/squeeth/resources/squeeth-faq"
+                href="https://opyn.gitbook.io/squfury/resources/squfury-faq"
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => track(SITE_EVENTS.NAV_FAQ)}

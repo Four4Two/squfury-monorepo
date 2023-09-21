@@ -1,6 +1,6 @@
 import { useQuery } from '@apollo/client'
-import { squeethClient } from '@utils/apollo-client'
-import { NORMHISTORY_TIME_QUERY } from '../queries/squeeth/normHistoryQuery'
+import { squfuryClient } from '@utils/apollo-client'
+import { NORMHISTORY_TIME_QUERY } from '../queries/squfury/normHistoryQuery'
 import { useEffect, useState } from 'react'
 import { NormHistory } from '../types'
 import { updateTimestampLiveVolDB } from '@utils/pricer'
@@ -16,7 +16,7 @@ export const useNormHistoryFromTime = (timestamps: number[]) => {
       timestamp: timestamps[timeIndex],
       timestampOnedayAfter: timestamps[timeIndex] + 24 * 60 * 60,
     },
-    client: squeethClient[networkId],
+    client: squfuryClient[networkId],
     fetchPolicy: 'cache-and-network',
   })
 

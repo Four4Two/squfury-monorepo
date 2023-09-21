@@ -2,14 +2,14 @@ import { createStyles, makeStyles } from '@material-ui/core'
 import { Box, Typography } from '@material-ui/core'
 import React, { useState } from 'react'
 
-import ObtainSqueeth from '@components/Lp/ObtainSqueeth'
-import SqueethInfo from '@components/Lp/SqueethInfo'
+import ObtainSquFury from '@components/Lp/ObtainSquFury'
+import SquFuryInfo from '@components/Lp/SquFuryInfo'
 import LPPosition from '@components/Lp/LPPosition'
 import LPBuyChart from '@components/Charts/LPBuyChart'
 import LPMintChart from '@components/Charts/LPMintChart'
 import Nav from '@components/Nav'
 import { LPProvider } from '@context/lp'
-import { SqueethTabNew, SqueethTabsNew } from '@components/Tabs'
+import { SquFuryTabNew, SquFuryTabsNew } from '@components/Tabs'
 import { useETHPrice } from '@hooks/useETHPrice'
 import DefaultSiteSeo from '@components/DefaultSiteSeo/DefaultSiteSeo'
 
@@ -104,7 +104,7 @@ const LPInfo: React.FC<{ lpType: number }> = ({ lpType }) => {
     return (
       <>
         <Typography variant="h4" className={classes.subtitle}>
-          Buy squeeth and LP
+          Buy squfury and LP
         </Typography>
         <Typography variant="body1" className={classes.content}>
           Earn a payoff similar to ETH<sup>1.5</sup>
@@ -114,7 +114,7 @@ const LPInfo: React.FC<{ lpType: number }> = ({ lpType }) => {
         </Typography>
         <Typography variant="body1" className={classes.content}>
           Buying and LPing gives you a leverage position with a payoff similar to ETH<sup>1.5</sup>. You give up some of
-          your squeeth upside in exchange for trading fees. You are paying daily premiums for being long squeeth, but
+          your squfury upside in exchange for trading fees. You are paying daily premiums for being long squfury, but
           earning fees from LPing on Uniswap.
         </Typography>
         <Typography variant="subtitle1" className={classes.sectionTitle}>
@@ -128,13 +128,13 @@ const LPInfo: React.FC<{ lpType: number }> = ({ lpType }) => {
           Risks
         </Typography>
         <Typography variant="body1" className={classes.content}>
-          You are exposed to squeeth premiums, so if you hold the position for a long period of time without upward
+          You are exposed to squfury premiums, so if you hold the position for a long period of time without upward
           price movements in ETH, you can lose considerable funds to premium payments.
         </Typography>
         <br />
         <Typography variant="body1" className={classes.content}>
           {' '}
-          Squeeth smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts are
+          SquFury smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts are
           experimental technology and we encourage caution only risking funds you can afford to lose.
         </Typography>
       </>
@@ -144,7 +144,7 @@ const LPInfo: React.FC<{ lpType: number }> = ({ lpType }) => {
   return (
     <>
       <Typography variant="h4" className={classes.subtitle}>
-        Mint squeeth and LP
+        Mint squfury and LP
       </Typography>
       <Typography variant="body1" className={classes.content}>
         Earn yield from trading fees while being long ETH
@@ -167,13 +167,13 @@ const LPInfo: React.FC<{ lpType: number }> = ({ lpType }) => {
         Risks
       </Typography>
       <Typography variant="body1" className={classes.content}>
-        You enter this position neutral to squeeth exposure, but could end up long squeeth exposed to premiums or short
-        squeeth depending on ETH price movements. If you fall below the minimum collateralization threshold (150%), you
+        You enter this position neutral to squfury exposure, but could end up long squfury exposed to premiums or short
+        squfury depending on ETH price movements. If you fall below the minimum collateralization threshold (150%), you
         are at risk of liquidation.
       </Typography>
       <br />
       <Typography variant="body1" className={classes.content}>
-        Squeeth smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts are
+        SquFury smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts are
         experimental technology and we encourage caution only risking funds you can afford to lose.
       </Typography>
     </>
@@ -192,10 +192,10 @@ export function LPCalculator() {
         <div className={classes.leftColumn}>
           <>
             <Typography variant="h3" className={classes.title}>
-              Uniswap V3 LP SQTH-ETH Pool
+              Uniswap V3 LP SQFU-ETH Pool
             </Typography>
             <Typography variant="subtitle1" className={classes.description}>
-              Earn LP fees for providing SQTH-ETH liquidity
+              Earn LP fees for providing SQFU-ETH liquidity
             </Typography>
           </>
 
@@ -205,7 +205,7 @@ export function LPCalculator() {
 
           <div className={classes.details}>
             <Box display="flex">
-              <SqueethTabsNew
+              <SquFuryTabsNew
                 style={{ background: 'transparent' }}
                 className={classes.chartNav}
                 value={lpType}
@@ -214,9 +214,9 @@ export function LPCalculator() {
                 scrollButtons="auto"
                 variant="scrollable"
               >
-                <SqueethTabNew label="Buy and LP" style={{ width: '140px' }} />
-                <SqueethTabNew label="Mint and LP" style={{ width: '140px' }} />
-              </SqueethTabsNew>
+                <SquFuryTabNew label="Buy and LP" style={{ width: '140px' }} />
+                <SquFuryTabNew label="Mint and LP" style={{ width: '140px' }} />
+              </SquFuryTabsNew>
             </Box>
 
             <Box marginTop="24px">
@@ -228,13 +228,13 @@ export function LPCalculator() {
             <Typography variant="h4" className={classes.subtitle}>
               Details
             </Typography>
-            <SqueethInfo marginTop="16px" />
+            <SquFuryInfo marginTop="16px" />
           </Box>
         </div>
 
         <div className={classes.rightColumn}>
           <div className={classes.tradeSection}>
-            <ObtainSqueeth />
+            <ObtainSquFury />
           </div>
         </div>
       </div>

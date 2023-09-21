@@ -5,32 +5,32 @@ import BigNumberJs from 'bignumber.js'
 import { Contract, BigNumber, providers } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { WETH9, MockErc20, Controller, Oracle, WPowerPerp, CrabStrategy } from "../../../typechain";
-import { deployUniswapV3, deploySqueethCoreContracts, deployWETHAndDai, addWethDaiLiquidity, addSqueethLiquidity, buyWSqueeth, buyWeth } from '../../setup'
+import { deployUniswapV3, deploySquFuryCoreContracts, deployWETHAndDai, addWethDaiLiquidity, addSquFuryLiquidity, buyWSquFury, buyWeth } from '../../setup'
 import { isSimilar, wmul, wdiv, one, oracleScaleFactor } from "../../utils"
 
 BigNumberJs.set({EXPONENTIAL_AT: 30})
 
-const calcPriceMulAndAuctionPrice = (isNegativeTargetHedge: boolean, maxPriceMultiplier: BigNumber, minPriceMultiplier: BigNumber, auctionExecution: BigNumber, currentWSqueethPrice: BigNumber) : [BigNumber, BigNumber] => {
+const calcPriceMulAndAuctionPrice = (isNegativeTargetHedge: boolean, maxPriceMultiplier: BigNumber, minPriceMultiplier: BigNumber, auctionExecution: BigNumber, currentWSquFuryPrice: BigNumber) : [BigNumber, BigNumber] => {
   let priceMultiplier: BigNumber
-  let auctionWSqueethEthPrice: BigNumber
+  let auctionWSquFuryEthPrice: BigNumber
 
   if(isNegativeTargetHedge) {
     priceMultiplier = maxPriceMultiplier.sub(wmul(auctionExecution, maxPriceMultiplier.sub(minPriceMultiplier)))
-    auctionWSqueethEthPrice = wmul(currentWSqueethPrice, priceMultiplier);
+    auctionWSquFuryEthPrice = wmul(currentWSquFuryPrice, priceMultiplier);
   } 
   else {
     priceMultiplier = minPriceMultiplier.add(wmul(auctionExecution, maxPriceMultiplier.sub(minPriceMultiplier)))
-    auctionWSqueethEthPrice = wmul(currentWSqueethPrice, priceMultiplier);
+    auctionWSquFuryEthPrice = wmul(currentWSquFuryPrice, priceMultiplier);
   }
 
-  return [priceMultiplier, auctionWSqueethEthPrice]
+  return [priceMultiplier, auctionWSquFuryEthPrice]
 }
 
 describe("Crab flashswap integration test: time based hedging", function () {
   const startingEthPrice = 3000
   const startingEthPrice1e18 = BigNumber.from(startingEthPrice).mul(one) // 3000 * 1e18
-  const scaledStartingSqueethPrice1e18 = startingEthPrice1e18.mul(11).div(10).div(oracleScaleFactor) // 0.303 * 1e18
-  const scaledStartingSqueethPrice = startingEthPrice*1.1 / oracleScaleFactor.toNumber() // 0.303
+  const scaledStartingSquFuryPrice1e18 = startingEthPrice1e18.mul(11).div(10).div(oracleScaleFactor) // 0.303 * 1e18
+  const scaledStartingSquFuryPrice = startingEthPrice*1.1 / oracleScaleFactor.toNumber() // 0.303
 
 
   const hedgeTimeThreshold = 86400  // 24h
@@ -51,8 +51,8 @@ describe("Crab flashswap integration test: time based hedging", function () {
   let swapRouter: Contract
   let oracle: Oracle
   let controller: Controller
-  let wSqueethPool: Contract
-  let wSqueeth: WPowerPerp
+  let wSquFuryPool: Contract
+  let wSquFury: WPowerPerp
   let crabStrategy: CrabStrategy
   let ethDaiPool: Contract
 
@@ -76,23 +76,23 @@ describe("Crab flashswap integration test: time based hedging", function () {
     swapRouter = uniDeployments.swapRouter
 
     // this will not deploy a new pool, only reuse old onces
-    const squeethDeployments = await deploySqueethCoreContracts(
+    const squfuryDeployments = await deploySquFuryCoreContracts(
       weth,
       dai, 
       positionManager, 
       uniswapFactory,
-      scaledStartingSqueethPrice,
+      scaledStartingSquFuryPrice,
       startingEthPrice
     )
-    controller = squeethDeployments.controller
-    wSqueeth = squeethDeployments.wsqueeth
-    oracle = squeethDeployments.oracle
-    // shortSqueeth = squeethDeployments.shortSqueeth
-    wSqueethPool = squeethDeployments.wsqueethEthPool
-    ethDaiPool = squeethDeployments.ethDaiPool
+    controller = squfuryDeployments.controller
+    wSquFury = squfuryDeployments.wsqufury
+    oracle = squfuryDeployments.oracle
+    // shortSquFury = squfuryDeployments.shortSquFury
+    wSquFuryPool = squfuryDeployments.wsqufuryEthPool
+    ethDaiPool = squfuryDeployments.ethDaiPool
 
     const CrabStrategyContract = await ethers.getContractFactory("CrabStrategy");
-    crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, uniswapFactory.address, wSqueethPool.address, hedgeTimeThreshold, hedgePriceThreshold, auctionTime, minPriceMultiplier, maxPriceMultiplier)) as CrabStrategy;
+    crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, uniswapFactory.address, wSquFuryPool.address, hedgeTimeThreshold, hedgePriceThreshold, auctionTime, minPriceMultiplier, maxPriceMultiplier)) as CrabStrategy;
     
     const strategyCap = ethers.utils.parseUnits("1000")
     await crabStrategy.connect(owner).setStrategyCap(strategyCap)
@@ -114,12 +114,12 @@ describe("Crab flashswap integration test: time based hedging", function () {
     await provider.send("evm_increaseTime", [600])
     await provider.send("evm_mine", [])
 
-    await addSqueethLiquidity(
-      scaledStartingSqueethPrice, 
+    await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice, 
       '1000000',
       '2000000', 
       owner.address, 
-      wSqueeth, 
+      wSquFury, 
       weth, 
       positionManager, 
       controller
@@ -132,24 +132,24 @@ describe("Crab flashswap integration test: time based hedging", function () {
   this.beforeAll("Deposit into strategy", async () => {
     const ethToDeposit = ethers.utils.parseUnits('20')
     const msgvalue = ethers.utils.parseUnits('10.1')
-    const depositorSqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+    const depositorSquFuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
     await crabStrategy.connect(depositor).flashDeposit(ethToDeposit, {value: msgvalue})
     
     const normFactor = await controller.normalizationFactor()
-    const currentScaledSquethPrice = (await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 300, false))
+    const currentScaledSqfuryPrice = (await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 300, false))
     const feeRate = await controller.feeRate()
-    const ethFeePerWSqueeth = currentScaledSquethPrice.mul(feeRate).div(10000)
-    const squeethDelta = scaledStartingSqueethPrice1e18.mul(2);
-    const debtToMint = wdiv(ethToDeposit, (squeethDelta.add(ethFeePerWSqueeth)));
-    const expectedEthDeposit = ethToDeposit.sub(debtToMint.mul(ethFeePerWSqueeth).div(one))
+    const ethFeePerWSquFury = currentScaledSqfuryPrice.mul(feeRate).div(10000)
+    const squfuryDelta = scaledStartingSquFuryPrice1e18.mul(2);
+    const debtToMint = wdiv(ethToDeposit, (squfuryDelta.add(ethFeePerWSquFury)));
+    const expectedEthDeposit = ethToDeposit.sub(debtToMint.mul(ethFeePerWSquFury).div(one))
 
     const totalSupply = (await crabStrategy.totalSupply())
     const depositorCrab = (await crabStrategy.balanceOf(depositor.address))
     const strategyVault = await controller.vaults(await crabStrategy.vaultId());
     const debtAmount = strategyVault.shortAmount
-    const depositorSqueethBalance = await wSqueeth.balanceOf(depositor.address)
-    const strategyContractSqueeth = await wSqueeth.balanceOf(crabStrategy.address)
+    const depositorSquFuryBalance = await wSquFury.balanceOf(depositor.address)
+    const strategyContractSquFury = await wSquFury.balanceOf(crabStrategy.address)
     const lastHedgeTime = await crabStrategy.timeAtLastHedge()
     const currentBlockNumber = await provider.getBlockNumber()
     const currentBlock = await provider.getBlock(currentBlockNumber)
@@ -159,8 +159,8 @@ describe("Crab flashswap integration test: time based hedging", function () {
     expect(isSimilar(totalSupply.toString(),(expectedEthDeposit).toString())).to.be.true
     expect(isSimilar(depositorCrab.toString(),(expectedEthDeposit).toString())).to.be.true
     expect(isSimilar(debtAmount.toString(), debtToMint.toString())).to.be.true
-    expect(depositorSqueethBalance.eq(depositorSqueethBalanceBefore)).to.be.true
-    expect(strategyContractSqueeth.eq(BigNumber.from(0))).to.be.true
+    expect(depositorSquFuryBalance.eq(depositorSquFuryBalanceBefore)).to.be.true
+    expect(strategyContractSquFury.eq(BigNumber.from(0))).to.be.true
     expect(lastHedgeTime.eq(timeStamp)).to.be.true
   })
 
@@ -177,10 +177,10 @@ describe("Crab flashswap integration test: time based hedging", function () {
   
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, true)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, true)
       const strategyDebt = await strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice)
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice)
       const isSellAuction = targetHedge.isNegative()
       await expect(
         crabStrategy.connect(depositor).timeHedge(isSellAuction, 0, {value: 1})
@@ -204,39 +204,39 @@ describe("Crab flashswap integration test: time based hedging", function () {
       
       const auctionTimeElapsed = BigNumber.from(hedgeBlockTimestamp).sub(auctionTriggerTimer)
       
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const normFactor = await controller.normalizationFactor()
       const currentScaledEthPrice = (await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 300, false)).div(oracleScaleFactor)
       const feeRate = await controller.feeRate()
-      const ethFeePerWSqueeth = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
+      const ethFeePerWSquFury = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
 
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice.add(ethFeePerWSqueeth))        
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice.add(ethFeePerWSquFury))        
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
-      const finalWSqueethDelta = wmul(strategyDebt.mul(2), expectedAuctionWSqueethEthPrice)
-      const secondTargetHedge = wdiv(finalWSqueethDelta.sub(ethDelta), expectedAuctionWSqueethEthPrice.add(ethFeePerWSqueeth))
-      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSqueethEthPrice)
-      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSqueeth, secondTargetHedge.abs()))
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
+      const finalWSquFuryDelta = wmul(strategyDebt.mul(2), expectedAuctionWSquFuryEthPrice)
+      const secondTargetHedge = wdiv(finalWSquFuryDelta.sub(ethDelta), expectedAuctionWSquFuryEthPrice.add(ethFeePerWSquFury))
+      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSquFuryEthPrice)
+      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSquFury, secondTargetHedge.abs()))
 
-      expect(targetHedge.abs().eq(BigNumber.from(0)) || isSimilar(initialWSqueethDelta.toString(), ethDelta.toString())).to.be.true
+      expect(targetHedge.abs().eq(BigNumber.from(0)) || isSimilar(initialWSquFuryDelta.toString(), ethDelta.toString())).to.be.true
       await expect(
-        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice, {value: 1})
+        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice, {value: 1})
       ).to.be.revertedWith("strategy is delta neutral");
     })
     
     it("should revert hedging if target hedge sign change (auction change from selling to buying)", async () => {
       // change pool price for auction to be sell auction
       const ethToDeposit = ethers.utils.parseUnits('1000')
-      const wSqueethToMint = ethers.utils.parseUnits('1000')
+      const wSquFuryToMint = ethers.utils.parseUnits('1000')
       const currentBlockTimestamp = (await provider.getBlock(await provider.getBlockNumber())).timestamp
-      await controller.connect(owner).mintWPowerPerpAmount("0", wSqueethToMint, "0", {value: ethToDeposit})
-      await buyWeth(swapRouter, wSqueeth, weth, owner.address, (await wSqueeth.balanceOf(owner.address)), currentBlockTimestamp + 10)
+      await controller.connect(owner).mintWPowerPerpAmount("0", wSquFuryToMint, "0", {value: ethToDeposit})
+      await buyWeth(swapRouter, wSquFury, weth, owner.address, (await wSquFury.balanceOf(owner.address)), currentBlockTimestamp + 10)
 
       const timeAtLastHedge = await crabStrategy.timeAtLastHedge()
       
@@ -254,34 +254,34 @@ describe("Crab flashswap integration test: time based hedging", function () {
 
       const auctionTimeElapsed = BigNumber.from(hedgeBlockTimestamp).sub(auctionTriggerTimer)
 
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const normFactor = await controller.normalizationFactor()
       const currentScaledEthPrice = (await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 300, false)).div(oracleScaleFactor)
       const feeRate = await controller.feeRate()
-      const ethFeePerWSqueeth = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
+      const ethFeePerWSquFury = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
 
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice.add(ethFeePerWSqueeth))        
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice.add(ethFeePerWSquFury))        
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
-      const finalWSqueethDelta = wmul(strategyDebt.mul(2), expectedAuctionWSqueethEthPrice)
-      const secondTargetHedge = wdiv(finalWSqueethDelta.sub(ethDelta), expectedAuctionWSqueethEthPrice.add(ethFeePerWSqueeth))
-      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSqueethEthPrice)
-      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSqueeth, secondTargetHedge.abs()))
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
+      const finalWSquFuryDelta = wmul(strategyDebt.mul(2), expectedAuctionWSquFuryEthPrice)
+      const secondTargetHedge = wdiv(finalWSquFuryDelta.sub(ethDelta), expectedAuctionWSquFuryEthPrice.add(ethFeePerWSquFury))
+      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSquFuryEthPrice)
+      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSquFury, secondTargetHedge.abs()))
 
       expect(isSellAuction).to.be.true
 
       await expect(
-        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice, {value: expectedEthProceeds.add(1)})
+        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice, {value: expectedEthProceeds.add(1)})
       ).to.be.revertedWith("auction direction changed");
     })
     
-    it("should revert hedging if sent ETH to sell for WSqueeth is not enough", async () => {      
+    it("should revert hedging if sent ETH to sell for WSquFury is not enough", async () => {      
       const timeAtLastHedge = await crabStrategy.timeAtLastHedge()
       
       const auctionTriggerTimer = timeAtLastHedge.add(hedgeTimeThreshold)
@@ -298,30 +298,30 @@ describe("Crab flashswap integration test: time based hedging", function () {
 
       const auctionTimeElapsed = BigNumber.from(hedgeBlockTimestamp).sub(auctionTriggerTimer)
 
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const normFactor = await controller.normalizationFactor()
       const currentScaledEthPrice = (await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 300, false)).div(oracleScaleFactor)
       const feeRate = await controller.feeRate()
-      const ethFeePerWSqueeth = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
+      const ethFeePerWSquFury = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
 
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice.add(ethFeePerWSqueeth))        
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice.add(ethFeePerWSquFury))        
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
-      const finalWSqueethDelta = wmul(strategyDebt.mul(2), expectedAuctionWSqueethEthPrice)
-      const secondTargetHedge = wdiv(finalWSqueethDelta.sub(ethDelta), expectedAuctionWSqueethEthPrice.add(ethFeePerWSqueeth))
-      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSqueethEthPrice)
-      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSqueeth, secondTargetHedge.abs()))
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
+      const finalWSquFuryDelta = wmul(strategyDebt.mul(2), expectedAuctionWSquFuryEthPrice)
+      const secondTargetHedge = wdiv(finalWSquFuryDelta.sub(ethDelta), expectedAuctionWSquFuryEthPrice.add(ethFeePerWSquFury))
+      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSquFuryEthPrice)
+      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSquFury, secondTargetHedge.abs()))
 
       expect(isSellAuction).to.be.true
 
       await expect(
-        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice, {value: expectedEthProceeds.sub(1)})
+        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice, {value: expectedEthProceeds.sub(1)})
       ).to.be.revertedWith("Low ETH amount received");
     })
 
@@ -342,31 +342,31 @@ describe("Crab flashswap integration test: time based hedging", function () {
       
       const auctionTimeElapsed = BigNumber.from(hedgeBlockTimestamp).sub(auctionTriggerTimer)
 
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const normFactor = await controller.normalizationFactor()
       const currentScaledEthPrice = (await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 300, false)).div(oracleScaleFactor)
       const feeRate = await controller.feeRate()
-      const ethFeePerWSqueeth = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
+      const ethFeePerWSquFury = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
 
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice.add(ethFeePerWSqueeth))        
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice.add(ethFeePerWSquFury))        
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
-      const finalWSqueethDelta = wmul(strategyDebt.mul(2), expectedAuctionWSqueethEthPrice)
-      const secondTargetHedge = wdiv(finalWSqueethDelta.sub(ethDelta), expectedAuctionWSqueethEthPrice.add(ethFeePerWSqueeth))
-      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSqueethEthPrice)
-      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSqueeth, secondTargetHedge.abs()))
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
+      const finalWSquFuryDelta = wmul(strategyDebt.mul(2), expectedAuctionWSquFuryEthPrice)
+      const secondTargetHedge = wdiv(finalWSquFuryDelta.sub(ethDelta), expectedAuctionWSquFuryEthPrice.add(ethFeePerWSquFury))
+      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSquFuryEthPrice)
+      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSquFury, secondTargetHedge.abs()))
       
-      const isStrategySellingWSqueeth = false
+      const isStrategySellingWSquFury = false
       expect(isSellAuction).to.be.true
 
       await expect(
-        crabStrategy.connect(depositor).timeHedge(isStrategySellingWSqueeth, expectedAuctionWSqueethEthPrice, {value: expectedEthProceeds.add(1)})
+        crabStrategy.connect(depositor).timeHedge(isStrategySellingWSquFury, expectedAuctionWSquFuryEthPrice, {value: expectedEthProceeds.add(1)})
       ).to.be.revertedWith("wrong auction type");
     }) 
 
@@ -387,34 +387,34 @@ describe("Crab flashswap integration test: time based hedging", function () {
       
       const auctionTimeElapsed = BigNumber.from(hedgeBlockTimestamp).sub(auctionTriggerTimer)
 
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const normFactor = await controller.normalizationFactor()
       const currentScaledEthPrice = (await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 300, false)).div(oracleScaleFactor)
       const feeRate = await controller.feeRate()
-      const ethFeePerWSqueeth = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
+      const ethFeePerWSquFury = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)  
 
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice.add(ethFeePerWSqueeth))        
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice.add(ethFeePerWSquFury))        
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
-      const finalWSqueethDelta = wmul(strategyDebt.mul(2), expectedAuctionWSqueethEthPrice)
-      const secondTargetHedge = wdiv(finalWSqueethDelta.sub(ethDelta), expectedAuctionWSqueethEthPrice.add(ethFeePerWSqueeth))
-      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSqueethEthPrice)
-      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSqueeth, secondTargetHedge.abs()))
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
+      const finalWSquFuryDelta = wmul(strategyDebt.mul(2), expectedAuctionWSquFuryEthPrice)
+      const secondTargetHedge = wdiv(finalWSquFuryDelta.sub(ethDelta), expectedAuctionWSquFuryEthPrice.add(ethFeePerWSquFury))
+      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSquFuryEthPrice)
+      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSquFury, secondTargetHedge.abs()))
 
       expect(isSellAuction).to.be.true
 
       await expect(
-        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice.div(2), {value: expectedEthProceeds.add(1)})
+        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice.div(2), {value: expectedEthProceeds.add(1)})
       ).to.be.revertedWith("Auction price > max price");
     }) 
 
-    it("should hedge by selling WSqueeth for ETH and update timestamp and price at hedge", async () => {
+    it("should hedge by selling WSquFury for ETH and update timestamp and price at hedge", async () => {
       const timeAtLastHedge = await crabStrategy.timeAtLastHedge()
       
       const auctionTriggerTimer = timeAtLastHedge.add(hedgeTimeThreshold)
@@ -430,51 +430,51 @@ describe("Crab flashswap integration test: time based hedging", function () {
       expect(await crabStrategy.checkPriceHedge(auctionTriggerTimer)).to.be.false;
       expect((await crabStrategy.checkTimeHedge())[0]).to.be.true;
 
-      let currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      let currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const normFactor = await controller.normalizationFactor()
-      const currentScaledSquethPrice = (await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 300, false))
+      const currentScaledSqfuryPrice = (await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 300, false))
       const feeRate = await controller.feeRate()
-      const ethFeePerWSqueeth = currentScaledSquethPrice.mul(feeRate).div(10000)
+      const ethFeePerWSquFury = currentScaledSqfuryPrice.mul(feeRate).div(10000)
 
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice.add(ethFeePerWSqueeth))        
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice.add(ethFeePerWSquFury))        
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
-      const finalWSqueethDelta = wmul(strategyDebt.mul(2), expectedAuctionWSqueethEthPrice)
-      const secondTargetHedge = wdiv(finalWSqueethDelta.sub(ethDelta), expectedAuctionWSqueethEthPrice.add(ethFeePerWSqueeth))
-      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSqueethEthPrice)
-      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSqueeth, secondTargetHedge.abs()))
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
+      const finalWSquFuryDelta = wmul(strategyDebt.mul(2), expectedAuctionWSquFuryEthPrice)
+      const secondTargetHedge = wdiv(finalWSquFuryDelta.sub(ethDelta), expectedAuctionWSquFuryEthPrice.add(ethFeePerWSquFury))
+      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSquFuryEthPrice)
+      const expectedEthDeposited = expectedEthProceeds.sub(wmul(ethFeePerWSquFury, secondTargetHedge.abs()))
 
       expect(isSellAuction).to.be.true
 
       expect(isSellAuction).to.be.true
 
-      const senderWsqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+      const senderWsqufuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
         
-      await crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice, {value: expectedEthProceeds.add(1)})
+      await crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice, {value: expectedEthProceeds.add(1)})
       
       const hedgeBlockNumber = await provider.getBlockNumber()
       const hedgeBlock = await provider.getBlock(hedgeBlockNumber)
 
-      currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
-      const senderWsqueethBalanceAfter = await wSqueeth.balanceOf(depositor.address)
+      currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
+      const senderWsqufuryBalanceAfter = await wSquFury.balanceOf(depositor.address)
       const strategyVaultAfter = await controller.vaults(await crabStrategy.vaultId());
       const strategyCollateralAmountAfter = strategyVaultAfter.collateralAmount
       const strategyDebtAmountAfter = strategyVaultAfter.shortAmount
       const timeAtLastHedgeAfter = await crabStrategy.timeAtLastHedge()
       const priceAtLastHedgeAfter = await crabStrategy.priceAtLastHedge()
 
-      expect(senderWsqueethBalanceAfter.gt(senderWsqueethBalanceBefore)).to.be.true
-      expect(isSimilar(senderWsqueethBalanceAfter.sub(senderWsqueethBalanceBefore).toString(), secondTargetHedge.abs().toString())).to.be.true
+      expect(senderWsqufuryBalanceAfter.gt(senderWsqufuryBalanceBefore)).to.be.true
+      expect(isSimilar(senderWsqufuryBalanceAfter.sub(senderWsqufuryBalanceBefore).toString(), secondTargetHedge.abs().toString())).to.be.true
       expect(isSimilar(strategyDebtAmountAfter.sub(strategyDebt).toString(), secondTargetHedge.abs().toString())).to.be.true
       expect(isSimilar(strategyCollateralAmountAfter.sub(ethDelta).toString(), expectedEthDeposited.toString())).to.be.true
       expect(timeAtLastHedgeAfter.eq(hedgeBlock.timestamp)).to.be.true
-      expect(priceAtLastHedgeAfter.eq(currentWSqueethPrice)).to.be.true 
+      expect(priceAtLastHedgeAfter.eq(currentWSquFuryPrice)).to.be.true 
     })
   })
 
@@ -487,9 +487,9 @@ describe("Crab flashswap integration test: time based hedging", function () {
 
       // change pool price
       const currentBlockTimestamp = (await provider.getBlock(await provider.getBlockNumber())).timestamp
-      await buyWSqueeth(swapRouter, wSqueeth, weth, owner.address, ethers.utils.parseUnits('10000'), currentBlockTimestamp + 10)
+      await buyWSquFury(swapRouter, wSquFury, weth, owner.address, ethers.utils.parseUnits('10000'), currentBlockTimestamp + 10)
       // set depositor balance to 0
-      await wSqueeth.connect(depositor).transfer(random.address, await wSqueeth.balanceOf(depositor.address))
+      await wSquFury.connect(depositor).transfer(random.address, await wSquFury.balanceOf(depositor.address))
     })
 
     it("should revert when the limit price is too high", async () => {
@@ -511,25 +511,25 @@ describe("Crab flashswap integration test: time based hedging", function () {
       expect(await crabStrategy.checkPriceHedge(auctionTriggerTimer)).to.be.false;
       expect((await crabStrategy.checkTimeHedge())[0]).to.be.true;
 
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice)
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice)
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
 
       expect(isSellAuction).to.be.false
 
-      const senderWsqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+      const senderWsqufuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
-      await wSqueeth.connect(depositor).approve(crabStrategy.address, senderWsqueethBalanceBefore)
+      await wSquFury.connect(depositor).approve(crabStrategy.address, senderWsqufuryBalanceBefore)
 
       await expect(
-        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice.mul(2))
+        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice.mul(2))
       ).to.be.revertedWith("Auction price < min price");
     })
 
@@ -548,30 +548,30 @@ describe("Crab flashswap integration test: time based hedging", function () {
       expect(await crabStrategy.checkPriceHedge(auctionTriggerTimer)).to.be.false;
       expect((await crabStrategy.checkTimeHedge())[0]).to.be.true;
 
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice)
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice)
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
 
       expect(isSellAuction).to.be.false
 
-      const senderWsqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+      const senderWsqufuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
-      await wSqueeth.connect(depositor).approve(crabStrategy.address, senderWsqueethBalanceBefore)
+      await wSquFury.connect(depositor).approve(crabStrategy.address, senderWsqufuryBalanceBefore)
 
       await expect(
-        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice, {value: 1})
+        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice, {value: 1})
       ).to.be.revertedWith("ETH attached for buy auction");
     })
 
 
-    it("should revert hedging when WSqueeth seller have less amount that target hedge", async () => {
+    it("should revert hedging when WSquFury seller have less amount that target hedge", async () => {
       const timeAtLastHedge = await crabStrategy.timeAtLastHedge()
       
       const auctionTriggerTimer = timeAtLastHedge.add(hedgeTimeThreshold)
@@ -586,29 +586,29 @@ describe("Crab flashswap integration test: time based hedging", function () {
       expect(await crabStrategy.checkPriceHedge(auctionTriggerTimer)).to.be.false;
       expect((await crabStrategy.checkTimeHedge())[0]).to.be.true;
 
-      const currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice)
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice)
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
 
       expect(isSellAuction).to.be.false
 
-      const senderWsqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+      const senderWsqufuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
-      await wSqueeth.connect(depositor).approve(crabStrategy.address, senderWsqueethBalanceBefore)
+      await wSquFury.connect(depositor).approve(crabStrategy.address, senderWsqufuryBalanceBefore)
 
       await expect(
-        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice)
+        crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice)
       ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
     })
 
-    it("should hedge by buying WSqueeth for ETH ", async () => {
+    it("should hedge by buying WSquFury for ETH ", async () => {
       const timeAtLastHedge = await crabStrategy.timeAtLastHedge()
       
       const auctionTriggerTimer = timeAtLastHedge.add(hedgeTimeThreshold)
@@ -628,19 +628,19 @@ describe("Crab flashswap integration test: time based hedging", function () {
       expect(await crabStrategy.checkPriceHedge(auctionTriggerTimer)).to.be.false;
       expect((await crabStrategy.checkTimeHedge())[0]).to.be.true;
 
-      let currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      let currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
       const strategyVault = await controller.vaults(await crabStrategy.vaultId());
       const ethDelta = strategyVault.collateralAmount
       const strategyDebt = strategyVault.shortAmount
-      const initialWSqueethDelta = wmul(strategyDebt.mul(2), currentWSqueethPrice)
-      const targetHedge = wdiv(initialWSqueethDelta.sub(ethDelta), currentWSqueethPrice)        
+      const initialWSquFuryDelta = wmul(strategyDebt.mul(2), currentWSquFuryPrice)
+      const targetHedge = wdiv(initialWSquFuryDelta.sub(ethDelta), currentWSquFuryPrice)        
       const isSellAuction = targetHedge.isNegative()
       const auctionExecution = (auctionTimeElapsed.gte(BigNumber.from(auctionTime))) ? one : wdiv(auctionTimeElapsed, BigNumber.from(auctionTime))
-      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSqueethPrice)
-      const expectedAuctionWSqueethEthPrice = result[1]
-      const finalWSqueethDelta = wmul(strategyDebt.mul(2), expectedAuctionWSqueethEthPrice)
-      const secondTargetHedge = wdiv(finalWSqueethDelta.sub(ethDelta), expectedAuctionWSqueethEthPrice)
-      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSqueethEthPrice)
+      const result = calcPriceMulAndAuctionPrice(isSellAuction, maxPriceMultiplier, minPriceMultiplier, auctionExecution, currentWSquFuryPrice)
+      const expectedAuctionWSquFuryEthPrice = result[1]
+      const finalWSquFuryDelta = wmul(strategyDebt.mul(2), expectedAuctionWSquFuryEthPrice)
+      const secondTargetHedge = wdiv(finalWSquFuryDelta.sub(ethDelta), expectedAuctionWSquFuryEthPrice)
+      const expectedEthProceeds = wmul(secondTargetHedge.abs(), expectedAuctionWSquFuryEthPrice)
 
       expect(isSellAuction).to.be.false
 
@@ -649,20 +649,20 @@ describe("Crab flashswap integration test: time based hedging", function () {
         collatToDeposit = ethers.utils.parseUnits('1')
       }
       await controller.connect(depositor).mintWPowerPerpAmount("0", secondTargetHedge.abs(), "0", {value: collatToDeposit.add(collatToDeposit.mul(2).div(3))})
-      const senderWsqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+      const senderWsqufuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
       await provider.send("evm_increaseTime", [50])
 
-      await wSqueeth.connect(depositor).approve(crabStrategy.address, senderWsqueethBalanceBefore)
-      await crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSqueethEthPrice)
+      await wSquFury.connect(depositor).approve(crabStrategy.address, senderWsqufuryBalanceBefore)
+      await crabStrategy.connect(depositor).timeHedge(isSellAuction, expectedAuctionWSquFuryEthPrice)
 
-      currentWSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
-      const senderWsqueethBalanceAfter = await wSqueeth.balanceOf(depositor.address)
+      currentWSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
+      const senderWsqufuryBalanceAfter = await wSquFury.balanceOf(depositor.address)
       const strategyVaultAfter = await controller.vaults(await crabStrategy.vaultId());
       const strategyCollateralAmountAfter = strategyVaultAfter.collateralAmount
       const strategyDebtAmountAfter = strategyVaultAfter.shortAmount
       
-      expect(isSimilar(senderWsqueethBalanceBefore.sub(senderWsqueethBalanceAfter).toString(), secondTargetHedge.toString())).to.be.true
+      expect(isSimilar(senderWsqufuryBalanceBefore.sub(senderWsqufuryBalanceAfter).toString(), secondTargetHedge.toString())).to.be.true
       expect(isSimilar(strategyDebt.sub(strategyDebtAmountAfter).toString(), secondTargetHedge.toString())).to.be.true
       expect(isSimilar(ethDelta.sub(strategyCollateralAmountAfter).toString(), expectedEthProceeds.abs().toString())).to.be.true
     })

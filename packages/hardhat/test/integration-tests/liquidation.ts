@@ -4,9 +4,9 @@ import { Contract, BigNumber, constants } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { Controller, INonfungiblePositionManager, ISwapRouter, IUniswapV3Pool, MockErc20, Oracle, VaultLibTester, ShortPowerPerp, WETH9, WPowerPerp, LiquidationHelper } from "../../typechain";
-import { deployUniswapV3, deploySqueethCoreContracts, deployWETHAndDai, addSqueethLiquidity, addWethDaiLiquidity } from '../setup'
+import { deployUniswapV3, deploySquFuryCoreContracts, deployWETHAndDai, addSquFuryLiquidity, addWethDaiLiquidity } from '../setup'
 import { isSimilar, getNow, one, oracleScaleFactor } from "../utils";
-import { getSqrtPriceAndTickBySqueethPrice } from "../calculator";
+import { getSqrtPriceAndTickBySquFuryPrice } from "../calculator";
 
 const TICK_SPACE = 60
 
@@ -17,15 +17,15 @@ describe("Liquidation Integration Test", function () {
   let oracle: Oracle;
   let dai: MockErc20
   let weth: WETH9
-  let squeeth: WPowerPerp
-  let shortSqueeth: ShortPowerPerp
+  let squfury: WPowerPerp
+  let shortSquFury: ShortPowerPerp
   let positionManager: INonfungiblePositionManager
   let controller: Controller
   let liquidationHelper: LiquidationHelper
   let swapRouter: Contract
 
   const provider = ethers.provider
-  let squeethPool: Contract
+  let squfuryPool: Contract
   let ethDaiPool: Contract
 
   let vaultLib: VaultLibTester
@@ -33,9 +33,9 @@ describe("Liquidation Integration Test", function () {
   const startingEthPrice = 3000
   const startingEthPrice1e18 = BigNumber.from(startingEthPrice).mul(one) // 3000 * 1e18
 
-  const scaledStartingSqueethPrice1e18 = startingEthPrice1e18.div(oracleScaleFactor) // 0.3 * 1e18
+  const scaledStartingSquFuryPrice1e18 = startingEthPrice1e18.div(oracleScaleFactor) // 0.3 * 1e18
   
-  const scaledStartingSqueethPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
+  const scaledStartingSquFuryPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
   
   let liquidityProvider: SignerWithAddress
   let seller0: SignerWithAddress
@@ -112,22 +112,22 @@ describe("Liquidation Integration Test", function () {
     weth = wethToken
 
     const uniDeployments = await deployUniswapV3(weth)
-    const coreDeployments = await deploySqueethCoreContracts(
+    const coreDeployments = await deploySquFuryCoreContracts(
       weth,
       dai, 
       uniDeployments.positionManager, 
       uniDeployments.uniswapFactory,
-      scaledStartingSqueethPrice,
+      scaledStartingSquFuryPrice,
       startingEthPrice
     )
 
     positionManager = (uniDeployments.positionManager) as INonfungiblePositionManager
     swapRouter = uniDeployments.swapRouter
 
-    squeeth = coreDeployments.wsqueeth
-    shortSqueeth = coreDeployments.shortSqueeth
+    squfury = coreDeployments.wsqufury
+    shortSquFury = coreDeployments.shortSquFury
     controller = coreDeployments.controller
-    squeethPool = coreDeployments.wsqueethEthPool
+    squfuryPool = coreDeployments.wsqufuryEthPool
     ethDaiPool = coreDeployments.ethDaiPool
     oracle = coreDeployments.oracle
 
@@ -145,22 +145,22 @@ describe("Liquidation Integration Test", function () {
     liquidationHelper = await LiqHelperFactory.deploy(
         controller.address,
         oracle.address,
-        squeeth.address,
+        squfury.address,
         weth.address,
         dai.address,
         ethDaiPool.address,
-        squeethPool.address,
+        squfuryPool.address,
         positionManager.address
       ) as LiquidationHelper;
   })
 
   this.beforeAll('Add liquidity to both pools', async() => {
-    await addSqueethLiquidity(
-      scaledStartingSqueethPrice, 
+    await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice, 
       '5',
       '30', 
       liquidityProvider.address, 
-      squeeth, 
+      squfury, 
       weth, 
       positionManager, 
       controller
@@ -177,34 +177,34 @@ describe("Liquidation Integration Test", function () {
   })
 
   this.beforeAll('Prepare vault0 (normal)', async() => {
-    vault0Id = await shortSqueeth.nextId()
+    vault0Id = await shortSquFury.nextId()
 
     
     await controller.connect(seller0).mintPowerPerpAmount(0, vault0MintAmount, 0, {value: vault0Collateral})
   })
 
   this.beforeAll('Prepare vault1 (normal)', async() => {
-    vault1Id = await shortSqueeth.nextId()
+    vault1Id = await shortSquFury.nextId()
     await controller.connect(seller1).mintPowerPerpAmount(0, vault1MintAmount, 0, {value: vault1Collateral})
   })
 
   this.beforeAll('Prepare vault2 (normal)', async() => {
-    vault2Id = await shortSqueeth.nextId()
+    vault2Id = await shortSquFury.nextId()
     await controller.connect(seller2).mintPowerPerpAmount(0, vault2MintAmount, 0, {value: vault2Collateral})
   })
 
   this.beforeAll('Prepare vault3 (with nft), dealing with cases when it\'s safe after saving', async() => {
-    vault3Id = await shortSqueeth.nextId()
+    vault3Id = await shortSquFury.nextId()
 
     
     await controller.connect(seller3).mintPowerPerpAmount(0, vault3MintAmount, 0, {value: vault3Collateral})
 
-    vault3LPTokenId = await addSqueethLiquidity(
-      scaledStartingSqueethPrice,
+    vault3LPTokenId = await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice,
       humanReadableMintAmount,
       '45.1',
       liquidityProvider.address,
-      squeeth,
+      squfury,
       weth,
       positionManager,
       controller
@@ -219,16 +219,16 @@ describe("Liquidation Integration Test", function () {
 
   this.beforeAll('Prepare vault4 (with nft), dealing with cases when it\'s safe after saving', async() => {
     // vault4 is identical to vault3
-    vault4Id = await shortSqueeth.nextId()
+    vault4Id = await shortSquFury.nextId()
 
     await controller.connect(seller4).mintPowerPerpAmount(0, vault4MintAmount, 0, {value: vault4Collateral})
 
-    vault4LPTokenId = await addSqueethLiquidity(
-      scaledStartingSqueethPrice,
+    vault4LPTokenId = await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice,
       humanReadableMintAmount,
       '45.1',
       liquidityProvider.address,
-      squeeth,
+      squfury,
       weth,
       positionManager,
       controller
@@ -242,16 +242,16 @@ describe("Liquidation Integration Test", function () {
   })
 
   this.beforeAll('Prepare vault5 (with nft), for liquidation', async() => {
-    vault5Id = await shortSqueeth.nextId()
+    vault5Id = await shortSquFury.nextId()
 
     await controller.connect(seller5).mintPowerPerpAmount(0, vault5MintAmount, 0, {value: vault5Collateral})
 
-    vault5LPTokenId = await addSqueethLiquidity(
-      scaledStartingSqueethPrice,
+    vault5LPTokenId = await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice,
       humanReadableMintAmount,
       '45.1',
       liquidityProvider.address,
-      squeeth,
+      squfury,
       weth,
       positionManager,
       controller
@@ -265,21 +265,21 @@ describe("Liquidation Integration Test", function () {
   })
 
   this.beforeAll('Prepare vault6 (with all eth nft), for liquidation', async() => {
-    vault6Id = await shortSqueeth.nextId()
+    vault6Id = await shortSquFury.nextId()
 
-    const isWethToken0 = parseInt(weth.address, 16) < parseInt(squeeth.address, 16) 
+    const isWethToken0 = parseInt(weth.address, 16) < parseInt(squfury.address, 16) 
 
     // create a uni position that's [1000, 2000], so it's now all eth
     const scaledPrice2000 = BigNumber.from('2000').mul(one).div(oracleScaleFactor)
     const scaledPrice1000 = BigNumber.from('1000').mul(one).div(oracleScaleFactor)
-    const { tick: tick1000 } = getSqrtPriceAndTickBySqueethPrice(scaledPrice1000, isWethToken0)
-    const { tick: tick2000 } = getSqrtPriceAndTickBySqueethPrice(scaledPrice2000, isWethToken0)
+    const { tick: tick1000 } = getSqrtPriceAndTickBySquFuryPrice(scaledPrice1000, isWethToken0)
+    const { tick: tick2000 } = getSqrtPriceAndTickBySquFuryPrice(scaledPrice2000, isWethToken0)
     const tickUpper = isWethToken0 ? tick1000 : tick2000;
     const tickLower = isWethToken0 ? tick2000 : tick1000;
     const tickUpperToUse = Math.ceil(parseInt(tickUpper, 10) / TICK_SPACE) * TICK_SPACE
     const tickLowerToUse = Math.ceil(parseInt(tickLower, 10) / TICK_SPACE) * TICK_SPACE
-    const token0 = isWethToken0 ? weth.address : squeeth.address
-    const token1 = isWethToken0 ? squeeth.address : weth.address
+    const token0 = isWethToken0 ? weth.address : squfury.address
+    const token1 = isWethToken0 ? squfury.address : weth.address
 
     // uni position is all ETH
     const mintParam = {
@@ -311,23 +311,23 @@ describe("Liquidation Integration Test", function () {
   })
 
   describe('Liquidate normal vault when price is 2x', async( )=> {
-    before('push squeeth price higher 2x', async() => {
-      // set squeeth price higher by buying half of squeeth in the pool
-      const poolSqueethBalance = await squeeth.balanceOf(squeethPool.address)
+    before('push squfury price higher 2x', async() => {
+      // set squfury price higher by buying half of squfury in the pool
+      const poolSquFuryBalance = await squfury.balanceOf(squfuryPool.address)
 
-      const maxWeth = poolSqueethBalance.mul(scaledStartingSqueethPrice1e18).mul(5).div(one)
+      const maxWeth = poolSquFuryBalance.mul(scaledStartingSquFuryPrice1e18).mul(5).div(one)
       
-      // how much squeeth to buy to make the price 2x
-      const newPoolSqueethBalance = new BigNumberJs(poolSqueethBalance.toString()).div(Math.SQRT2).integerValue().toString()
-      const squeethToBuy = poolSqueethBalance.sub(newPoolSqueethBalance)
+      // how much squfury to buy to make the price 2x
+      const newPoolSquFuryBalance = new BigNumberJs(poolSquFuryBalance.toString()).div(Math.SQRT2).integerValue().toString()
+      const squfuryToBuy = poolSquFuryBalance.sub(newPoolSquFuryBalance)
       
       const exactOutputParam = {
         tokenIn: weth.address,
-        tokenOut: squeeth.address,
+        tokenOut: squfury.address,
         fee: 3000,
         recipient: liquidityProvider.address,
         deadline: await getNow(provider) + 86400,
-        amountOut: squeethToBuy,
+        amountOut: squfuryToBuy,
         amountInMaximum: maxWeth,
         sqrtPriceLimitX96: 0,
       }
@@ -339,8 +339,8 @@ describe("Liquidation Integration Test", function () {
       // make sure price is set correctly
       await provider.send("evm_increaseTime", [10]) // increase time by 10 sec
       await provider.send("evm_mine", [])
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 1, true)
-      expect(isSimilar(newSqueethPrice.toString(), (scaledStartingSqueethPrice1e18.mul(2)).toString())).to.be.true
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 1, true)
+      expect(isSimilar(newSquFuryPrice.toString(), (scaledStartingSquFuryPrice1e18.mul(2)).toString())).to.be.true
     })
     before('push weth price higher 2x', async() => {
       // set weth price higher by buying half of weth in the pool
@@ -377,8 +377,8 @@ describe("Liquidation Integration Test", function () {
       await provider.send("evm_mine", [])
 
       const newEthPrice = await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 3600, false)
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 3600, false)
-      expect(isSimilar(newEthPrice.toString(), newSqueethPrice.mul(oracleScaleFactor).toString(), 3)).to.be.true
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 3600, false)
+      expect(isSimilar(newEthPrice.toString(), newSquFuryPrice.mul(oracleScaleFactor).toString(), 3)).to.be.true
     })
 
     before('prepare liquidator to liquidate vault 0 and vault 1', async() => {
@@ -388,33 +388,33 @@ describe("Liquidation Integration Test", function () {
       const mintAmount = vaultBefore.shortAmount.mul(2)
       const collateralRequired = mintAmount.mul(newEthPrice).mul(2).div(oracleScaleFactor).div(one).mul(2)
 
-      // mint squeeth to liquidate vault0!
+      // mint squfury to liquidate vault0!
       await controller.connect(liquidator).mintPowerPerpAmount(0, mintAmount, 0, {value: collateralRequired})
       
     })
     
     it("liquidate vault 0", async () => {
 
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 600, false)
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 600, false)
 
       const vaultBefore = await controller.vaults(vault0Id)
       
       // state before liquidation
-      const liquidatorSqueethBefore = await squeeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryBefore = await squfury.balanceOf(liquidator.address)
       const liquidatorBalanceBefore = await provider.getBalance(liquidator.address)
 
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount.div(2)
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount.div(2)
 
       const result = await liquidationHelper.checkLiquidation(vault0Id);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount, collateralToReceive] = result;
 
-      await controller.connect(liquidator).liquidate(vault0Id, wSqueethAmountToLiquidate);
+      await controller.connect(liquidator).liquidate(vault0Id, wSquFuryAmountToLiquidate);
       
-      const collateralToGet = newSqueethPrice.mul(wSqueethAmountToLiquidate).div(one).mul(11).div(10)
+      const collateralToGet = newSquFuryPrice.mul(wSquFuryAmountToLiquidate).div(one).mul(11).div(10)
 
       const vaultAfter = await controller.vaults(vault0Id)
       const liquidatorBalanceAfter = await provider.getBalance(liquidator.address)
-      const liquidatorSqueethAfter = await squeeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryAfter = await squfury.balanceOf(liquidator.address)
 
       expect(isUnsafe).to.be.true
       expect(isLiquidatableAfterReducingDebt).to.be.true
@@ -422,32 +422,32 @@ describe("Liquidation Integration Test", function () {
       expect(isSimilar(collateralToReceive.toString(), collateralToGet.toString())).to.be.true
       
       // expect(collateralToGet.eq(liquidatorBalanceAfter.sub(liquidatorBalanceBefore))).to.be.true
-      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSqueethBefore.sub(liquidatorSqueethAfter))).to.be.true
+      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSquFuryBefore.sub(liquidatorSquFuryAfter))).to.be.true
     })
 
     it('should revert if trying to leave vault1 a dust vault', async() => {
       const vaultBefore = await controller.vaults(vault1Id)
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount.div(2)
-      await expect(controller.connect(liquidator).liquidate(vault1Id, wSqueethAmountToLiquidate)).to.be.revertedWith('C22')
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount.div(2)
+      await expect(controller.connect(liquidator).liquidate(vault1Id, wSquFuryAmountToLiquidate)).to.be.revertedWith('C22')
     })
 
     it("fully liquidate vault 1, get the full collateral amount from the vault", async () => {
       const vaultBefore = await controller.vaults(vault1Id)
       
       // state before liquidation
-      const liquidatorSqueethBefore = await squeeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryBefore = await squfury.balanceOf(liquidator.address)
       const liquidatorBalanceBefore = await provider.getBalance(liquidator.address)
 
       // liquidate the full vault
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount
 
       const result = await liquidationHelper.checkLiquidation(vault1Id);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount, collateralToReceive] = result;
 
-      await controller.connect(liquidator).liquidate(vault1Id, wSqueethAmountToLiquidate);
+      await controller.connect(liquidator).liquidate(vault1Id, wSquFuryAmountToLiquidate);
       const vaultAfter = await controller.vaults(vault1Id)
       const liquidatorBalanceAfter = await provider.getBalance(liquidator.address)
-      const liquidatorSqueethAfter = await squeeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryAfter = await squfury.balanceOf(liquidator.address)
 
       expect(isUnsafe).to.be.true
       expect(isLiquidatableAfterReducingDebt).to.be.true
@@ -455,18 +455,18 @@ describe("Liquidation Integration Test", function () {
       expect(isSimilar(collateralToReceive.toString(), (vaultBefore.collateralAmount).toString())).to.be.true
 
       // expect(vaultBefore.collateralAmount.eq(liquidatorBalanceAfter.sub(liquidatorBalanceBefore))).to.be.true
-      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSqueethBefore.sub(liquidatorSqueethAfter))).to.be.true
+      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSquFuryBefore.sub(liquidatorSquFuryAfter))).to.be.true
     })
 
     it("fully liquidate vault 2, get expected payout", async () => {      
       const vaultBefore = await controller.vaults(vault2Id)
       
       // state before liquidation
-      const liquidatorSqueethBefore = await squeeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryBefore = await squfury.balanceOf(liquidator.address)
       const liquidatorBalanceBefore = await provider.getBalance(liquidator.address)
 
       // liquidate the full vault
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount
 
       const result = await liquidationHelper.checkLiquidation(vault2Id);
       const isUnsafe = result[0]
@@ -474,13 +474,13 @@ describe("Liquidation Integration Test", function () {
       const minWPowerPerpAmount = result[2]
       const collateralToReceive = result[3]
 
-      await controller.connect(liquidator).liquidate(vault2Id, wSqueethAmountToLiquidate);
+      await controller.connect(liquidator).liquidate(vault2Id, wSquFuryAmountToLiquidate);
       const vaultAfter = await controller.vaults(vault2Id)
       const liquidatorBalanceAfter = await provider.getBalance(liquidator.address)
-      const liquidatorSqueethAfter = await squeeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryAfter = await squfury.balanceOf(liquidator.address)
 
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 600, false)
-      const collateralToGet = newSqueethPrice.mul(wSqueethAmountToLiquidate).div(one).mul(11).div(10)
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 600, false)
+      const collateralToGet = newSquFuryPrice.mul(wSquFuryAmountToLiquidate).div(one).mul(11).div(10)
       
       expect(isUnsafe).to.be.true
       expect(isLiquidatableAfterReducingDebt).to.be.true
@@ -488,14 +488,14 @@ describe("Liquidation Integration Test", function () {
       expect(isSimilar(collateralToReceive.toString(), (collateralToGet).toString())).to.be.true
 
       // expect(collateralToGet.eq(liquidatorBalanceAfter.sub(liquidatorBalanceBefore))).to.be.true
-      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSqueethBefore.sub(liquidatorSqueethAfter))).to.be.true
+      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSquFuryBefore.sub(liquidatorSquFuryAfter))).to.be.true
       expect(vaultAfter.shortAmount.isZero()).to.be.true
       expect(vaultAfter.collateralAmount.gt(0)).to.be.true
     })
     
     it('should revert when trying to liquidate vault 6 (nft vault underwater) but leave dust behind', async() => {
       const vaultBefore = await controller.vaults(vault6Id)
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount.sub(1)
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount.sub(1)
 
       const result = await liquidationHelper.checkLiquidation(vault6Id);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount] = result;
@@ -504,29 +504,29 @@ describe("Liquidation Integration Test", function () {
       expect(isLiquidatableAfterReducingDebt).to.be.true
       expect(maxWPowerPerpAmount.eq((vaultBefore.shortAmount))).to.be.true
 
-      await expect(controller.connect(liquidator).liquidate(vault6Id, wSqueethAmountToLiquidate)).to.be.revertedWith('C22');
+      await expect(controller.connect(liquidator).liquidate(vault6Id, wSquFuryAmountToLiquidate)).to.be.revertedWith('C22');
     })
 
     it("fully liquidate vault 6, redeem nft and liquidate", async () => {
       const vaultBefore = await controller.vaults(vault6Id)
       
       // state before liquidation
-      const liquidatorSqueethBefore = await squeeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryBefore = await squfury.balanceOf(liquidator.address)
       const liquidatorBalanceBefore = await provider.getBalance(liquidator.address)
 
       // liquidate the full vault
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount
 
       const result = await liquidationHelper.checkLiquidation(vault6Id);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount, collateralToReceive] = result;
 
-      await controller.connect(liquidator).liquidate(vault6Id, wSqueethAmountToLiquidate);
+      await controller.connect(liquidator).liquidate(vault6Id, wSquFuryAmountToLiquidate);
       const vaultAfter = await controller.vaults(vault6Id)
       const liquidatorBalanceAfter = await provider.getBalance(liquidator.address)
-      const liquidatorSqueethAfter = await squeeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryAfter = await squfury.balanceOf(liquidator.address)
 
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 600, false)
-      const collateralToGet = newSqueethPrice.mul(wSqueethAmountToLiquidate).div(one).mul(11).div(10)
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 600, false)
+      const collateralToGet = newSquFuryPrice.mul(wSquFuryAmountToLiquidate).div(one).mul(11).div(10)
       
       expect(isUnsafe).to.be.true
       expect(isLiquidatableAfterReducingDebt).to.be.true
@@ -534,14 +534,14 @@ describe("Liquidation Integration Test", function () {
       expect(isSimilar(collateralToReceive.toString(), (collateralToGet).toString())).to.be.true
 
       // expect(collateralToGet.eq(liquidatorBalanceAfter.sub(liquidatorBalanceBefore))).to.be.true
-      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSqueethBefore.sub(liquidatorSqueethAfter))).to.be.true
+      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSquFuryBefore.sub(liquidatorSquFuryAfter))).to.be.true
       expect(vaultAfter.shortAmount.isZero()).to.be.true
       expect(vaultAfter.collateralAmount.gt(0)).to.be.true
     })
 
     it("should revert when trying to liquidate a safe vault", async () => {
       const vaultBefore = await controller.vaults(vault3Id)
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount.div(2)
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount.div(2)
 
       const result = await liquidationHelper.checkLiquidation(vault6Id);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount, collateralToReceive] = result;
@@ -551,28 +551,28 @@ describe("Liquidation Integration Test", function () {
       expect(maxWPowerPerpAmount.eq(BigNumber.from(0))).to.be.true
       expect(collateralToReceive.eq(BigNumber.from(0))).to.be.true
       
-      await expect(controller.connect(liquidator).liquidate(vault3Id, wSqueethAmountToLiquidate)).to.be.revertedWith('C12')
+      await expect(controller.connect(liquidator).liquidate(vault3Id, wSquFuryAmountToLiquidate)).to.be.revertedWith('C12')
     })
   })
 
   describe('Save vault with uni nft when price is 4x', async( )=> {
-    before('push squeeth price higher 2x', async() => {
-      // set squeeth price higher by buying half of squeeth in the pool
-      const poolSqueethBalance = await squeeth.balanceOf(squeethPool.address)
+    before('push squfury price higher 2x', async() => {
+      // set squfury price higher by buying half of squfury in the pool
+      const poolSquFuryBalance = await squfury.balanceOf(squfuryPool.address)
 
-      const maxWeth = poolSqueethBalance.mul(scaledStartingSqueethPrice1e18).mul(5).div(one)
+      const maxWeth = poolSquFuryBalance.mul(scaledStartingSquFuryPrice1e18).mul(5).div(one)
       
-      // how much squeeth to buy to make the price 2x
-      const newPoolSqueethBalance = new BigNumberJs(poolSqueethBalance.toString()).div(Math.SQRT2).integerValue().toString()
-      const squeethToBuy = poolSqueethBalance.sub(newPoolSqueethBalance)
+      // how much squfury to buy to make the price 2x
+      const newPoolSquFuryBalance = new BigNumberJs(poolSquFuryBalance.toString()).div(Math.SQRT2).integerValue().toString()
+      const squfuryToBuy = poolSquFuryBalance.sub(newPoolSquFuryBalance)
       
       const exactOutputParam = {
         tokenIn: weth.address,
-        tokenOut: squeeth.address,
+        tokenOut: squfury.address,
         fee: 3000,
         recipient: liquidityProvider.address,
         deadline: await getNow(provider) + 86400,
-        amountOut: squeethToBuy,
+        amountOut: squfuryToBuy,
         amountInMaximum: maxWeth,
         sqrtPriceLimitX96: 0,
       }
@@ -584,8 +584,8 @@ describe("Liquidation Integration Test", function () {
       // make sure price is set correctly
       await provider.send("evm_increaseTime", [10]) // increase time by 10 sec
       await provider.send("evm_mine", [])
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 1, false)
-      expect(isSimilar(newSqueethPrice.toString(), scaledStartingSqueethPrice1e18.mul(4).toString())).to.be.true
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 1, false)
+      expect(isSimilar(newSquFuryPrice.toString(), scaledStartingSquFuryPrice1e18.mul(4).toString())).to.be.true
 
     })
     before('push weth price higher 2x', async() => {
@@ -623,20 +623,20 @@ describe("Liquidation Integration Test", function () {
       await provider.send("evm_mine", [])
 
       const newEthPrice = await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 3600, false)
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 3600, false)
-      expect(isSimilar(newEthPrice.toString(), newSqueethPrice.mul(oracleScaleFactor).toString(), 3)).to.be.true
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 3600, false)
+      expect(isSimilar(newEthPrice.toString(), newSquFuryPrice.mul(oracleScaleFactor).toString(), 3)).to.be.true
     })
     it("calling liquidation now will save vault 3 and get bounty", async () => {
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 600, false)
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 600, false)
       // price has 4x, eth amount should have doubled in the nft
-      // squeeth amount should be cut in half
+      // squfury amount should be cut in half
       // get net worth of nft
-      const { tick } = await (squeethPool as IUniswapV3Pool).slot0()
-      const isWethToken0 = parseInt(weth.address, 16) < parseInt(squeeth.address, 16)
+      const { tick } = await (squfuryPool as IUniswapV3Pool).slot0()
+      const isWethToken0 = parseInt(weth.address, 16) < parseInt(squfury.address, 16)
       const { ethAmount, wPowerPerpAmount } = await vaultLib.getUniPositionBalances(positionManager.address, vault3LPTokenId, tick, isWethToken0)
       
       const vaultBefore = await controller.vaults(vault3Id)
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount.sub(wPowerPerpAmount).div(2)
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount.sub(wPowerPerpAmount).div(2)
       const liquidatorEthBalance = await provider.getBalance(liquidator.address)
 
       const result = await liquidationHelper.checkLiquidation(vault3Id);
@@ -653,19 +653,19 @@ describe("Liquidation Integration Test", function () {
       })
       const { tokensOwed0, tokensOwed1 }  = await positionManager.positions(vault3LPTokenId)
       const ethFeeAmount = isWethToken0 ? tokensOwed0 : tokensOwed1
-      const squeethFeeAmount = isWethToken0 ? tokensOwed1 : tokensOwed0
+      const squfuryFeeAmount = isWethToken0 ? tokensOwed1 : tokensOwed0
 
       const totalEthFromUniPosition = ethAmount.add(ethFeeAmount)
-      const totalWSqueethFromUniPosition = wPowerPerpAmount.add(squeethFeeAmount)
+      const totalWSquFuryFromUniPosition = wPowerPerpAmount.add(squfuryFeeAmount)
 
-      await controller.connect(liquidator).liquidate(vault3Id, wSqueethAmountToLiquidate)
+      await controller.connect(liquidator).liquidate(vault3Id, wSquFuryAmountToLiquidate)
 
       const liquidatorEthAfter = await provider.getBalance(liquidator.address)
       const vaultAfter = await controller.vaults(vault3Id)
       
       // paying a 2% bounty on top of total value withdrawn from NFT.
-      const withdrawWSqueethInEth = newSqueethPrice.mul(totalWSqueethFromUniPosition).div(one)
-      const bounty = withdrawWSqueethInEth.add(totalEthFromUniPosition).mul(2).div(100);
+      const withdrawWSquFuryInEth = newSquFuryPrice.mul(totalWSquFuryFromUniPosition).div(one)
+      const bounty = withdrawWSquFuryInEth.add(totalEthFromUniPosition).mul(2).div(100);
       
       expect(isUnsafe).to.be.true
       expect(isLiquidatableAfterReducingDebt).to.be.false
@@ -678,8 +678,8 @@ describe("Liquidation Integration Test", function () {
 
       expect(isSimilar(vaultBefore.collateralAmount.add(totalEthFromUniPosition).sub(bounty).toString(), vaultAfter.collateralAmount.toString(), 2)).to.be.true
 
-      // the debt in the vault is reduced by squeethAmount.
-      expect(isSimilar(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).toString(), totalWSqueethFromUniPosition.toString())).to.be.true
+      // the debt in the vault is reduced by squfuryAmount.
+      expect(isSimilar(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).toString(), totalWSquFuryFromUniPosition.toString())).to.be.true
     })
 
     it("seller4 can save his own vault", async () => {
@@ -700,25 +700,25 @@ describe("Liquidation Integration Test", function () {
   })
 
   describe('Liquidate vault with uni nft when price is 8x', async( )=> {
-    before('push squeeth price higher 2x', async() => {
-      // set squeeth price higher by buying half of squeeth in the pool
-      const poolSqueethBalance = await squeeth.balanceOf(squeethPool.address)
-      const poolWethBalance = await weth.balanceOf(squeethPool.address)
+    before('push squfury price higher 2x', async() => {
+      // set squfury price higher by buying half of squfury in the pool
+      const poolSquFuryBalance = await squfury.balanceOf(squfuryPool.address)
+      const poolWethBalance = await weth.balanceOf(squfuryPool.address)
 
       // calculate max weth with 1.5x buffer
       const maxWeth = new BigNumberJs(poolWethBalance.toString()).times(Math.SQRT2 - 1).times(2).integerValue().toString()
 
-      // how much squeeth to buy to make the price 2x
-      const newPoolSqueethBalance = new BigNumberJs(poolSqueethBalance.toString()).div(Math.SQRT2).integerValue().toString()
-      const squeethToBuy = poolSqueethBalance.sub(newPoolSqueethBalance)
+      // how much squfury to buy to make the price 2x
+      const newPoolSquFuryBalance = new BigNumberJs(poolSquFuryBalance.toString()).div(Math.SQRT2).integerValue().toString()
+      const squfuryToBuy = poolSquFuryBalance.sub(newPoolSquFuryBalance)
       
       const exactOutputParam = {
         tokenIn: weth.address,
-        tokenOut: squeeth.address,
+        tokenOut: squfury.address,
         fee: 3000,
         recipient: liquidityProvider.address,
         deadline: await getNow(provider) + 86400,
-        amountOut: squeethToBuy,
+        amountOut: squfuryToBuy,
         amountInMaximum: maxWeth,
         sqrtPriceLimitX96: 0,
       }
@@ -730,8 +730,8 @@ describe("Liquidation Integration Test", function () {
       // make sure price is set correctly
       await provider.send("evm_increaseTime", [10]) // increase time by 10 sec
       await provider.send("evm_mine", [])
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 1, false)
-      expect(isSimilar(newSqueethPrice.toString(), scaledStartingSqueethPrice1e18.mul(8).toString())).to.be.true
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 1, false)
+      expect(isSimilar(newSquFuryPrice.toString(), scaledStartingSquFuryPrice1e18.mul(8).toString())).to.be.true
 
     })
     before('push weth price higher 2x', async() => {
@@ -771,14 +771,14 @@ describe("Liquidation Integration Test", function () {
       await provider.send("evm_mine", [])
 
       const newEthPrice = await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 3600, false)
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 3600, false)
-      expect(isSimilar(newEthPrice.toString(), newSqueethPrice.mul(oracleScaleFactor).toString(), 3)).to.be.true
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 3600, false)
+      expect(isSimilar(newEthPrice.toString(), newSquFuryPrice.mul(oracleScaleFactor).toString(), 3)).to.be.true
     })
     it("calling liquidation now will save vault5 + liquidate half of the remaining debt", async () => {
-      const newSqueethPrice = await oracle.getTwap(squeethPool.address, squeeth.address, weth.address, 600, false)
+      const newSquFuryPrice = await oracle.getTwap(squfuryPool.address, squfury.address, weth.address, 600, false)
 
-      const { tick } = await (squeethPool as IUniswapV3Pool).slot0()
-      const isWethToken0 = parseInt(weth.address, 16) < parseInt(squeeth.address, 16)
+      const { tick } = await (squfuryPool as IUniswapV3Pool).slot0()
+      const isWethToken0 = parseInt(weth.address, 16) < parseInt(squfury.address, 16)
       const { ethAmount, wPowerPerpAmount } = await vaultLib.getUniPositionBalances(positionManager.address, vault5LPTokenId, tick, isWethToken0)
       
       // hack: increase liquidity so the fee info got updated
@@ -792,31 +792,31 @@ describe("Liquidation Integration Test", function () {
       })
       const { tokensOwed0, tokensOwed1 }  = await positionManager.positions(vault5LPTokenId)
       const ethFeeAmount = isWethToken0 ? tokensOwed0 : tokensOwed1
-      const squeethFeeAmount = isWethToken0 ? tokensOwed1 : tokensOwed0
+      const squfuryFeeAmount = isWethToken0 ? tokensOwed1 : tokensOwed0
 
-      // total amount of eth and wsqueeth we can get out of the position nft
+      // total amount of eth and wsqufury we can get out of the position nft
       const totalEthFromUniPosition = ethAmount.add(ethFeeAmount)
-      const totalWSqueethFromUniPosition = wPowerPerpAmount.add(squeethFeeAmount)
+      const totalWSquFuryFromUniPosition = wPowerPerpAmount.add(squfuryFeeAmount)
 
       const vaultBefore = await controller.vaults(vault5Id)
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount.sub(totalWSqueethFromUniPosition).div(2)
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount.sub(totalWSquFuryFromUniPosition).div(2)
       const liquidatorEthBalance = await provider.getBalance(liquidator.address)
 
       const result = await liquidationHelper.checkLiquidation(vault5Id);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount, collateralToReceive] = result;
 
-      await controller.connect(liquidator).liquidate(vault5Id, wSqueethAmountToLiquidate)
+      await controller.connect(liquidator).liquidate(vault5Id, wSquFuryAmountToLiquidate)
 
       const liquidatorEthAfter = await provider.getBalance(liquidator.address)
       const vaultAfter = await controller.vaults(vault5Id)
       
-      const reward = newSqueethPrice.mul(wSqueethAmountToLiquidate).div(one).mul(11).div(10)
+      const reward = newSquFuryPrice.mul(wSquFuryAmountToLiquidate).div(one).mul(11).div(10)
 
       expect(isUnsafe).to.be.true
       expect(isLiquidatableAfterReducingDebt).to.be.true
 
       // the estimation is not exactly the same but only off by a very small amount.
-      expect(isSimilar(maxWPowerPerpAmount.toString(), wSqueethAmountToLiquidate.toString(), 10)).to.be.true
+      expect(isSimilar(maxWPowerPerpAmount.toString(), wSquFuryAmountToLiquidate.toString(), 10)).to.be.true
       expect(isSimilar(collateralToReceive.toString(), reward.toString(), 3)).to.be.true
 
       expect(isSimilar(liquidatorEthAfter.sub(liquidatorEthBalance).toString(), reward.toString())).to.be.true      
@@ -824,8 +824,8 @@ describe("Liquidation Integration Test", function () {
 
       expect(isSimilar(vaultBefore.collateralAmount.add(totalEthFromUniPosition).sub(reward).toString(), vaultAfter.collateralAmount.toString())).to.be.true
 
-      // the debt in the vault is reduced by squeethAmount.
-      expect(isSimilar(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).toString(), totalWSqueethFromUniPosition.add(wSqueethAmountToLiquidate).toString())).to.be.true
+      // the debt in the vault is reduced by squfuryAmount.
+      expect(isSimilar(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).toString(), totalWSquFuryFromUniPosition.add(wSquFuryAmountToLiquidate).toString())).to.be.true
     })
   })
   

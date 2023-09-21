@@ -1,4 +1,4 @@
-# Squeeth Frontend Contribution Guidelines
+# SquFury Frontend Contribution Guidelines
 
 ## Issues
 

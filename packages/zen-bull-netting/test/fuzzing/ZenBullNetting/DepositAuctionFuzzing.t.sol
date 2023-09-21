@@ -57,12 +57,12 @@ contract DepositAuctionFuzzing is ZenBullNettingBaseSetup {
 
     function _calAuctionCrabAmount(uint256 _depositToProcess) internal view returns (uint256) {
         uint256 ethUsdPrice = IOracle(ORACLE).getTwap(ethUsdcPool, WETH, USDC, 420, false);
-        uint256 squeethEthPrice =
-            IOracle(ORACLE).getTwap(ethSqueethPool, WPOWERPERP, WETH, 420, false);
+        uint256 squfuryEthPrice =
+            IOracle(ORACLE).getTwap(ethSquFuryPool, WPOWERPERP, WETH, 420, false);
         (uint256 crabCollateral, uint256 crabDebt) =
             IZenBullStrategy(ZEN_BULL).getCrabVaultDetails();
         uint256 crabUsdPrice = (
-            crabCollateral * ethUsdPrice / 1e18 - (crabDebt * squeethEthPrice * ethUsdPrice / 1e36)
+            crabCollateral * ethUsdPrice / 1e18 - (crabDebt * squfuryEthPrice * ethUsdPrice / 1e36)
         ) * 1e18 / IERC20(CRAB).totalSupply();
         uint256 bullEquityValue = (
             IZenBullStrategy(ZEN_BULL).getCrabBalance() * crabUsdPrice / 1e18
@@ -85,10 +85,10 @@ contract DepositAuctionFuzzing is ZenBullNettingBaseSetup {
         uint256 crabAmount = _calAuctionCrabAmount(_amount);
         uint256 crabTotalSupply = IERC20(CRAB).totalSupply();
         (, uint256 crabDebt) = IZenBullStrategy(ZEN_BULL).getCrabVaultDetails();
-        uint256 oSqthAmount = crabAmount * crabDebt / crabTotalSupply;
+        uint256 oSqfuAmount = crabAmount * crabDebt / crabTotalSupply;
 
-        uint256 squeethEthPrice =
-            IOracle(ORACLE).getTwap(ethSqueethPool, WPOWERPERP, WETH, 420, false);
+        uint256 squfuryEthPrice =
+            IOracle(ORACLE).getTwap(ethSquFuryPool, WPOWERPERP, WETH, 420, false);
         ZenBullNetting.Order[] memory orders = new ZenBullNetting.Order[](1);
         {
             // trader signature vars
@@ -99,8 +99,8 @@ contract DepositAuctionFuzzing is ZenBullNettingBaseSetup {
             SigUtil.Order memory orderSig = SigUtil.Order({
                 bidId: 1,
                 trader: mm1,
-                quantity: oSqthAmount,
-                price: squeethEthPrice,
+                quantity: oSqfuAmount,
+                price: squfuryEthPrice,
                 isBuying: true,
                 expiry: block.timestamp + 1000,
                 nonce: 0
@@ -110,8 +110,8 @@ contract DepositAuctionFuzzing is ZenBullNettingBaseSetup {
             ZenBullNetting.Order memory orderData = ZenBullNetting.Order({
                 bidId: 1,
                 trader: mm1,
-                quantity: oSqthAmount,
-                price: squeethEthPrice,
+                quantity: oSqfuAmount,
+                price: squfuryEthPrice,
                 isBuying: true,
                 expiry: block.timestamp + 1000,
                 nonce: 0,
@@ -126,16 +126,16 @@ contract DepositAuctionFuzzing is ZenBullNettingBaseSetup {
             depositsToProcess: _amount,
             crabAmount: crabAmount,
             orders: orders,
-            clearingPrice: squeethEthPrice * 99e16 / 1e18,
+            clearingPrice: squfuryEthPrice * 99e16 / 1e18,
             flashDepositEthToCrab: 0,
-            flashDepositMinEthFromSqth: 0,
+            flashDepositMinEthFromSqfu: 0,
             flashDepositMinEthFromUsdc: 0,
             flashDepositWPowerPerpPoolFee: 3000,
             wethUsdcPoolFee: 3000
         });
 
         vm.prank(mm1);
-        IERC20(WETH).approve(address(zenBullNetting), oSqthAmount * params.clearingPrice / 1e18);
+        IERC20(WETH).approve(address(zenBullNetting), oSqfuAmount * params.clearingPrice / 1e18);
 
         vm.startPrank(owner);
         zenBullNetting.depositAuction(params);

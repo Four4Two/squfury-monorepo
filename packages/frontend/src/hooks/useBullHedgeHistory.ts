@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client'
-import BULL_REBALANCE_QUERY from '@queries/squeeth/bullHedgeQuery'
-import { bullHedges } from '@queries/squeeth/__generated__/bullHedges'
+import BULL_REBALANCE_QUERY from '@queries/squfury/bullHedgeQuery'
+import { bullHedges } from '@queries/squfury/__generated__/bullHedges'
 import { networkIdAtom } from '@state/wallet/atoms'
 import { BullRebalanceType } from '../types'
-import { squeethClient } from '@utils/apollo-client'
+import { squfuryClient } from '@utils/apollo-client'
 import { useAtomValue } from 'jotai'
 import { useMemo } from 'react'
 
@@ -12,7 +12,7 @@ export const useBullHedgeHistory = () => {
 
   const { data, loading } = useQuery<bullHedges>(BULL_REBALANCE_QUERY, {
     fetchPolicy: 'cache-and-network',
-    client: squeethClient[networkId],
+    client: squfuryClient[networkId],
   })
 
   const uiData = useMemo(() => {

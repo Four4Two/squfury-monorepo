@@ -1,11 +1,11 @@
 import { useQuery } from '@apollo/client'
 import { useAtomValue } from 'jotai'
 
-import { crabV2Auctions } from '../queries/squeeth/__generated__/crabV2Auctions'
-import CRAB_V2_AUCTION_QUERY from '../queries/squeeth/crabV2AuctionQuery'
+import { crabV2Auctions } from '../queries/squfury/__generated__/crabV2Auctions'
+import CRAB_V2_AUCTION_QUERY from '../queries/squfury/crabV2AuctionQuery'
 import { toTokenAmount } from '@utils/calculations'
-import { WETH_DECIMALS, OSQUEETH_DECIMALS } from '../constants'
-import { squeethClient } from '@utils/apollo-client'
+import { WETH_DECIMALS, OSQUFURY_DECIMALS } from '../constants'
+import { squfuryClient } from '@utils/apollo-client'
 import { networkIdAtom } from 'src/state/wallet/atoms'
 import { visibleStrategyHedgesAtom } from '@state/crab/atoms'
 
@@ -14,18 +14,18 @@ export const useCrabStrategyV2TxHistory = () => {
   const visibleHedges = useAtomValue(visibleStrategyHedgesAtom)
   const { data, loading } = useQuery<crabV2Auctions>(CRAB_V2_AUCTION_QUERY, {
     fetchPolicy: 'cache-and-network',
-    client: squeethClient[networkId],
+    client: squfuryClient[networkId],
   })
 
   const uiData = data?.hedgeOTCs!.map((tx) => {
-    const oSqueethAmount = toTokenAmount(tx.quantity, OSQUEETH_DECIMALS)
+    const oSquFuryAmount = toTokenAmount(tx.quantity, OSQUFURY_DECIMALS)
     const clearingPrice = toTokenAmount(tx.clearingPrice, WETH_DECIMALS)
-    const ethAmount = oSqueethAmount.times(clearingPrice)
+    const ethAmount = oSquFuryAmount.times(clearingPrice)
 
     return {
       ...tx,
       ethAmount,
-      oSqueethAmount,
+      oSquFuryAmount,
     }
   })
 

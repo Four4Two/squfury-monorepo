@@ -1,5 +1,5 @@
 import useAppMemo from '@hooks/useAppMemo'
-import { getBreakEvenForLongSqueeth, toTokenAmount } from '@utils/calculations'
+import { getBreakEvenForLongSquFury, toTokenAmount } from '@utils/calculations'
 import { useAtomValue } from 'jotai'
 import React from 'react'
 import { currentImpliedFundingAtom, indexAtom, markAtom, normFactorAtom } from 'src/state/controller/atoms'
@@ -13,7 +13,7 @@ const BreakEven: React.FC = () => {
   const currentFunding = useAtomValue(currentImpliedFundingAtom)
 
   const breakEven = useAppMemo(() => {
-    const breakEvenValue = getBreakEvenForLongSqueeth(mark, index, normFactor, days)
+    const breakEvenValue = getBreakEvenForLongSquFury(mark, index, normFactor, days)
     const ethPrice = toTokenAmount(index, 18).sqrt()
     return (breakEvenValue / ethPrice.toNumber() - 1) * 100
   }, [index, mark, normFactor])

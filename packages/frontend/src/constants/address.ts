@@ -20,7 +20,7 @@ export const VAULT_MANAGER: Address = {
 }
 
 //WPowerPerp
-export const OSQUEETH: Address = {
+export const OSQUFURY: Address = {
   1: '0xf1B99e3E573A1a9C5E6B2Ce818b617F0E664E86B',
   3: '0xa4222f78d23593e82Aa74742d25D06720DCa4ab7',
   5: '0x9421c968d28dd789363fbd8c9aa5cf2090f0a656',
@@ -69,7 +69,7 @@ export const SWAP_ROUTER_02: Address = {
   31337: '',
 }
 
-export const SQUEETH_UNI_POOL: Address = {
+export const SQUFURY_UNI_POOL: Address = {
   1: '0x82c427AdFDf2d245Ec51D8046b41c4ee87F0d29C',
   3: '0x921c384F79de1BAe96d6f33E3E5b8d0B2B34cb68',
   5: '0xc3c29372b5138d48993f0699a129b9eadf5191bf',

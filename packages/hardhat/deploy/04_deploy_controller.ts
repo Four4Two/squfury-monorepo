@@ -13,13 +13,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // Load contracts
   const oracle = await ethers.getContract("Oracle", deployer);
-  const shortSqueeth = await ethers.getContract("ShortPowerPerp", deployer);
-  const wsqueeth = await ethers.getContract("WPowerPerp", deployer);
+  const shortSquFury = await ethers.getContract("ShortPowerPerp", deployer);
+  const wsqufury = await ethers.getContract("WPowerPerp", deployer);
   const weth9 = await getWETH(ethers, deployer, network.name)
   const usdc = await getUSDC(ethers, deployer, network.name)
   const { uniswapFactory, positionManager } = await getUniswapDeployments(ethers, deployer, network.name)
   const ethUSDCPool = await getPoolAddress(weth9, usdc, uniswapFactory)
-  const squeethEthPool = await getPoolAddress(weth9, wsqueeth, uniswapFactory)
+  const squfuryEthPool = await getPoolAddress(weth9, wsqufury, uniswapFactory)
 
   if (network.name === 'goerli' || network.name === 'mainnet') return
 
@@ -34,21 +34,21 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const sqrtPriceMathPartial = await ethers.getContract("SqrtPriceMathPartial", deployer)
 
   // deploy controller
-  const controllerArgs = [oracle.address, shortSqueeth.address, wsqueeth.address, weth9.address, usdc.address, ethUSDCPool, squeethEthPool, positionManager.address, feeTier]
+  const controllerArgs = [oracle.address, shortSquFury.address, wsqufury.address, weth9.address, usdc.address, ethUSDCPool, squfuryEthPool, positionManager.address, feeTier]
   await deploy("Controller", { from: deployer, log: true, libraries: { ABDKMath64x64: abdk.address, SqrtPriceMathPartial: sqrtPriceMathPartial.address, TickMathExternal: tickMathExternal.address }, args: controllerArgs });
   createArgumentFile('Controller', network.name, controllerArgs)
   const controller = await ethers.getContract("Controller", deployer);
 
   try {
-    const tx = await wsqueeth.init(controller.address, { from: deployer });
+    const tx = await wsqufury.init(controller.address, { from: deployer });
     await ethers.provider.waitForTransaction(tx.hash, 1)
-    console.log(`Squeeth init done 🍋`);
+    console.log(`SquFury init done 🍋`);
   } catch (error) {
-    console.log(`Squeeth already init or wrong deployer address.`)
+    console.log(`SquFury already init or wrong deployer address.`)
   }
 
   try {
-    const tx = await shortSqueeth.init(controller.address, { from: deployer });
+    const tx = await shortSquFury.init(controller.address, { from: deployer });
     await ethers.provider.waitForTransaction(tx.hash, 1)
     console.log(`ShortPowerPerp init done 🥭`);
   } catch (error) {

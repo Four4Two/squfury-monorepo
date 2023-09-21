@@ -6,7 +6,7 @@ import clsx from 'clsx'
 import Image from 'next/image'
 import isBefore from 'date-fns/isBefore'
 
-import { SQUEETH_BASE_URL, BULL_START_DATE, CRABV2_START_DATE } from '@constants/index'
+import { SQUFURY_BASE_URL, BULL_START_DATE, CRABV2_START_DATE } from '@constants/index'
 import Nav from '@components/Nav'
 import { formatNumber } from '@utils/formatter'
 
@@ -192,7 +192,7 @@ const SharePnl = ({ strategy, depositedAt, pnl }: SharePnlProps) => {
 
   const title = isCrab ? 'Opyn Crab Strategy - Stack USDC' : 'Opyn Zen Bull Strategy - Stack ETH'
   const description = isCrab ? 'Stack USDC when ETH is flat' : 'Stack ETH when ETH increases slow and steady'
-  const ogImageUrl = SQUEETH_BASE_URL + '/api/pnl?strategy=' + strategy + '&depositedAt=' + depositedAt + '&pnl=' + pnl
+  const ogImageUrl = SQUFURY_BASE_URL + '/api/pnl?strategy=' + strategy + '&depositedAt=' + depositedAt + '&pnl=' + pnl
 
   const depositDate = new Date(depositedAt * 1000)
   const startTimestamp = getStartTimestamp(strategy, depositDate)
@@ -202,7 +202,7 @@ const SharePnl = ({ strategy, depositedAt, pnl }: SharePnlProps) => {
       <NextSeo
         title={title}
         description={description}
-        canonical={SQUEETH_BASE_URL}
+        canonical={SQUFURY_BASE_URL}
         openGraph={{
           type: 'website',
           images: [

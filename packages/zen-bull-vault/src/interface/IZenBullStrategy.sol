@@ -11,7 +11,7 @@ interface IZenBullStrategy {
         uint256 _crabAmount,
         uint256 _bullShare,
         uint256 _ethInCrab,
-        uint256 _squeethInCrab,
+        uint256 _squfuryInCrab,
         uint256 _crabTotalSupply
     ) external view returns (uint256, uint256);
     function calcUsdcToRepay(uint256 _bullShare) external view returns (uint256);

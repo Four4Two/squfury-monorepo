@@ -11,7 +11,7 @@ const { formatEther, parseEther } = utils
  */
 task("addWethLiquidity", "Add liquidity to WETH/DAI pool")
   .addParam('wethAmount', 'amount weth', '0.5', types.string)
-  .addParam('basePrice', 'estimated wsqueeth/weth price', 3000, types.int)
+  .addParam('basePrice', 'estimated wsqufury/weth price', 3000, types.int)
   .setAction(async ({
     wethAmount,
     basePrice
@@ -63,7 +63,7 @@ task("addWethLiquidity", "Add liquidity to WETH/DAI pool")
     await ethers.provider.waitForTransaction(tx.hash, 1)
   }
 
-  // approve weth and wsqueeth to be used by position manager
+  // approve weth and wsqufury to be used by position manager
   const wethAllowance = await weth.allowance(deployer, positionManager.address)
   if (wethAllowance.lt(wethLiquidityAmount)) {
     console.log(`Approving weth...`)
@@ -79,7 +79,7 @@ task("addWethLiquidity", "Add liquidity to WETH/DAI pool")
   }
   
   const minWeth = 0
-  const minSqueeth = 0
+  const minSquFury = 0
 
   const mintParam = {
     token0,
@@ -89,8 +89,8 @@ task("addWethLiquidity", "Add liquidity to WETH/DAI pool")
     tickUpper: 887220,// int24 max tick used when selecting full range
     amount0Desired: isWethToken0 ? wethLiquidityAmount : usdcLiquidityAmount,
     amount1Desired: isWethToken0 ? usdcLiquidityAmount : wethLiquidityAmount,
-    amount0Min: isWethToken0 ? minWeth : minSqueeth,
-    amount1Min: isWethToken0 ? minSqueeth : minWeth,
+    amount0Min: isWethToken0 ? minWeth : minSquFury,
+    amount1Min: isWethToken0 ? minSquFury : minWeth,
     recipient: deployer,// address
     deadline: Math.floor(Date.now() / 1000 + 86400),// uint256
   }

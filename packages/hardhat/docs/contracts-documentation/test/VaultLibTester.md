@@ -2,7 +2,7 @@
 
 ## All Functions:
 
-- `getUniPositionBalances(address _positionManager, uint256 _tokenId, int24 _squeethPoolTick, bool _isWethToken0)`
+- `getUniPositionBalances(address _positionManager, uint256 _tokenId, int24 _squfuryPoolTick, bool _isWethToken0)`
 
 - `getLiquidity(uint160 sqrtRatioX96, int24 tickA, int24 tickB, uint256 amount0Desired, uint256 amount1Desired)`
 
@@ -14,7 +14,7 @@
 
 # Functions
 
-## `getUniPositionBalances(address _positionManager, uint256 _tokenId, int24 _squeethPoolTick, bool _isWethToken0) → uint256 ethAmount, uint256 squeethAmount`
+## `getUniPositionBalances(address _positionManager, uint256 _tokenId, int24 _squfuryPoolTick, bool _isWethToken0) → uint256 ethAmount, uint256 squfuryAmount`
 
 ## `getLiquidity(uint160 sqrtRatioX96, int24 tickA, int24 tickB, uint256 amount0Desired, uint256 amount1Desired) → uint128 liquidity`
 

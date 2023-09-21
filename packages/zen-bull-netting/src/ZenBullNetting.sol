@@ -44,7 +44,7 @@ import { NettingLib } from "./NettingLib.sol";
  * ZBN20: sell order price greater than clearing
  * ZBN21: auction order is not buying
  * ZBN22: buy order price greater than clearing
- * ZBN23: not enough buy orders for sqth
+ * ZBN23: not enough buy orders for sqfu
  * ZBN24: not authorized to perform netting at price
  */
 
@@ -83,16 +83,16 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
 
     /// @dev WETH token address
     address private immutable weth;
-    /// @dev oSQTH token address
-    address private immutable oSqth;
+    /// @dev oSQFU token address
+    address private immutable oSqfu;
     /// @dev USDC token address
     address private immutable usdc;
     /// @dev ZenBull token address
     address private immutable zenBull;
     /// @dev WPowerPerp Oracle address
     address private immutable oracle;
-    /// @dev ETH/oSQTH uniswap v3 pool address
-    address private immutable ethSqueethPool;
+    /// @dev ETH/oSQFU uniswap v3 pool address
+    address private immutable ethSquFuryPool;
     /// @dev ETH/USDC uniswap v3 pool address
     address private immutable ethUsdcPool;
     /// @dev Euler Simple Lens contract address
@@ -150,14 +150,14 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
         uint256 depositsToProcess;
         /// @dev Crab amount to deposit into ZenBull
         uint256 crabAmount;
-        /// @dev orders to buy sqth
+        /// @dev orders to buy sqfu
         Order[] orders;
-        /// @dev price from the auction to sell sqth
+        /// @dev price from the auction to sell sqfu
         uint256 clearingPrice;
         /// @dev amount to deposit into crab in ZenBull flash deposit
         uint256 flashDepositEthToCrab;
-        /// @dev min ETH to get from oSQTH in ZenBull flash deposit
-        uint256 flashDepositMinEthFromSqth;
+        /// @dev min ETH to get from oSQFU in ZenBull flash deposit
+        uint256 flashDepositMinEthFromSqfu;
         /// @dev min ETH to get from USDC in ZenBull flash deposit
         uint256 flashDepositMinEthFromUsdc;
         /// @dev uniswap weth/wPowerPerp pool fee ZenBull flash deposit
@@ -170,9 +170,9 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
     struct WithdrawAuctionParams {
         /// @dev amont of bull to queue for withdrawal
         uint256 withdrawsToProcess;
-        /// @dev orders that sell oSqth to the auction
+        /// @dev orders that sell oSqfu to the auction
         Order[] orders;
-        /// @dev price that the auction pays for the purchased oSqth
+        /// @dev price that the auction pays for the purchased oSqfu
         uint256 clearingPrice;
         /// @dev max WETH to pay for flashswapped USDC
         uint256 maxWethForUsdc;
@@ -185,7 +185,7 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
         uint256 currentZenBullBalance;
         uint256 remainingEth;
         uint256 remainingDeposits;
-        uint256 oSqthBalance;
+        uint256 oSqfuBalance;
     }
 
     event SetMinZenBullAmount(uint256 oldAmount, uint256 newAmount);
@@ -234,29 +234,29 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
         uint256 wethDeposited,
         uint256 crabAmount,
         uint256 clearingPrice,
-        uint256 oSqthAmount,
+        uint256 oSqfuAmount,
         uint256 depositsIndex
     );
     event WithdrawAuction(
-        uint256 zenBullWithdrawn, uint256 clearingPrice, uint256 oSqthAmount, uint256 withdrawsIndex
+        uint256 zenBullWithdrawn, uint256 clearingPrice, uint256 oSqfuAmount, uint256 withdrawsIndex
     );
     event CancelNonce(address trader, uint256 nonce);
     /// @dev shared events with the NettingLib for client side to detect them
     event TransferWethFromMarketMakers(
         address indexed trader, uint256 quantity, uint256 wethAmount, uint256 clearingPrice
     );
-    event TransferOsqthToMarketMakers(
-        address indexed trader, uint256 bidId, uint256 quantity, uint256 remainingOsqthBalance
+    event TransferOsqfuToMarketMakers(
+        address indexed trader, uint256 bidId, uint256 quantity, uint256 remainingOsqfuBalance
     );
-    event TransferOsqthFromMarketMakers(
-        address indexed trader, uint256 quantity, uint256 oSqthRemaining
+    event TransferOsqfuFromMarketMakers(
+        address indexed trader, uint256 quantity, uint256 oSqfuRemaining
     );
     event TransferWethToMarketMaker(
         address indexed trader,
         uint256 bidId,
         uint256 quantity,
         uint256 wethAmount,
-        uint256 oSqthRemaining,
+        uint256 oSqfuRemaining,
         uint256 clearingPrice
     );
 
@@ -273,17 +273,17 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
         eulerLens = _eulerSimpleLens;
         weth = IController(IZenBullStrategy(_zenBull).powerTokenController()).weth();
         oracle = IController(IZenBullStrategy(_zenBull).powerTokenController()).oracle();
-        ethSqueethPool =
+        ethSquFuryPool =
             IController(IZenBullStrategy(_zenBull).powerTokenController()).wPowerPerpPool();
         ethUsdcPool =
             IController(IZenBullStrategy(_zenBull).powerTokenController()).ethQuoteCurrencyPool();
         usdc = IController(IZenBullStrategy(_zenBull).powerTokenController()).quoteCurrency();
-        oSqth = IController(IZenBullStrategy(_zenBull).powerTokenController()).wPowerPerp();
+        oSqfu = IController(IZenBullStrategy(_zenBull).powerTokenController()).wPowerPerp();
         crab = IZenBullStrategy(zenBull).crab();
         flashZenBull = _flashZenBull;
 
         IERC20(usdc).approve(_zenBull, type(uint256).max);
-        IERC20(oSqth).approve(_zenBull, type(uint256).max);
+        IERC20(oSqfu).approve(_zenBull, type(uint256).max);
         IERC20(crab).approve(_zenBull, type(uint256).max);
     }
 
@@ -580,7 +580,7 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
 
     /**
      * @notice auction for queued deposits
-     * @dev takes in orders from MM's to buy oSQTH
+     * @dev takes in orders from MM's to buy oSQFU
      * @param _params deposit Params
      */
     function depositAuction(DepositAuctionParams calldata _params) external onlyOwner {
@@ -588,8 +588,8 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
 
         uint256 initialZenBullBalance = IERC20(zenBull).balanceOf(address(this));
         uint256 initialEthBalance = address(this).balance;
-        (uint256 oSqthToMint, uint256 ethIntoCrab) =
-            NettingLib.calcOsqthToMintAndEthIntoCrab(crab, zenBull, _params.crabAmount);
+        (uint256 oSqfuToMint, uint256 ethIntoCrab) =
+            NettingLib.calcOsqfuToMintAndEthIntoCrab(crab, zenBull, _params.crabAmount);
 
         // get WETH from MM
         for (uint256 i = 0; i < _params.orders.length; i++) {
@@ -600,16 +600,16 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
             _useNonce(_params.orders[i].trader, _params.orders[i].nonce);
 
             bool shouldBreak;
-            (shouldBreak, oSqthToMint) = NettingLib.transferWethFromMarketMakers(
+            (shouldBreak, oSqfuToMint) = NettingLib.transferWethFromMarketMakers(
                 weth,
                 _params.orders[i].trader,
                 _params.orders[i].quantity,
-                oSqthToMint,
+                oSqfuToMint,
                 _params.clearingPrice
             );
             if (shouldBreak) break;
         }
-        require(oSqthToMint == 0, "ZBN23");
+        require(oSqfuToMint == 0, "ZBN23");
 
         {
             // deposit into crab
@@ -644,7 +644,7 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
             if (memVar.remainingEth > 0 && _params.flashDepositEthToCrab > 0) {
                 IFlashZen.FlashDepositParams memory params = IFlashZen.FlashDepositParams({
                     ethToCrab: _params.flashDepositEthToCrab,
-                    minEthFromSqth: _params.flashDepositMinEthFromSqth,
+                    minEthFromSqfu: _params.flashDepositMinEthFromSqfu,
                     minEthFromUsdc: _params.flashDepositMinEthFromUsdc,
                     wPowerPerpPoolFee: _params.flashDepositWPowerPerpPoolFee,
                     usdcPoolFee: _params.wethUsdcPoolFee
@@ -654,15 +654,15 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
             }
         }
 
-        // send oSqth to market makers
-        memVar.oSqthBalance = IERC20(oSqth).balanceOf(address(this));
+        // send oSqfu to market makers
+        memVar.oSqfuBalance = IERC20(oSqfu).balanceOf(address(this));
         for (uint256 i = 0; i < _params.orders.length; i++) {
             bool shouldBreak;
-            (shouldBreak, memVar.oSqthBalance) = NettingLib.transferOsqthToMarketMakers(
-                oSqth,
+            (shouldBreak, memVar.oSqfuBalance) = NettingLib.transferOsqfuToMarketMakers(
+                oSqfu,
                 _params.orders[i].trader,
                 _params.orders[i].bidId,
-                memVar.oSqthBalance,
+                memVar.oSqfuBalance,
                 _params.orders[i].quantity
             );
             if (shouldBreak) break;
@@ -743,24 +743,24 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
             _params.depositsToProcess,
             _params.crabAmount,
             _params.clearingPrice,
-            memVar.oSqthBalance,
+            memVar.oSqfuBalance,
             k
         );
     }
 
     /**
      * @notice auction for queued withdraws
-     * @dev takes in orders from MM's to sell oSQTH
+     * @dev takes in orders from MM's to sell oSQFU
      * @param _params withdraw Params
      */
     function withdrawAuction(WithdrawAuctionParams calldata _params) external onlyOwner {
         _checkOTCPrice(_params.clearingPrice, true);
 
         uint256 initialEthBalance = address(this).balance;
-        uint256 oSqthAmount = NettingLib.calcOsqthAmount(zenBull, crab, _params.withdrawsToProcess);
+        uint256 oSqfuAmount = NettingLib.calcOsqfuAmount(zenBull, crab, _params.withdrawsToProcess);
 
-        // get oSQTH from market makers orders
-        uint256 toExchange = oSqthAmount;
+        // get oSQFU from market makers orders
+        uint256 toExchange = oSqfuAmount;
         for (uint256 i = 0; i < _params.orders.length && toExchange > 0; i++) {
             _checkOrder(_params.orders[i]);
             _useNonce(_params.orders[i].trader, _params.orders[i].nonce);
@@ -768,8 +768,8 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
             require(!_params.orders[i].isBuying, "ZBN19");
             require(_params.orders[i].price <= _params.clearingPrice, "ZBN20");
 
-            toExchange = NettingLib.transferOsqthFromMarketMakers(
-                oSqth, _params.orders[i].trader, toExchange, _params.orders[i].quantity
+            toExchange = NettingLib.transferOsqfuFromMarketMakers(
+                oSqfu, _params.orders[i].trader, toExchange, _params.orders[i].quantity
             );
         }
 
@@ -791,7 +791,7 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
 
         // send WETH to market makers
         IWETH(weth).deposit{ value: address(this).balance - initialEthBalance }();
-        toExchange = oSqthAmount;
+        toExchange = oSqfuAmount;
         for (uint256 i = 0; i < _params.orders.length && toExchange > 0; i++) {
             toExchange = NettingLib.transferWethToMarketMaker(
                 weth,
@@ -849,7 +849,7 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
         withdrawsIndex = j;
         isAuctionLive = false;
 
-        emit WithdrawAuction(_params.withdrawsToProcess, _params.clearingPrice, oSqthAmount, j);
+        emit WithdrawAuction(_params.withdrawsToProcess, _params.clearingPrice, oSqfuAmount, j);
     }
 
     /**
@@ -967,7 +967,7 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
      */
     function _getZenBullPrice() internal view returns (uint256) {
         (uint256 crabFairPriceInEth, uint256 ethUsdcPrice) = NettingLib.getCrabPrice(
-            oracle, crab, ethUsdcPool, ethSqueethPool, oSqth, usdc, weth, zenBull, auctionTwapPeriod
+            oracle, crab, ethUsdcPool, ethSquFuryPool, oSqfu, usdc, weth, zenBull, auctionTwapPeriod
         );
 
         return NettingLib.getZenBullPrice(
@@ -978,17 +978,17 @@ contract ZenBullNetting is Ownable, EIP712, FlashSwap {
     /**
      * @notice check that the proposed sale price is within a tolerance of the current Uniswap twap
      * @param _price clearing price provided by manager
-     * @param _isAuctionBuying is auction buying or selling oSQTH
+     * @param _isAuctionBuying is auction buying or selling oSQFU
      */
     function _checkOTCPrice(uint256 _price, bool _isAuctionBuying) internal view {
         // Get twap
-        uint256 squeethEthPrice =
-            IOracle(oracle).getTwap(ethSqueethPool, oSqth, weth, auctionTwapPeriod, false);
+        uint256 squfuryEthPrice =
+            IOracle(oracle).getTwap(ethSquFuryPool, oSqfu, weth, auctionTwapPeriod, false);
 
         if (_isAuctionBuying) {
-            require(_price <= (squeethEthPrice * (1e18 + otcPriceTolerance)) / 1e18, "ZBN14");
+            require(_price <= (squfuryEthPrice * (1e18 + otcPriceTolerance)) / 1e18, "ZBN14");
         } else {
-            require(_price >= (squeethEthPrice * (1e18 - otcPriceTolerance)) / 1e18, "ZBN15");
+            require(_price >= (squfuryEthPrice * (1e18 - otcPriceTolerance)) / 1e18, "ZBN15");
         }
     }
 

@@ -104,11 +104,11 @@ const History: React.FC = () => {
                           : classes.red
                       }
                     >
-                      {tx.squeethAmount.toFixed(8)}&nbsp; oSQTH
+                      {tx.squfuryAmount.toFixed(8)}&nbsp; oSQFU
                     </Typography>
                     <Typography variant="caption" color="textSecondary">
                       $
-                      {tx.squeethAmount
+                      {tx.squfuryAmount
                         .times(ethPrice)
                         .times(ethPrice)
                         .div(10000)

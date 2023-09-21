@@ -1,13 +1,13 @@
 import React from 'react'
 import { NextSeo } from 'next-seo'
-import { SiteMetaDescription, SiteMetaImage, SiteMetaTitle, SQUEETH_BASE_URL } from '@constants/index'
+import { SiteMetaDescription, SiteMetaImage, SiteMetaTitle, SQUFURY_BASE_URL } from '@constants/index'
 
 const DefaultSiteSeo: React.FC = () => {
   return (
     <NextSeo
       title={SiteMetaTitle}
       description={SiteMetaDescription}
-      canonical={SQUEETH_BASE_URL}
+      canonical={SQUFURY_BASE_URL}
       openGraph={{
         images: [
           {

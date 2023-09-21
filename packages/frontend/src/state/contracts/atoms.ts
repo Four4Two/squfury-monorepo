@@ -72,11 +72,11 @@ export const swapRouter2ContractAtom = atom<Contract | null>((get) => {
   return getContract(web3, swapRouter2, routerABI)
 })
 
-export const squeethPoolContractAtom = atom<Contract | null>((get) => {
+export const squfuryPoolContractAtom = atom<Contract | null>((get) => {
   const web3 = get(web3Atom)
-  const { squeethPool } = get(addressesAtom)
+  const { squfuryPool } = get(addressesAtom)
   if (!web3) return null
-  return getContract(web3, squeethPool, uniABI)
+  return getContract(web3, squfuryPool, uniABI)
 })
 
 export const shortHelperContractAtom = atom<Contract | null>((get) => {

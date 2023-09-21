@@ -7,8 +7,8 @@
      4. Browser: Default is Chrome
         1. Can test with firefox or chromium-based browsers as well, but will need to change the command in `package.json` ,
      5. Test websites
-        1. squeeth, at `localhost:3000`
-        2. uniswap lp page to lp oSQTH
+        1. squfury, at `localhost:3000`
+        2. uniswap lp page to lp oSQFU
   2. Test setup
 
      1. Make sure `synpress` and `dotenv-cli` packages are installed successfully with `package.json`
@@ -23,8 +23,8 @@
         NETWORK_NAME = ropsten
         ```
 
-     3. If you want to test with squeeth website, set `baseUrl` in `cypress.json` as `"baseUrl": "http://localhost:3000",`
-     4. if you want to test lp, set `baseUrl` in `cypress.json` as `"baseUrl": "https://squeeth-uniswap.netlify.app/#/add/ETH/0xa4222f78d23593e82Aa74742d25D06720DCa4ab7/3000",`
+     3. If you want to test with squfury website, set `baseUrl` in `cypress.json` as `"baseUrl": "http://localhost:3000",`
+     4. if you want to test lp, set `baseUrl` in `cypress.json` as `"baseUrl": "https://squfury-uniswap.netlify.app/#/add/ETH/0xa4222f78d23593e82Aa74742d25D06720DCa4ab7/3000",`
      5. Recommended to clear your existing position before you run the tests, otherwise it may be hard to tell if the test fails because of the existing position or the new position
      6. Run `yarn run build` and `yarn start` , dont use `yarn dev` , cuz it will have warning pop-ups hiding some DOM elements
      7. **Recommended**: if you only want to test one page or related functionalities or the functionalities you changed, plz specify the tests file you would like to include, it will run only provided spec files, i.e.

@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme) =>
     confMsg: {
       marginTop: theme.spacing(1),
     },
-    squeethCat: {
+    squfuryCat: {
       marginTop: theme.spacing(6),
       marginBottom: theme.spacing(6),
     },

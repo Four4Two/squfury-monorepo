@@ -22,7 +22,7 @@ import { isLPAtom, positionTypeAtom, swapsAtom, isToHidePnLAtom } from 'src/stat
 import {
   actualTradeTypeAtom,
   isOpenPositionAtom,
-  sqthTradeAmountAtom,
+  sqfuTradeAmountAtom,
   tradeCompletedAtom,
   tradeSuccessAtom,
   tradeTypeAtom,
@@ -228,7 +228,7 @@ const PositionCard: React.FC = () => {
   const { startPolling, stopPolling } = useSwaps()
   const swapsData = useAtomValue(swapsAtom)
   const swaps = swapsData.swaps
-  const { squeethAmount } = useComputeSwaps()
+  const { squfuryAmount } = useComputeSwaps()
   const { validVault: vault, vaultId } = useFirstValidVault()
   const { existingCollat } = useVaultData(vault)
   const { loading: isPositionLoading } = useLPPositionsQuery()
@@ -241,7 +241,7 @@ const PositionCard: React.FC = () => {
   const shortRealizedPNL = useShortRealizedPnl()
   const { liquidations } = useVaultLiquidations(Number(vaultId))
   const actualTradeType = useAtomValue(actualTradeTypeAtom)
-  const tradeAmountInput = useAtomValue(sqthTradeAmountAtom)
+  const tradeAmountInput = useAtomValue(sqfuTradeAmountAtom)
   const tradeType = useAtomValue(tradeTypeAtom)
   const prevSwapsData = usePrevious(swaps)
   const tradeAmount = useAppMemo(() => new BigNumber(tradeAmountInput), [tradeAmountInput])
@@ -308,16 +308,16 @@ const PositionCard: React.FC = () => {
     let _postPosition = PositionType.NONE
     if (actualTradeType === TradeType.LONG && positionType !== PositionType.SHORT) {
       if (isOpenPosition) {
-        _postTradeAmt = squeethAmount.plus(tradeAmount)
+        _postTradeAmt = squfuryAmount.plus(tradeAmount)
       } else {
-        _postTradeAmt = squeethAmount.minus(tradeAmount)
+        _postTradeAmt = squfuryAmount.minus(tradeAmount)
       }
       if (_postTradeAmt.gt(0)) _postPosition = PositionType.LONG
     } else if (actualTradeType === TradeType.SHORT && positionType !== PositionType.LONG) {
       if (isOpenPosition) {
-        _postTradeAmt = squeethAmount.isGreaterThan(0) ? squeethAmount.plus(tradeAmount) : tradeAmount
+        _postTradeAmt = squfuryAmount.isGreaterThan(0) ? squfuryAmount.plus(tradeAmount) : tradeAmount
       } else {
-        _postTradeAmt = squeethAmount.isGreaterThan(0) ? squeethAmount.minus(tradeAmount) : new BigNumber(0)
+        _postTradeAmt = squfuryAmount.isGreaterThan(0) ? squfuryAmount.minus(tradeAmount) : new BigNumber(0)
       }
       if (_postTradeAmt.gt(0)) {
         _postPosition = PositionType.SHORT
@@ -326,7 +326,7 @@ const PositionCard: React.FC = () => {
 
     setPostTradeAmt(_postTradeAmt)
     setPostPosition(_postPosition)
-  }, [actualTradeType, isOpenPosition, isPositionLoading, positionType, squeethAmount, tradeAmount])
+  }, [actualTradeType, isOpenPosition, isPositionLoading, positionType, squfuryAmount, tradeAmount])
 
   const pnlLoading = useAppMemo(() => {
     if (positionType === PositionType.LONG) {
@@ -370,7 +370,7 @@ const PositionCard: React.FC = () => {
               value={
                 <div className={classes.postAmount}>
                   <Typography component="span" className={classes.amountText} id="position-card-positive-value">
-                    0 oSQTH
+                    0 oSQFU
                   </Typography>
                   <Typography component="span" className={clsx(classes.amountText, classes.positionUsdValue)}>
                     {Number(0).toFixed(2)}%
@@ -406,7 +406,7 @@ const PositionCard: React.FC = () => {
                 <div className={classes.postAmount}>
                   <Box display="flex" alignItems="center" gridGap="4px">
                     <Typography component="span" className={classes.amountText} id="position-card-before-trade-balance">
-                      {getPositionBasedValue(squeethAmount.toFixed(6), squeethAmount.toFixed(6), '0', '0')}
+                      {getPositionBasedValue(squfuryAmount.toFixed(6), squfuryAmount.toFixed(6), '0', '0')}
                     </Typography>
 
                     {(tradeType === TradeType.SHORT && positionType === PositionType.LONG) ||
@@ -421,7 +421,7 @@ const PositionCard: React.FC = () => {
                           className={classes.amountText}
                           id="position-card-post-trade-balance"
                           style={{
-                            color: postTradeAmt.gte(getPositionBasedValue(squeethAmount, squeethAmount, 0))
+                            color: postTradeAmt.gte(getPositionBasedValue(squfuryAmount, squfuryAmount, 0))
                               ? '#49D273'
                               : '#f5475c',
                           }}
@@ -432,7 +432,7 @@ const PositionCard: React.FC = () => {
                     )}
                   </Box>
                   <Typography component="span" className={clsx(classes.amountText, classes.amountUnit)} variant="body2">
-                    oSQTH
+                    oSQFU
                   </Typography>
 
                   {!isDollarValueLoading && (

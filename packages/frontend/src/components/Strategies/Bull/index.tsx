@@ -78,7 +78,7 @@ const Bull: React.FC = () => {
       <div className={classes.topAlert}>
         <Alert severity="warning">
           <Typography style={{ fontSize: '15px', fontWeight: 500 }}>
-            Zen Bull has been impacted by the Euler Finance exploit. All other Squeeth contracts are unaffected. Please{' '}
+            Zen Bull has been impacted by the Euler Finance exploit. All other SquFury contracts are unaffected. Please{' '}
             <Link
               style={{ fontSize: '15px', fontWeight: 500 }}
               target="_blank"

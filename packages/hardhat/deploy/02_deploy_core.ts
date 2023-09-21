@@ -9,11 +9,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts();
   await deploy("Oracle", { from: deployer, log: true, skipIfAlreadyDeployed: true });
 
-  const shortPowerPerpArgs = ['short Squeeth', 'sSQTH']
+  const shortPowerPerpArgs = ['short SquFury', 'sSQFU']
   await deploy("ShortPowerPerp", { from: deployer, log: true, args: shortPowerPerpArgs, skipIfAlreadyDeployed: true });
   createArgumentFile('ShortPowerPerp', network.name, shortPowerPerpArgs)
 
-  const wPowerPerpArgs = ['Opyn Squeeth', 'oSQTH']
+  const wPowerPerpArgs = ['Opyn SquFury', 'oSQFU']
   await deploy("WPowerPerp", { from: deployer, log: true, args: wPowerPerpArgs, skipIfAlreadyDeployed: true });
   createArgumentFile('WPowerPerp', network.name, wPowerPerpArgs)
 }

@@ -32,7 +32,7 @@ struct Order {
 struct Portion {
     uint256 crab;
     uint256 eth;
-    uint256 sqth;
+    uint256 sqfu;
 }
 
 /// @dev params for deposit auction
@@ -41,17 +41,17 @@ struct DepositAuctionParams {
     uint256 depositsQueued;
     /// @dev minETH equivalent to get from uniswap of the USDC to deposit
     uint256 minEth;
-    /// @dev total ETH to deposit after selling the minted SQTH
+    /// @dev total ETH to deposit after selling the minted SQFU
     uint256 totalDeposit;
-    /// @dev orders to buy sqth
+    /// @dev orders to buy sqfu
     Order[] orders;
-    /// @dev price from the auction to sell sqth
+    /// @dev price from the auction to sell sqfu
     uint256 clearingPrice;
     /// @dev remaining ETH to flashDeposit
     uint256 ethToFlashDeposit;
     /// @dev fee to pay uniswap for ethUSD swap
     uint24 ethUSDFee;
-    /// @dev fee to pay uniswap for sqthETH swap
+    /// @dev fee to pay uniswap for sqfuETH swap
     uint24 flashDepositFee;
 }
 
@@ -59,9 +59,9 @@ struct DepositAuctionParams {
 struct WithdrawAuctionParams {
     /// @dev amont of crab to queue for withdrawal
     uint256 crabToWithdraw;
-    /// @dev orders that sell sqth to the auction
+    /// @dev orders that sell sqfu to the auction
     Order[] orders;
-    /// @dev price that the auction pays for the purchased sqth
+    /// @dev price that the auction pays for the purchased sqfu
     uint256 clearingPrice;
     /// @dev minUSDC to receive from swapping the ETH obtained by withdrawing
     uint256 minUSDC;
@@ -92,9 +92,9 @@ struct Receipt {
  * N9: signature incorrect
  * N10: order expired
  * N11: Min ETH out too low
- * N12: auction order not buying sqth
+ * N12: auction order not buying sqfu
  * N13: buy order price less than clearing
- * N14: not enough buy orders for sqth
+ * N14: not enough buy orders for sqfu
  * N15: auction order is not selling
  * N16: sell order price greater than clearing
  * N17: min USDC out too low
@@ -121,8 +121,8 @@ contract CrabNetting is Ownable, EIP712 {
     /// @dev owner sets to true when starting auction
     bool public isAuctionLive;
 
-    /// @dev sqth twap period
-    uint32 public immutable sqthTwapPeriod;
+    /// @dev sqfu twap period
+    uint32 public immutable sqfuTwapPeriod;
     /// @dev twap period to use for auction calculations
     uint32 public auctionTwapPeriod = 420 seconds;
 
@@ -141,7 +141,7 @@ contract CrabNetting is Ownable, EIP712 {
     address public immutable usdc;
     address public immutable crab;
     address public immutable weth;
-    address public immutable sqth;
+    address public immutable sqfu;
 
     /// @dev address for uniswap router
     ISwapRouter public immutable swapRouter;
@@ -149,14 +149,14 @@ contract CrabNetting is Ownable, EIP712 {
     /// @dev address for uniswap oracle
     address public immutable oracle;
 
-    /// @dev address for sqth eth pool
-    address public immutable ethSqueethPool;
+    /// @dev address for sqfu eth pool
+    address public immutable ethSquFuryPool;
 
     /// @dev address for usdc eth pool
     address public immutable ethUsdcPool;
 
-    /// @dev address for sqth controller
-    address public immutable sqthController;
+    /// @dev address for sqfu controller
+    address public immutable sqfuController;
 
     /// @dev array index of last processed deposits
     uint256 public depositsIndex;
@@ -231,17 +231,17 @@ contract CrabNetting is Ownable, EIP712 {
         crab = _crab;
         swapRouter = ISwapRouter(_swapRouter);
 
-        sqthController = ICrabStrategyV2(_crab).powerTokenController();
-        usdc = IController(sqthController).quoteCurrency();
+        sqfuController = ICrabStrategyV2(_crab).powerTokenController();
+        usdc = IController(sqfuController).quoteCurrency();
         weth = ICrabStrategyV2(_crab).weth();
-        sqth = ICrabStrategyV2(_crab).wPowerPerp();
+        sqfu = ICrabStrategyV2(_crab).wPowerPerp();
         oracle = ICrabStrategyV2(_crab).oracle();
-        ethSqueethPool = ICrabStrategyV2(_crab).ethWSqueethPool();
-        ethUsdcPool = IController(sqthController).ethQuoteCurrencyPool();
-        sqthTwapPeriod = IController(sqthController).TWAP_PERIOD();
+        ethSquFuryPool = ICrabStrategyV2(_crab).ethWSquFuryPool();
+        ethUsdcPool = IController(sqfuController).ethQuoteCurrencyPool();
+        sqfuTwapPeriod = IController(sqfuController).TWAP_PERIOD();
 
-        // approve crab and sqth so withdraw can happen
-        IERC20(sqth).approve(crab, type(uint256).max);
+        // approve crab and sqfu so withdraw can happen
+        IERC20(sqfu).approve(crab, type(uint256).max);
 
         IERC20(weth).approve(address(swapRouter), type(uint256).max);
         IERC20(usdc).approve(address(swapRouter), type(uint256).max);
@@ -530,18 +530,18 @@ contract CrabNetting is Ownable, EIP712 {
     }
 
     /**
-     * @dev calculates wSqueeth minted when amount is deposited
+     * @dev calculates wSquFury minted when amount is deposited
      * @param _amount to deposit into crab
      */
     function _debtToMint(uint256 _amount) internal view returns (uint256) {
         uint256 feeAdjustment = _calcFeeAdjustment();
         (,, uint256 collateral, uint256 debt) = ICrabStrategyV2(crab).getVaultDetails();
-        uint256 wSqueethToMint = (_amount * debt) / (collateral + (debt * feeAdjustment) / 1e18);
-        return wSqueethToMint;
+        uint256 wSquFuryToMint = (_amount * debt) / (collateral + (debt * feeAdjustment) / 1e18);
+        return wSquFuryToMint;
     }
 
     /**
-     * @dev takes in orders from mm's to buy sqth and deposits the usd amount from the depositQueue into crab along with the eth from selling sqth
+     * @dev takes in orders from mm's to buy sqfu and deposits the usd amount from the depositQueue into crab along with the eth from selling sqfu
      * @param _p DepositAuction Params that contain orders, usdToDeposit, uniswap min amount and fee
      */
     function depositAuction(DepositAuctionParams calldata _p) external onlyOwner {
@@ -553,15 +553,15 @@ contract CrabNetting is Ownable, EIP712 {
          *     step 2: get eth from deposit usdc
          *     step 3: crab deposit
          *     step 4: flash deposit
-         *     step 5: send sqth to mms
+         *     step 5: send sqfu to mms
          *     step 6: send crab to depositors
          */
         uint256 initCrabBalance = IERC20(crab).balanceOf(address(this));
         uint256 initEthBalance = address(this).balance;
 
-        uint256 sqthToSell = _debtToMint(_p.totalDeposit);
+        uint256 sqfuToSell = _debtToMint(_p.totalDeposit);
         // step 1 get all the eth in
-        uint256 remainingToSell = sqthToSell;
+        uint256 remainingToSell = sqfuToSell;
         for (uint256 i = 0; i < _p.orders.length; i++) {
             require(_p.orders[i].isBuying, "N12");
             require(_p.orders[i].price >= _p.clearingPrice, "N13");
@@ -610,15 +610,15 @@ contract CrabNetting is Ownable, EIP712 {
         }
 
         // step 5
-        to_send.sqth = IERC20(sqth).balanceOf(address(this));
-        remainingToSell = to_send.sqth;
+        to_send.sqfu = IERC20(sqfu).balanceOf(address(this));
+        remainingToSell = to_send.sqfu;
         for (uint256 j = 0; j < _p.orders.length; j++) {
             if (_p.orders[j].quantity < remainingToSell) {
-                IERC20(sqth).transfer(_p.orders[j].trader, _p.orders[j].quantity);
+                IERC20(sqfu).transfer(_p.orders[j].trader, _p.orders[j].quantity);
                 remainingToSell -= _p.orders[j].quantity;
                 emit BidTraded(_p.orders[j].bidId, _p.orders[j].trader, _p.orders[j].quantity, _p.clearingPrice, true);
             } else {
-                IERC20(sqth).transfer(_p.orders[j].trader, remainingToSell);
+                IERC20(sqfu).transfer(_p.orders[j].trader, remainingToSell);
                 emit BidTraded(_p.orders[j].bidId, _p.orders[j].trader, remainingToSell, _p.clearingPrice, true);
                 break;
             }
@@ -681,7 +681,7 @@ contract CrabNetting is Ownable, EIP712 {
     }
 
     /**
-     * @dev takes in orders from mm's to sell sqth and withdraws the crab amount in q
+     * @dev takes in orders from mm's to sell sqfu and withdraws the crab amount in q
      * @param _p Withdraw Params that contain orders, crabToWithdraw, uniswap min amount and fee
      */
     function withdrawAuction(WithdrawAuctionParams calldata _p) public onlyOwner {
@@ -689,16 +689,16 @@ contract CrabNetting is Ownable, EIP712 {
         uint256 initWethBalance = IERC20(weth).balanceOf(address(this));
         uint256 initEthBalance = address(this).balance;
         /**
-         * step 1: get sqth from mms
+         * step 1: get sqfu from mms
          *     step 2: withdraw from crab
          *     step 3: send eth to mms
          *     step 4: convert eth to usdc
          *     step 5: send usdc to withdrawers
          */
 
-        // step 1 get sqth from mms
-        uint256 sqthRequired = ICrabStrategyV2(crab).getWsqueethFromCrabAmount(_p.crabToWithdraw);
-        uint256 toPull = sqthRequired;
+        // step 1 get sqfu from mms
+        uint256 sqfuRequired = ICrabStrategyV2(crab).getWsqufuryFromCrabAmount(_p.crabToWithdraw);
+        uint256 toPull = sqfuRequired;
         for (uint256 i = 0; i < _p.orders.length && toPull > 0; i++) {
             _checkOrder(_p.orders[i]);
             _useNonce(_p.orders[i].trader, _p.orders[i].nonce);
@@ -706,9 +706,9 @@ contract CrabNetting is Ownable, EIP712 {
             require(_p.orders[i].price <= _p.clearingPrice, "N16");
             if (_p.orders[i].quantity < toPull) {
                 toPull -= _p.orders[i].quantity;
-                IERC20(sqth).transferFrom(_p.orders[i].trader, address(this), _p.orders[i].quantity);
+                IERC20(sqfu).transferFrom(_p.orders[i].trader, address(this), _p.orders[i].quantity);
             } else {
-                IERC20(sqth).transferFrom(_p.orders[i].trader, address(this), toPull);
+                IERC20(sqfu).transferFrom(_p.orders[i].trader, address(this), toPull);
                 toPull = 0;
             }
         }
@@ -718,17 +718,17 @@ contract CrabNetting is Ownable, EIP712 {
 
         // step 3 pay all mms
         IWETH(weth).deposit{value: address(this).balance - initEthBalance}();
-        toPull = sqthRequired;
-        uint256 sqthQuantity;
+        toPull = sqfuRequired;
+        uint256 sqfuQuantity;
         for (uint256 i = 0; i < _p.orders.length && toPull > 0; i++) {
             if (_p.orders[i].quantity < toPull) {
-                sqthQuantity = _p.orders[i].quantity;
+                sqfuQuantity = _p.orders[i].quantity;
             } else {
-                sqthQuantity = toPull;
+                sqfuQuantity = toPull;
             }
-            IERC20(weth).transfer(_p.orders[i].trader, (sqthQuantity * _p.clearingPrice) / 1e18);
-            toPull -= sqthQuantity;
-            emit BidTraded(_p.orders[i].bidId, _p.orders[i].trader, sqthQuantity, _p.clearingPrice, false);
+            IERC20(weth).transfer(_p.orders[i].trader, (sqfuQuantity * _p.clearingPrice) / 1e18);
+            toPull -= sqfuQuantity;
+            emit BidTraded(_p.orders[i].bidId, _p.orders[i].trader, sqfuQuantity, _p.clearingPrice, false);
         }
 
         // step 4 convert to USDC
@@ -837,36 +837,36 @@ contract CrabNetting is Ownable, EIP712 {
     /**
      * @notice check that the proposed sale price is within a tolerance of the current Uniswap twap
      * @param _price clearing price provided by manager
-     * @param _isAuctionBuying is crab buying or selling oSQTH
+     * @param _isAuctionBuying is crab buying or selling oSQFU
      */
     function _checkOTCPrice(uint256 _price, bool _isAuctionBuying) internal view {
         // Get twap
-        uint256 squeethEthPrice = IOracle(oracle).getTwap(ethSqueethPool, sqth, weth, auctionTwapPeriod, true);
+        uint256 squfuryEthPrice = IOracle(oracle).getTwap(ethSquFuryPool, sqfu, weth, auctionTwapPeriod, true);
 
         if (_isAuctionBuying) {
-            require(_price <= (squeethEthPrice * (1e18 + otcPriceTolerance)) / 1e18, "N21");
+            require(_price <= (squfuryEthPrice * (1e18 + otcPriceTolerance)) / 1e18, "N21");
         } else {
-            require(_price >= (squeethEthPrice * (1e18 - otcPriceTolerance)) / 1e18, "N22");
+            require(_price >= (squfuryEthPrice * (1e18 - otcPriceTolerance)) / 1e18, "N22");
         }
     }
 
     function _checkCrabPrice(uint256 _price) internal view {
         // Get twap
-        uint256 squeethEthPrice = IOracle(oracle).getTwap(ethSqueethPool, sqth, weth, auctionTwapPeriod, true);
+        uint256 squfuryEthPrice = IOracle(oracle).getTwap(ethSquFuryPool, sqfu, weth, auctionTwapPeriod, true);
         uint256 usdcEthPrice = IOracle(oracle).getTwap(ethUsdcPool, weth, usdc, auctionTwapPeriod, true);
         (,, uint256 collateral, uint256 debt) = ICrabStrategyV2(crab).getVaultDetails();
         uint256 crabFairPrice =
-            ((collateral - ((debt * squeethEthPrice) / 1e18)) * usdcEthPrice) / ICrabStrategyV2(crab).totalSupply();
+            ((collateral - ((debt * squfuryEthPrice) / 1e18)) * usdcEthPrice) / ICrabStrategyV2(crab).totalSupply();
         crabFairPrice = crabFairPrice / 1e12; //converting from units of 18 to 6
         require(_price <= (crabFairPrice * (1e18 + otcPriceTolerance)) / 1e18, "N23");
         require(_price >= (crabFairPrice * (1e18 - otcPriceTolerance)) / 1e18, "N24");
     }
 
     function _calcFeeAdjustment() internal view returns (uint256) {
-        uint256 feeRate = IController(sqthController).feeRate();
+        uint256 feeRate = IController(sqfuController).feeRate();
         if (feeRate == 0) return 0;
-        uint256 squeethEthPrice = IOracle(oracle).getTwap(ethSqueethPool, sqth, weth, sqthTwapPeriod, true);
-        return (squeethEthPrice * feeRate) / 10000;
+        uint256 squfuryEthPrice = IOracle(oracle).getTwap(ethSquFuryPool, sqfu, weth, sqfuTwapPeriod, true);
+        return (squfuryEthPrice * feeRate) / 10000;
     }
 
     receive() external payable {

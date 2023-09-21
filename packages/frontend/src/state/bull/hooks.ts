@@ -13,8 +13,8 @@ import useAppCallback from '@hooks/useAppCallback'
 import useAppMemo from '@hooks/useAppMemo'
 import { useOnChainETHPrice } from '@hooks/useETHPrice'
 import usePopup, { GenericErrorPopupConfig } from '@hooks/usePopup'
-import STRATEGY_QUERY from '@queries/squeeth/strategyQuery'
-import { strategyQuery, strategyQueryVariables } from '@queries/squeeth/__generated__/strategyQuery'
+import STRATEGY_QUERY from '@queries/squfury/strategyQuery'
+import { strategyQuery, strategyQueryVariables } from '@queries/squfury/__generated__/strategyQuery'
 import {
   auctionBullContractAtom,
   bullStrategyContractAtom,
@@ -27,12 +27,12 @@ import {
 import { indexAtom } from '@state/controller/atoms'
 import { crabStrategySlippageAtomV2, crabStrategyVaultAtomV2, crabTotalSupplyV2Atom } from '@state/crab/atoms'
 import { addressesAtom } from '@state/positions/atoms'
-import { squeethInitialPriceAtom } from '@state/squeethPool/atoms'
-import { useGetWSqueethPositionValueInETH } from '@state/squeethPool/hooks'
+import { squfuryInitialPriceAtom } from '@state/squfuryPool/atoms'
+import { useGetWSquFuryPositionValueInETH } from '@state/squfuryPool/hooks'
 import { addressAtom, networkIdAtom } from '@state/wallet/atoms'
 import { useHandleTransaction } from '@state/wallet/hooks'
 import { BULL_EVENTS } from '@utils/amplitude'
-import { squeethClient } from '@utils/apollo-client'
+import { squfuryClient } from '@utils/apollo-client'
 import { fromTokenAmount, getUSDCPoolFee, toTokenAmount } from '@utils/calculations'
 import { getExactIn, getExactOut } from '@utils/quoter'
 import BigNumber from 'bignumber.js'
@@ -79,7 +79,7 @@ export const useInitBullStrategy = () => {
   const { data, loading } = useQuery<strategyQuery, strategyQueryVariables>(STRATEGY_QUERY, {
     variables: { strategyId: auctionBull },
     fetchPolicy: 'cache-and-network',
-    client: squeethClient[networkId],
+    client: squfuryClient[networkId],
   })
 
   useEffect(() => {
@@ -176,7 +176,7 @@ export const useSetBullUserState = () => {
   const bullSupply = useAtomValue(bullSupplyAtom)
   const crabTotalSupply = useAtomValue(crabTotalSupplyV2Atom)
   const crabV2Vault = useAtomValue(crabStrategyVaultAtomV2)
-  const getWSqueethPositionValueInETH = useGetWSqueethPositionValueInETH()
+  const getWSquFuryPositionValueInETH = useGetWSquFuryPositionValueInETH()
   const setBullCurrentPosition = useUpdateAtom(bullCurrentETHPositionAtom)
   const setBullCurrentUsdcPosition = useUpdateAtom(bullCurrentUSDCPositionAtom)
   const setBullEthValuePerShare = useUpdateAtom(bullEthValuePerShareAtom)
@@ -191,7 +191,7 @@ export const useSetBullUserState = () => {
     const userCrab = bullShare.times(bullCrabBalance).div(bullSupply)
     const crabCollat = userCrab.times(crabV2Vault.collateralAmount).div(crabTotalSupply)
     const crabDebt = userCrab.times(crabV2Vault.shortAmount).div(crabTotalSupply)
-    const crabDebtInEth = getWSqueethPositionValueInETH(crabDebt)
+    const crabDebtInEth = getWSquFuryPositionValueInETH(crabDebt)
 
     const crabComponent = crabCollat.minus(crabDebtInEth)
     const userBullPosition = crabComponent.plus(leverageComponent)
@@ -263,7 +263,7 @@ export const useSetBullRecoveryUserState = () => {
   const setBullCrabValueInEth = useUpdateAtom(bullCrabValueInEth)
   const setBullRecoveryReady = useUpdateAtom(isBullRecoveryReadyAtom)
 
-  const getWSqueethPositionValueInETH = useGetWSqueethPositionValueInETH()
+  const getWSquFuryPositionValueInETH = useGetWSquFuryPositionValueInETH()
   const isMounted = useMountedState()
 
   const { value: userBullBalance } = useTokenBalance(bullStrategy)
@@ -278,7 +278,7 @@ export const useSetBullRecoveryUserState = () => {
     const userCrab = bullShare.times(bullCrabBalance)
     const crabCollat = userCrab.times(crabV2Vault.collateralAmount).div(crabTotalSupply)
     const crabDebt = userCrab.times(crabV2Vault.shortAmount).div(crabTotalSupply)
-    const crabDebtInEth = getWSqueethPositionValueInETH(crabDebt)
+    const crabDebtInEth = getWSquFuryPositionValueInETH(crabDebt)
 
     const crabComponent = crabCollat.minus(crabDebtInEth)
     const userBullCrabPosition = crabComponent
@@ -298,21 +298,21 @@ export const useGetFlashBulldepositParams = () => {
   const bullCrabBalance = useAtomValue(bullCrabBalanceAtom)
   const bullSupply = useAtomValue(bullSupplyAtom)
   const quoterContract = useAtomValue(quoterContractAtom)
-  const { weth, oSqueeth, usdc } = useAtomValue(addressesAtom)
+  const { weth, oSquFury, usdc } = useAtomValue(addressesAtom)
   const slippage = useAtomValue(crabStrategySlippageAtomV2)
   const network = useAtomValue(networkIdAtom)
   const queryClient = useQueryClient()
   const ethPrice = useOnChainETHPrice()
-  const sqthPrice = useAtomValue(squeethInitialPriceAtom)
+  const sqfuPrice = useAtomValue(squfuryInitialPriceAtom)
 
   const emptyState = useMemo(
     () => ({
       ethToCrab: BIG_ZERO,
-      minEthFromSqth: BIG_ZERO,
+      minEthFromSqfu: BIG_ZERO,
       minEthFromUsdc: BIG_ZERO,
-      ethOutForSqth: BIG_ZERO,
+      ethOutForSqfu: BIG_ZERO,
       ethOutForUsdc: BIG_ZERO,
-      oSqthIn: BIG_ZERO,
+      oSqfuIn: BIG_ZERO,
       usdcIn: BIG_ZERO,
       wPowerPerpPoolFee: UNI_POOL_FEES,
       usdcPoolFee: getUSDCPoolFee(network),
@@ -336,7 +336,7 @@ export const useGetFlashBulldepositParams = () => {
         const middle = start.plus(end).div(2)
 
         const ethToCrab = totalEthDeposit.times(middle)
-        const { oSqthToMint, wethToLend, usdcToBorrow } = await getWethToLendFromCrabEth(
+        const { oSqfuToMint, wethToLend, usdcToBorrow } = await getWethToLendFromCrabEth(
           bullStrategyContract,
           ethToCrab,
           crabV2Vault,
@@ -347,11 +347,11 @@ export const useGetFlashBulldepositParams = () => {
 
         if (ethToCrab.eq(prevState.ethToCrab)) break
 
-        const oSqthProceedsPromise = getExactIn(
+        const oSqfuProceedsPromise = getExactIn(
           quoterContract,
-          oSqueeth,
+          oSquFury,
           weth,
-          fromTokenAmount(oSqthToMint, 18),
+          fromTokenAmount(oSqfuToMint, 18),
           UNI_POOL_FEES,
           slippage,
         )
@@ -365,21 +365,21 @@ export const useGetFlashBulldepositParams = () => {
         )
 
         const [
-          { minAmountOut: oSqthMinProceeds, amountOut: oSqthProceeds },
+          { minAmountOut: oSqfuMinProceeds, amountOut: oSqfuProceeds },
           { minAmountOut: usdcMinProceeds, amountOut: usdcProceeds },
-        ] = await Promise.all([oSqthProceedsPromise, usdcProceedsPromise])
+        ] = await Promise.all([oSqfuProceedsPromise, usdcProceedsPromise])
 
-        const minEthFromSqth = toTokenAmount(oSqthMinProceeds, 18)
+        const minEthFromSqfu = toTokenAmount(oSqfuMinProceeds, 18)
         const minEthFromUsdc = toTokenAmount(usdcMinProceeds, 18)
-        const cumulativeSpotPrice = oSqthToMint.times(sqthPrice).plus(usdcToBorrow.div(ethPrice))
-        const executionPrice = toTokenAmount(oSqthProceeds, 18).plus(toTokenAmount(usdcProceeds, 18))
+        const cumulativeSpotPrice = oSqfuToMint.times(sqfuPrice).plus(usdcToBorrow.div(ethPrice))
+        const executionPrice = toTokenAmount(oSqfuProceeds, 18).plus(toTokenAmount(usdcProceeds, 18))
 
-        const squeethSpot = oSqthToMint.times(sqthPrice) // eth from sqth trade
+        const squfurySpot = oSqfuToMint.times(sqfuPrice) // eth from sqfu trade
         const usdcSpot = usdcToBorrow.div(ethPrice) // eth from usdc trade
 
         // cumulative uniswap fees
 
-        const poolFee = squeethSpot
+        const poolFee = squfurySpot
           .times(UNI_POOL_FEES)
           .plus(usdcSpot.times(getUSDCPoolFee(network)))
           .div(cumulativeSpotPrice)
@@ -389,18 +389,18 @@ export const useGetFlashBulldepositParams = () => {
         prevState = {
           ...emptyState,
           ethToCrab,
-          minEthFromSqth,
+          minEthFromSqfu,
           minEthFromUsdc,
           priceImpact,
           wethToLend,
-          ethOutForSqth: toTokenAmount(oSqthProceeds, 18),
+          ethOutForSqfu: toTokenAmount(oSqfuProceeds, 18),
           ethOutForUsdc: toTokenAmount(usdcProceeds, 18),
           usdcIn: usdcToBorrow,
-          oSqthIn: oSqthToMint,
+          oSqfuIn: oSqfuToMint,
           poolFee: poolFee.div(10000).toNumber(),
         }
 
-        const totalToBull = ethToCrab.plus(wethToLend).minus(minEthFromSqth).minus(minEthFromUsdc)
+        const totalToBull = ethToCrab.plus(wethToLend).minus(minEthFromSqfu).minus(minEthFromUsdc)
         // Total to bull should almost equal to totalEthDeposit
         if (totalToBull.gt(totalEthDeposit)) {
           end = middle
@@ -424,10 +424,10 @@ export const useGetFlashBulldepositParams = () => {
       emptyState,
       ethPrice,
       network,
-      oSqueeth,
+      oSquFury,
       quoterContract,
       slippage,
-      sqthPrice,
+      sqfuPrice,
       usdc,
       weth,
     ],
@@ -435,7 +435,7 @@ export const useGetFlashBulldepositParams = () => {
 
   const queryKey = useAppMemo(
     () =>
-      `getFlashBullDepositParams-${network}-${crabTotalSupply.toString()}-${bullCrabBalance.toString()}-${bullSupply.toString()}-${crabV2Vault?.collateralAmount.toString()}-${slippage.toString()}-${ethPrice.toString()}-${sqthPrice.toString()}`,
+      `getFlashBullDepositParams-${network}-${crabTotalSupply.toString()}-${bullCrabBalance.toString()}-${bullSupply.toString()}-${crabV2Vault?.collateralAmount.toString()}-${slippage.toString()}-${ethPrice.toString()}-${sqfuPrice.toString()}`,
     [
       network,
       crabTotalSupply,
@@ -444,7 +444,7 @@ export const useGetFlashBulldepositParams = () => {
       crabV2Vault?.collateralAmount,
       slippage,
       ethPrice,
-      sqthPrice,
+      sqfuPrice,
     ],
   )
 
@@ -477,7 +477,7 @@ export const useBullFlashDeposit = () => {
 
   const flashDepositToBull = async (
     ethToCrab: BigNumber,
-    minEthFromSqth: BigNumber,
+    minEthFromSqfu: BigNumber,
     minEthFromUsdc: BigNumber,
     wPowerPerpPoolFee: number,
     usdcPoolFee: number,
@@ -494,7 +494,7 @@ export const useBullFlashDeposit = () => {
         gasEstimate = await flashBullContract.methods
           .flashDeposit({
             ethToCrab: fromTokenAmount(ethToCrab, 18).toFixed(0),
-            minEthFromSqth: fromTokenAmount(minEthFromSqth, 18).toFixed(0),
+            minEthFromSqfu: fromTokenAmount(minEthFromSqfu, 18).toFixed(0),
             minEthFromUsdc: fromTokenAmount(minEthFromUsdc, 18).toFixed(0),
             wPowerPerpPoolFee,
             usdcPoolFee,
@@ -519,7 +519,7 @@ export const useBullFlashDeposit = () => {
         flashBullContract.methods
           .flashDeposit({
             ethToCrab: fromTokenAmount(ethToCrab, 18).toFixed(0),
-            minEthFromSqth: fromTokenAmount(minEthFromSqth, 18).toFixed(0),
+            minEthFromSqfu: fromTokenAmount(minEthFromSqfu, 18).toFixed(0),
             minEthFromUsdc: fromTokenAmount(minEthFromUsdc, 18).toFixed(0),
             wPowerPerpPoolFee,
             usdcPoolFee,
@@ -557,10 +557,10 @@ export const useGetFlashWithdrawParams = () => {
   const network = useAtomValue(networkIdAtom)
   const quoterContract = useAtomValue(quoterContractAtom)
   const slippage = useAtomValue(crabStrategySlippageAtomV2)
-  const { oSqueeth, weth, usdc } = useAtomValue(addressesAtom)
+  const { oSquFury, weth, usdc } = useAtomValue(addressesAtom)
   const queryClient = useQueryClient()
   const ethPrice = useOnChainETHPrice()
-  const sqthPrice = useAtomValue(squeethInitialPriceAtom)
+  const sqfuPrice = useAtomValue(squfuryInitialPriceAtom)
 
   const emptyState = {
     maxEthForWPowerPerp: BIG_ZERO,
@@ -568,9 +568,9 @@ export const useGetFlashWithdrawParams = () => {
     wPowerPerpPoolFee: UNI_POOL_FEES,
     usdcPoolFee: getUSDCPoolFee(network),
     priceImpact: 0,
-    ethInForSqth: BIG_ZERO,
+    ethInForSqfu: BIG_ZERO,
     ethInForUsdc: BIG_ZERO,
-    oSqthOut: BIG_ZERO,
+    oSqfuOut: BIG_ZERO,
     usdcOut: BIG_ZERO,
     poolFee: 0,
   }
@@ -587,10 +587,10 @@ export const useGetFlashWithdrawParams = () => {
       crabTotalSupply,
     )
 
-    const oSqthProceedsPromise = getExactOut(
+    const oSqfuProceedsPromise = getExactOut(
       quoterContract,
       weth,
-      oSqueeth,
+      oSquFury,
       fromTokenAmount(wPowerPerpToRedeem, 18),
       UNI_POOL_FEES,
       slippage,
@@ -606,22 +606,22 @@ export const useGetFlashWithdrawParams = () => {
     )
 
     const [
-      { maxAmountIn: oSqthMinProceeds, amountIn: oSqthProceeds },
+      { maxAmountIn: oSqfuMinProceeds, amountIn: oSqfuProceeds },
       { maxAmountIn: usdcMinProceeds, amountIn: usdcProceeds },
-    ] = await Promise.all([oSqthProceedsPromise, usdcProceedsPromise])
+    ] = await Promise.all([oSqfuProceedsPromise, usdcProceedsPromise])
 
-    const maxEthForWPowerPerp = toTokenAmount(oSqthMinProceeds, 18)
+    const maxEthForWPowerPerp = toTokenAmount(oSqfuMinProceeds, 18)
     const maxEthForUsdc = toTokenAmount(usdcMinProceeds, 18)
 
-    const cumulativeSpotPrice = wPowerPerpToRedeem.times(sqthPrice).plus(usdcToRepay.div(ethPrice))
-    const executionPrice = toTokenAmount(oSqthProceeds, 18).plus(toTokenAmount(usdcProceeds, 18))
+    const cumulativeSpotPrice = wPowerPerpToRedeem.times(sqfuPrice).plus(usdcToRepay.div(ethPrice))
+    const executionPrice = toTokenAmount(oSqfuProceeds, 18).plus(toTokenAmount(usdcProceeds, 18))
 
-    const squeethSpot = wPowerPerpToRedeem.times(sqthPrice)
+    const squfurySpot = wPowerPerpToRedeem.times(sqfuPrice)
     const usdcSpot = usdcToRepay.div(ethPrice)
 
     // cumulative uniswap fees
 
-    const poolFee = squeethSpot
+    const poolFee = squfurySpot
       .times(UNI_POOL_FEES)
       .plus(usdcSpot.times(getUSDCPoolFee(network)))
       .div(cumulativeSpotPrice)
@@ -633,17 +633,17 @@ export const useGetFlashWithdrawParams = () => {
       maxEthForUsdc,
       maxEthForWPowerPerp,
       priceImpact,
-      ethInForSqth: toTokenAmount(oSqthProceeds, 18),
+      ethInForSqfu: toTokenAmount(oSqfuProceeds, 18),
       ethInForUsdc: toTokenAmount(usdcProceeds, 18),
       usdcOut: usdcToRepay,
-      oSqthOut: wPowerPerpToRedeem,
+      oSqfuOut: wPowerPerpToRedeem,
       poolFee: poolFee.div(10000).toNumber(),
     }
   }
 
   const queryKey = useAppMemo(
     () =>
-      `getFlashBullWithdrawParams-${network}-${crabTotalSupply.toString()}-${bullCrabBalance.toString()}-${bullSupply.toString()}-${crabV2Vault?.collateralAmount.toString()}-${ethPrice.toString()}-${sqthPrice.toString()}-${slippage.toString()}`,
+      `getFlashBullWithdrawParams-${network}-${crabTotalSupply.toString()}-${bullCrabBalance.toString()}-${bullSupply.toString()}-${crabV2Vault?.collateralAmount.toString()}-${ethPrice.toString()}-${sqfuPrice.toString()}-${slippage.toString()}`,
     [
       network,
       crabTotalSupply,
@@ -651,7 +651,7 @@ export const useGetFlashWithdrawParams = () => {
       bullSupply,
       crabV2Vault?.collateralAmount,
       ethPrice,
-      sqthPrice,
+      sqfuPrice,
       slippage,
     ],
   )
@@ -759,16 +759,16 @@ export const useGetEmergencyWithdrawParams = () => {
   const bullCrabBalance = useAtomValue(bullCrabBalanceAtom)
   const crabTotalSupply = useAtomValue(crabTotalSupplyV2Atom)
   const quoterContract = useAtomValue(quoterContractAtom)
-  const { oSqueeth, weth } = useAtomValue(addressesAtom)
+  const { oSquFury, weth } = useAtomValue(addressesAtom)
   const slippage = useAtomValue(crabStrategySlippageAtomV2)
-  const sqthPriceInEth = useAtomValue(squeethInitialPriceAtom)
+  const sqfuPriceInEth = useAtomValue(squfuryInitialPriceAtom)
   const network = useAtomValue(networkIdAtom)
   const queryClient = useQueryClient()
 
   const emptyState = {
     maxEthForWPowerPerp: BIG_ZERO,
-    ethInForOsqth: BIG_ZERO,
-    osqthOut: BIG_ZERO,
+    ethInForOsqfu: BIG_ZERO,
+    osqfuOut: BIG_ZERO,
     wPowerPerpPoolFee: UNI_POOL_FEES,
     priceImpact: 0,
   }
@@ -786,36 +786,36 @@ export const useGetEmergencyWithdrawParams = () => {
       crabTotalSupply,
     )
 
-    const { maxAmountIn: maxEthForOsqth, amountIn: ethForOsqth } = await getExactOut(
+    const { maxAmountIn: maxEthForOsqfu, amountIn: ethForOsqfu } = await getExactOut(
       quoterContract,
       weth,
-      oSqueeth,
+      oSquFury,
       fromTokenAmount(wPowerPerpToRedeem, 18),
       UNI_POOL_FEES,
       slippage,
     )
 
-    const maxEthForWPowerPerp = toTokenAmount(maxEthForOsqth, 18)
-    const ethInForOsqth = toTokenAmount(ethForOsqth, 18)
+    const maxEthForWPowerPerp = toTokenAmount(maxEthForOsqfu, 18)
+    const ethInForOsqfu = toTokenAmount(ethForOsqfu, 18)
 
-    const spotPrice = wPowerPerpToRedeem.times(sqthPriceInEth)
-    const executionPrice = ethInForOsqth
+    const spotPrice = wPowerPerpToRedeem.times(sqfuPriceInEth)
+    const executionPrice = ethInForOsqfu
 
     const priceImpact = (executionPrice.div(spotPrice).toNumber() - 1) * 100
 
     return {
       ...emptyState,
       maxEthForWPowerPerp,
-      ethInForOsqth,
-      osqthOut: wPowerPerpToRedeem,
+      ethInForOsqfu,
+      osqfuOut: wPowerPerpToRedeem,
       priceImpact,
     }
   }
 
   const queryKey = useAppMemo(
     () =>
-      `getEmergencyWithdrawParams-${network}-${crabTotalSupply.toString()}-${bullCrabBalance.toString()}-${bullSupply.toString()}-${crabV2Vault?.collateralAmount.toString()}-${sqthPriceInEth.toString()}-${slippage.toString()}`,
-    [network, crabTotalSupply, bullCrabBalance, bullSupply, crabV2Vault?.collateralAmount, sqthPriceInEth, slippage],
+      `getEmergencyWithdrawParams-${network}-${crabTotalSupply.toString()}-${bullCrabBalance.toString()}-${bullSupply.toString()}-${crabV2Vault?.collateralAmount.toString()}-${sqfuPriceInEth.toString()}-${slippage.toString()}`,
+    [network, crabTotalSupply, bullCrabBalance, bullSupply, crabV2Vault?.collateralAmount, sqfuPriceInEth, slippage],
   )
 
   const getCachedWithdrawParams = async (bullToWithdraw: BigNumber) => {

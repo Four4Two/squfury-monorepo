@@ -1,9 +1,9 @@
-# Squeeth Contracts
+# SquFury Contracts
 
-[![Coverage Status](https://coveralls.io/repos/github/opynfinance/squeeth-monorepo/badge.svg?t=XrsOxo)](https://coveralls.io/github/opynfinance/squeeth-monorepo) [![CircleCI](https://circleci.com/gh/opynfinance/squeeth-monorepo/tree/master.svg?style=svg&circle-token=5d9ceb617a91160d922e21209489eb3060f326a3)](https://circleci.com/gh/opynfinance/squeeth-monorepo/tree/master)
+[![Coverage Status](https://coveralls.io/repos/github/opynfinance/squfury-monorepo/badge.svg?t=XrsOxo)](https://coveralls.io/github/opynfinance/squfury-monorepo) [![CircleCI](https://circleci.com/gh/opynfinance/squfury-monorepo/tree/master.svg?style=svg&circle-token=5d9ceb617a91160d922e21209489eb3060f326a3)](https://circleci.com/gh/opynfinance/squfury-monorepo/tree/master)
 
-Here you can find all the contracts that is related to squeeth. To read auto-generated contract doc, you can go to `/docs/contracts-documentation`. 
-For a more comprehensive documentation about how the system works together, we suggest visiting our [GitBook page](https://opyn.gitbook.io/squeeth/)  
+Here you can find all the contracts that is related to squfury. To read auto-generated contract doc, you can go to `/docs/contracts-documentation`. 
+For a more comprehensive documentation about how the system works together, we suggest visiting our [GitBook page](https://opyn.gitbook.io/squfury/)  
 
 # Running this Project
 
@@ -76,7 +76,7 @@ yarn lint
 
 ## Licensing
 
-The primary license for Squeeth V1 Core is the Business Source License 1.1 (`BUSL-1.1`), see [`LICENSE_BUSL`](./LICENSE_BUSL).
+The primary license for SquFury V1 Core is the Business Source License 1.1 (`BUSL-1.1`), see [`LICENSE_BUSL`](./LICENSE_BUSL).
 
 ### Exceptions
 - Some files in `contracts/core/` are licensed under `GPL-2.0-or-later` (as indicated in their SPDX headers), see [`contracts/core/LICENSE_GPL_3`](./contracts/core/LICENSE_GPL_3)

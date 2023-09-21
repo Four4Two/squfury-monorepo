@@ -61,7 +61,7 @@ function loadOrCreateTx(id: string): CrabUserTxSchema {
 export function handleDeposit(event: Deposit): void {
   if (event.params.depositor.equals(FLASH_BULL_ADDR) || event.params.depositor.equals(BULL_ADDR)) return
   const userTx = loadOrCreateTx(event.transaction.hash.toHex())
-  userTx.wSqueethAmount = event.params.wSqueethAmount
+  userTx.wSquFuryAmount = event.params.wSquFuryAmount
   userTx.lpAmount = event.params.lpAmount
   userTx.ethAmount = event.transaction.value
   userTx.user = event.params.depositor
@@ -74,7 +74,7 @@ export function handleDeposit(event: Deposit): void {
 export function handleWithdraw(event: Withdraw): void {
   if (event.params.withdrawer.equals(FLASH_BULL_ADDR) || event.params.withdrawer.equals(BULL_ADDR)) return
   const userTx = loadOrCreateTx(event.transaction.hash.toHex())
-  userTx.wSqueethAmount = event.params.wSqueethAmount
+  userTx.wSquFuryAmount = event.params.wSquFuryAmount
   userTx.lpAmount = event.params.crabAmount
   userTx.ethAmount = event.params.ethWithdrawn
   userTx.user = event.params.withdrawer
@@ -98,7 +98,7 @@ export function handleWithdrawShutdown(event: WithdrawShutdown): void {
 export function handleFlashDeposit(event: FlashDeposit): void {
   if (event.params.depositor.equals(FLASH_BULL_ADDR) || event.params.depositor.equals(BULL_ADDR)) return
   const userTx = loadOrCreateTx(event.transaction.hash.toHex())
-  userTx.wSqueethAmount = event.params.tradedAmountOut
+  userTx.wSquFuryAmount = event.params.tradedAmountOut
   if (event.transaction.value.isZero()) {
     const constructedInput = '0x' + event.transaction.input.toHex().substring(10)
     let dec = ethereum.decode('(uint256,uint256,uint256,uint24,uint24,address)', Bytes.fromHexString(constructedInput))
@@ -121,7 +121,7 @@ export function handleFlashDeposit(event: FlashDeposit): void {
 export function handleFlashWithdraw(event: FlashWithdraw): void {
   if (event.params.withdrawer.equals(FLASH_BULL_ADDR) || event.params.withdrawer.equals(BULL_ADDR)) return
   const userTx = loadOrCreateTx(event.transaction.hash.toHex())
-  userTx.wSqueethAmount = event.params.wSqueethAmount
+  userTx.wSquFuryAmount = event.params.wSquFuryAmount
   userTx.lpAmount = event.params.crabAmount
   userTx.user = event.params.withdrawer
   if (userTx.user.equals(CRAB_MIGRATION_ADDR)) {

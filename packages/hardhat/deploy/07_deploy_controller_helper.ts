@@ -8,7 +8,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     
   const { deployer } = await getNamedAccounts();
 
-  if (network.name === 'localhost' || network.name === 'goerli' || network.name === 'mainnet') return;
+  if (network.name === 'localhost' || network.name === 'goerli' || network.name === 'highbury') return;
 
   await deploy("TickMathExternal", { from: deployer, log: true })
   const tickMathExternal = await ethers.getContract("TickMathExternal", deployer)

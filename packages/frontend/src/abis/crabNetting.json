@@ -729,7 +729,7 @@
   },
   {
     "inputs": [],
-    "name": "ethSqueethPool",
+    "name": "ethSquFuryPool",
     "outputs": [
       {
         "internalType": "address",
@@ -999,7 +999,7 @@
   },
   {
     "inputs": [],
-    "name": "sqth",
+    "name": "sqfu",
     "outputs": [
       {
         "internalType": "address",
@@ -1012,7 +1012,7 @@
   },
   {
     "inputs": [],
-    "name": "sqthController",
+    "name": "sqfuController",
     "outputs": [
       {
         "internalType": "address",
@@ -1025,7 +1025,7 @@
   },
   {
     "inputs": [],
-    "name": "sqthTwapPeriod",
+    "name": "sqfuTwapPeriod",
     "outputs": [
       {
         "internalType": "uint32",

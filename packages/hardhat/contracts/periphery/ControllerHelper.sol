@@ -79,7 +79,7 @@ contract ControllerHelper is UniswapControllerHelper, EulerControllerHelper, IER
     receive() external payable {}
 
     /**
-     * @notice flash close position and buy long squeeth
+     * @notice flash close position and buy long squfury
      * @dev this function
      * @param _params ControllerHelperDataType.FlashswapWBurnBuyLongParams struct
      */

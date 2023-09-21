@@ -23,7 +23,7 @@ library Power2Base {
      * @param _ethQuoteCurrencyPool uniswap v3 pool for weth / quoteCurrency
      * @param _weth weth address
      * @param _quoteCurrency quoteCurrency address
-     * @return for squeeth, return ethPrice^2
+     * @return for squfury, return ethPrice^2
      */
     function _getIndex(
         uint32 _period,
@@ -50,7 +50,7 @@ library Power2Base {
      * @param _ethQuoteCurrencyPool uniswap v3 pool for weth / quoteCurrency
      * @param _weth weth address
      * @param _quoteCurrency quoteCurrency address
-     * @return for squeeth, return ethPrice^2
+     * @return for squfury, return ethPrice^2
      */
     function _getUnscaledIndex(
         uint32 _period,
@@ -67,22 +67,22 @@ library Power2Base {
      * @notice return the mark price of power perp in quoteCurrency, scaled by 18 decimals
      * @param _period period of time for the twap in seconds (cannot be longer than maximum period for the pool)
      * @param _oracle oracle address
-     * @param _wSqueethEthPool uniswap v3 pool for wSqueeth / weth
+     * @param _wSquFuryEthPool uniswap v3 pool for wSquFury / weth
      * @param _ethQuoteCurrencyPool uniswap v3 pool for weth / quoteCurrency
      * @param _weth weth address
      * @param _quoteCurrency quoteCurrency address
-     * @param _wSqueeth wSqueeth address
+     * @param _wSquFury wSquFury address
      * @param _normalizationFactor current normalization factor
-     * @return for squeeth, return ethPrice * squeethPriceInEth
+     * @return for squfury, return ethPrice * squfuryPriceInEth
      */
     function _getDenormalizedMark(
         uint32 _period,
         address _oracle,
-        address _wSqueethEthPool,
+        address _wSquFuryEthPool,
         address _ethQuoteCurrencyPool,
         address _weth,
         address _quoteCurrency,
-        address _wSqueeth,
+        address _wSquFury,
         uint256 _normalizationFactor
     ) internal view returns (uint256) {
         uint256 ethQuoteCurrencyPrice = _getScaledTwap(
@@ -93,30 +93,30 @@ library Power2Base {
             _period,
             false
         );
-        uint256 wsqueethEthPrice = _getTwap(_oracle, _wSqueethEthPool, _wSqueeth, _weth, _period, false);
+        uint256 wsqufuryEthPrice = _getTwap(_oracle, _wSquFuryEthPool, _wSquFury, _weth, _period, false);
 
-        return wsqueethEthPrice.mul(ethQuoteCurrencyPrice).div(_normalizationFactor);
+        return wsqufuryEthPrice.mul(ethQuoteCurrencyPrice).div(_normalizationFactor);
     }
 
     /**
-     * @notice get the fair collateral value for a _debtAmount of wSqueeth
+     * @notice get the fair collateral value for a _debtAmount of wSquFury
      * @dev the actual amount liquidator can get should have a 10% bonus on top of this value.
-     * @param _debtAmount wSqueeth amount paid by liquidator
+     * @param _debtAmount wSquFury amount paid by liquidator
      * @param _oracle oracle address
-     * @param _wSqueethEthPool uniswap v3 pool for wSqueeth / weth
-     * @param _wSqueeth wSqueeth address
+     * @param _wSquFuryEthPool uniswap v3 pool for wSquFury / weth
+     * @param _wSquFury wSquFury address
      * @param _weth weth address
      * @return returns value of debt in ETH
      */
     function _getDebtValueInEth(
         uint256 _debtAmount,
         address _oracle,
-        address _wSqueethEthPool,
-        address _wSqueeth,
+        address _wSquFuryEthPool,
+        address _wSquFury,
         address _weth
     ) internal view returns (uint256) {
-        uint256 wSqueethPrice = _getTwap(_oracle, _wSqueethEthPool, _wSqueeth, _weth, TWAP_PERIOD, false);
-        return _debtAmount.mul(wSqueethPrice).div(ONE);
+        uint256 wSquFuryPrice = _getTwap(_oracle, _wSquFuryEthPool, _wSquFury, _weth, TWAP_PERIOD, false);
+        return _debtAmount.mul(wSquFuryPrice).div(ONE);
     }
 
     /**
@@ -165,18 +165,18 @@ library Power2Base {
     }
 
     /**
-     * @notice get the index value of wsqueeth in wei, used when system settles
-     * @dev the index of squeeth is ethPrice^2, so each squeeth will need to pay out {ethPrice} eth
-     * @param _wsqueethAmount amount of wsqueeth used in settlement
+     * @notice get the index value of wsqufury in wei, used when system settles
+     * @dev the index of squfury is ethPrice^2, so each squfury will need to pay out {ethPrice} eth
+     * @param _wsqufuryAmount amount of wsqufury used in settlement
      * @param _indexPriceForSettlement index price for settlement
      * @param _normalizationFactor current normalization factor
      * @return amount in wei that should be paid to the token holder
      */
     function _getLongSettlementValue(
-        uint256 _wsqueethAmount,
+        uint256 _wsqufuryAmount,
         uint256 _indexPriceForSettlement,
         uint256 _normalizationFactor
     ) internal pure returns (uint256) {
-        return _wsqueethAmount.mul(_normalizationFactor).mul(_indexPriceForSettlement).div(ONE_ONE);
+        return _wsqufuryAmount.mul(_normalizationFactor).mul(_indexPriceForSettlement).div(ONE_ONE);
     }
 }

@@ -13,9 +13,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const controller = await ethers.getContract("Controller", deployer);
   const oracle = await ethers.getContract("Oracle", deployer);
   const weth = await getWETH(ethers, deployer, network.name)
-  const wsqueeth = await ethers.getContract("WPowerPerp", deployer);
+  const wsqufury = await ethers.getContract("WPowerPerp", deployer);
   const { uniswapFactory } = await getUniswapDeployments(ethers, deployer, network.name)
-  const squeethPoolAddr = await getPoolAddress(wsqueeth, weth, uniswapFactory)
+  const squfuryPoolAddr = await getPoolAddress(wsqufury, weth, uniswapFactory)
 
   // strategy parameters
   const hedgeTimeThreshold = 86400
@@ -30,7 +30,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     oracle.address,
     weth.address,
     uniswapFactory.address,
-    squeethPoolAddr,
+    squfuryPoolAddr,
     hedgeTimeThreshold,
     hedgePriceThreshold,
     auctionTime,
@@ -42,7 +42,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     from: deployer,
     log: true,
     args: crabStrategyArgs,
-    gasLimit: 10000000,
+    gasLimit: 8000000,
     skipIfAlreadyDeployed: true,
   });
   createArgumentFile('CrabStrategy', network.name, crabStrategyArgs)

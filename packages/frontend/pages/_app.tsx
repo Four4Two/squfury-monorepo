@@ -16,7 +16,7 @@ import getTheme, { Mode } from '../src/theme'
 import { uniswapClient } from '@utils/apollo-client'
 import { useOnboard, useConnectWallet } from 'src/state/wallet/hooks'
 import { networkIdAtom, onboardAddressAtom, walletFailVisibleAtom } from 'src/state/wallet/atoms'
-import { useUpdateSqueethPrices, useUpdateSqueethPoolData } from 'src/state/squeethPool/hooks'
+import { useUpdateSquFuryPrices, useUpdateSquFuryPoolData } from 'src/state/squfuryPool/hooks'
 import { useInitController } from 'src/state/controller/hooks'
 import { ComputeSwapsProvider } from 'src/state/positions/providers'
 import { useSwaps } from 'src/state/positions/hooks'
@@ -93,16 +93,6 @@ function MyApp({ Component, pageProps }: any) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track])
 
-  useEffect(() => {
-    Crisp.configure(process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID as string)
-  }, [])
-
-  useEffect(() => {
-    if (router.pathname !== '/') {
-      showCrispChat()
-    } else hideCrispChat()
-  }, [router])
-
   return (
     <RestrictUserProvider>
       <QueryClientProvider client={queryClient}>
@@ -176,8 +166,8 @@ const Init = () => {
 
   useOnboard()
   useTrackSiteReload()
-  useUpdateSqueethPrices()
-  useUpdateSqueethPoolData()
+  useUpdateSquFuryPrices()
+  useUpdateSquFuryPoolData()
   useInitController()
   useSwaps()
   return null

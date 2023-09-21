@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import React from 'react'
 
-import Logo from '../../../public/images/mint-squeeth.svg'
+import Logo from '../../../public/images/mint-squfury.svg'
 import UniswapLogo from '../../../public/images/uniswap-uni-logo.svg'
 import { LPActions, OBTAIN_METHOD, useLPState } from '@context/lp'
 
@@ -56,19 +56,19 @@ const SelectMethod: React.FC = () => {
 
   return (
     <>
-      <Typography className={classes.title}>Obtain Squeeth</Typography>
+      <Typography className={classes.title}>Obtain SquFury</Typography>
       <div className={classes.obtainItemContainer}>
         <motion.div
           initial={{ x: '-5%', opacity: 0.8 }}
           animate={{ x: 0, opacity: 1 }}
           className={classes.obtainItem}
-          id="mint-sqth-to-lp-btn"
+          id="mint-sqfu-to-lp-btn"
           onClick={() => dispatch({ type: LPActions.SELECT_METHOD, payload: OBTAIN_METHOD.MINT })}
         >
           <Image src={Logo} alt="Comparison Chart" height={60} width={60} />
           <Box>
             <Typography className={classes.obtainItemTitle} variant="h6">
-              Mint Squeeth to LP
+              Mint SquFury to LP
             </Typography>
             <Typography className={classes.obtainItemDetail}>Mint by depositing ETH as collateral</Typography>
           </Box>
@@ -77,13 +77,13 @@ const SelectMethod: React.FC = () => {
           initial={{ x: '-5%', opacity: 0.8 }}
           animate={{ x: 0, opacity: 1 }}
           className={classes.obtainItem}
-          id="buy-sqth-to-lp-btn"
+          id="buy-sqfu-to-lp-btn"
           onClick={() => dispatch({ type: LPActions.SELECT_METHOD, payload: OBTAIN_METHOD.BUY })}
         >
           <Image src={UniswapLogo} alt="Comparison Chart" height={60} width={60} />
           <Box>
             <Typography className={classes.obtainItemTitle} variant="h6">
-              Buy Squeeth to LP
+              Buy SquFury to LP
             </Typography>
             <Typography className={classes.obtainItemDetail}>Buy directly from Uniswap</Typography>
           </Box>

@@ -1,5 +1,5 @@
 # ZenBullNetting
-[Git Source](https://github.com/opynfinance/squeeth-monorepo/blob/334783aa87db73939fb00d5b133216b0033dfece/src/ZenBullNetting.sol)
+[Git Source](https://github.com/opynfinance/squfury-monorepo/blob/334783aa87db73939fb00d5b133216b0033dfece/src/ZenBullNetting.sol)
 
 **Inherits:**
 Ownable, EIP712, [FlashSwap](/src/FlashSwap.sol/contract.FlashSwap.md)
@@ -30,7 +30,7 @@ ZBN19: auction order is not selling
 ZBN20: sell order price greater than clearing
 ZBN21: auction order is not buying
 ZBN22: buy order price greater than clearing
-ZBN23: not enough buy orders for sqth
+ZBN23: not enough buy orders for sqfu
 ZBN24: not authorized to perform netting at price
 
 Contract for Netting Deposits and Withdrawals in ZenBull
@@ -138,12 +138,12 @@ address private immutable weth;
 ```
 
 
-### oSqth
-*oSQTH token address*
+### oSqfu
+*oSQFU token address*
 
 
 ```solidity
-address private immutable oSqth;
+address private immutable oSqfu;
 ```
 
 
@@ -174,12 +174,12 @@ address private immutable oracle;
 ```
 
 
-### ethSqueethPool
-*ETH/oSQTH uniswap v3 pool address*
+### ethSquFuryPool
+*ETH/oSQFU uniswap v3 pool address*
 
 
 ```solidity
-address private immutable ethSqueethPool;
+address private immutable ethSquFuryPool;
 ```
 
 
@@ -526,7 +526,7 @@ function netAtPrice(uint256 _price, uint256 _quantity) external;
 
 auction for queued deposits
 
-*takes in orders from MM's to buy oSQTH*
+*takes in orders from MM's to buy oSQFU*
 
 
 ```solidity
@@ -543,7 +543,7 @@ function depositAuction(DepositAuctionParams calldata _params) external onlyOwne
 
 auction for queued withdraws
 
-*takes in orders from MM's to sell oSQTH*
+*takes in orders from MM's to sell oSQFU*
 
 
 ```solidity
@@ -709,7 +709,7 @@ function _checkOTCPrice(uint256 _price, bool _isAuctionBuying) internal view;
 |Name|Type|Description|
 |----|----|-----------|
 |`_price`|`uint256`|clearing price provided by manager|
-|`_isAuctionBuying`|`bool`|is auction buying or selling oSQTH|
+|`_isAuctionBuying`|`bool`|is auction buying or selling oSQFU|
 
 
 ### _checkOrder
@@ -838,14 +838,14 @@ event SetBot(address bot);
 
 ```solidity
 event DepositAuction(
-    uint256 wethDeposited, uint256 crabAmount, uint256 clearingPrice, uint256 oSqthAmount, uint256 depositsIndex
+    uint256 wethDeposited, uint256 crabAmount, uint256 clearingPrice, uint256 oSqfuAmount, uint256 depositsIndex
 );
 ```
 
 ### WithdrawAuction
 
 ```solidity
-event WithdrawAuction(uint256 zenBullWithdrawn, uint256 clearingPrice, uint256 oSqthAmount, uint256 withdrawsIndex);
+event WithdrawAuction(uint256 zenBullWithdrawn, uint256 clearingPrice, uint256 oSqfuAmount, uint256 withdrawsIndex);
 ```
 
 ### CancelNonce
@@ -862,18 +862,18 @@ event CancelNonce(address trader, uint256 nonce);
 event TransferWethFromMarketMakers(address indexed trader, uint256 quantity, uint256 wethAmount, uint256 clearingPrice);
 ```
 
-### TransferOsqthToMarketMakers
+### TransferOsqfuToMarketMakers
 
 ```solidity
-event TransferOsqthToMarketMakers(
-    address indexed trader, uint256 bidId, uint256 quantity, uint256 remainingOsqthBalance
+event TransferOsqfuToMarketMakers(
+    address indexed trader, uint256 bidId, uint256 quantity, uint256 remainingOsqfuBalance
 );
 ```
 
-### TransferOsqthFromMarketMakers
+### TransferOsqfuFromMarketMakers
 
 ```solidity
-event TransferOsqthFromMarketMakers(address indexed trader, uint256 quantity, uint256 oSqthRemaining);
+event TransferOsqfuFromMarketMakers(address indexed trader, uint256 quantity, uint256 oSqfuRemaining);
 ```
 
 ### TransferWethToMarketMaker
@@ -884,7 +884,7 @@ event TransferWethToMarketMaker(
     uint256 bidId,
     uint256 quantity,
     uint256 wethAmount,
-    uint256 oSqthRemaining,
+    uint256 oSqfuRemaining,
     uint256 clearingPrice
 );
 ```
@@ -930,7 +930,7 @@ struct DepositAuctionParams {
     Order[] orders;
     uint256 clearingPrice;
     uint256 flashDepositEthToCrab;
-    uint256 flashDepositMinEthFromSqth;
+    uint256 flashDepositMinEthFromSqfu;
     uint256 flashDepositMinEthFromUsdc;
     uint24 flashDepositWPowerPerpPoolFee;
     uint24 wethUsdcPoolFee;
@@ -960,7 +960,7 @@ struct MemoryVar {
     uint256 currentZenBullBalance;
     uint256 remainingEth;
     uint256 remainingDeposits;
-    uint256 oSqthBalance;
+    uint256 oSqfuBalance;
 }
 ```
 

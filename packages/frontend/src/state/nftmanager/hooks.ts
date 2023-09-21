@@ -5,7 +5,7 @@ import { useAtomValue } from 'jotai'
 import { isWethToken0Atom } from '../positions/atoms'
 import BigNumber from 'bignumber.js'
 import { BIG_ZERO } from '@constants/index'
-import { poolAtom } from '../squeethPool/atoms'
+import { poolAtom } from '../squfuryPool/atoms'
 import { nftManagerContractAtom } from '../contracts/atoms'
 import { useCallback } from 'react'
 
@@ -34,25 +34,25 @@ export const useGetPosition = () => {
   return getPosition
 }
 
-export const useGetETHandOSQTHAmount = () => {
+export const useGetETHandOSQFUAmount = () => {
   const isWethToken0 = useAtomValue(isWethToken0Atom)
   const getPosition = useGetPosition()
-  const getETHandOSQTHAmount = useCallback(
+  const getETHandOSQFUAmount = useCallback(
     async (posId: number) => {
       const result = await getPosition(posId)
-      if (!result) return { wethAmount: BIG_ZERO, oSqthAmount: BIG_ZERO }
+      if (!result) return { wethAmount: BIG_ZERO, oSqfuAmount: BIG_ZERO }
 
       const { uniPosition, tokensOwed0, tokensOwed1 } = result
       const amt0 = new BigNumber(uniPosition.amount0.toSignificant(18))
       const amt1 = new BigNumber(uniPosition.amount1.toSignificant(18))
 
       const wethAmount = isWethToken0 ? amt0.plus(tokensOwed0) : amt1.plus(tokensOwed1)
-      const oSqthAmount = !isWethToken0 ? amt0.plus(tokensOwed0) : amt1.plus(tokensOwed1)
+      const oSqfuAmount = !isWethToken0 ? amt0.plus(tokensOwed0) : amt1.plus(tokensOwed1)
 
-      return { wethAmount, oSqthAmount, position: result.uniPosition }
+      return { wethAmount, oSqfuAmount, position: result.uniPosition }
     },
     [getPosition, isWethToken0],
   )
 
-  return getETHandOSQTHAmount
+  return getETHandOSQFUAmount
 }

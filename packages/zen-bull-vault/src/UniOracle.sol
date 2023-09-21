@@ -4,12 +4,12 @@ pragma abicoder v2;
 
 // interface
 import "v3-core/interfaces/IUniswapV3Pool.sol";
-import { IERC20Detailed } from "squeeth-monorepo/interfaces/IERC20Detailed.sol";
+import { IERC20Detailed } from "squfury-monorepo/interfaces/IERC20Detailed.sol";
 // lib
 import "v3-periphery/libraries/Path.sol";
 import "v3-periphery/libraries/PoolAddress.sol";
 import "v3-core/libraries/SafeCast.sol";
-import { OracleLibrary } from "squeeth-monorepo/libs/OracleLibrary.sol";
+import { OracleLibrary } from "squfury-monorepo/libs/OracleLibrary.sol";
 import { SafeMath } from "openzeppelin/math/SafeMath.sol";
 
 /**

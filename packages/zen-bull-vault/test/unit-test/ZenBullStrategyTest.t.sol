@@ -8,22 +8,22 @@ import { console } from "forge-std/console.sol";
 
 //interface
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
-import { IController } from "squeeth-monorepo/interfaces/IController.sol";
+import { IController } from "squfury-monorepo/interfaces/IController.sol";
 import { IEulerMarkets } from "../../src/interface/IEulerMarkets.sol";
 import { IEulerEToken } from "../../src/interface/IEulerEToken.sol";
 import { IEulerDToken } from "../../src/interface/IEulerDToken.sol";
-import { IWETH9 } from "squeeth-monorepo/interfaces/IWETH9.sol";
+import { IWETH9 } from "squfury-monorepo/interfaces/IWETH9.sol";
 // contract
 import { SwapRouter } from "v3-periphery/SwapRouter.sol";
 import { TestUtil } from "../util/TestUtil.t.sol";
 import { ZenBullStrategy } from "../../src/ZenBullStrategy.sol";
-import { CrabStrategyV2 } from "squeeth-monorepo/strategy/CrabStrategyV2.sol";
-import { Controller } from "squeeth-monorepo/core/Controller.sol";
+import { CrabStrategyV2 } from "squfury-monorepo/strategy/CrabStrategyV2.sol";
+import { Controller } from "squfury-monorepo/core/Controller.sol";
 import { ZenEmergencyShutdown } from "../../src/ZenEmergencyShutdown.sol";
 import { FlashZen } from "../../src/FlashZen.sol";
 // lib
-import { VaultLib } from "squeeth-monorepo/libs/VaultLib.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
+import { VaultLib } from "squfury-monorepo/libs/VaultLib.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
 import { UniOracle } from "../../src/UniOracle.sol";
 
 /**
@@ -112,7 +112,7 @@ contract ZenBullStrategyTest is Test {
         vm.label(eulerMarketsModule, "EulerMarkets");
         vm.label(usdc, "USDC");
         vm.label(weth, "WETH");
-        vm.label(wPowerPerp, "oSQTH");
+        vm.label(wPowerPerp, "oSQFU");
         vm.label(address(crabV2), "crabV2");
 
         vm.deal(user1, 100000000e18);
@@ -149,9 +149,9 @@ contract ZenBullStrategyTest is Test {
 
     function testDepositEthIntoCrabWhenFeeIsNotZero() public {
         uint256 ethToDeposit = 10e18;
-        (uint256 ethInCrab, uint256 squeethInCrab) = testUtil.getCrabVaultDetails();
+        (uint256 ethInCrab, uint256 squfuryInCrab) = testUtil.getCrabVaultDetails();
 
-        (, uint256 fee) = testUtil.calcWsqueethToMintAndFee(ethToDeposit, squeethInCrab, ethInCrab);
+        (, uint256 fee) = testUtil.calcWsqufuryToMintAndFee(ethToDeposit, squfuryInCrab, ethInCrab);
 
         uint256 crabShare = (ethToDeposit.sub(fee)).wdiv(ethInCrab.add(ethToDeposit));
         uint256 crabToBeMinted =
@@ -177,9 +177,9 @@ contract ZenBullStrategyTest is Test {
         bullStrategy.deposit{ value: wethToLend }(crabToRedeem);
         vm.stopPrank();
 
-        (, uint256 squeethInCrab) = testUtil.getCrabVaultDetails();
+        (, uint256 squfuryInCrab) = testUtil.getCrabVaultDetails();
         uint256 wPowerPerpToRedeem =
-            squeethInCrab.wmul(crabToRedeem).wdiv(IERC20(crabV2).totalSupply());
+            squfuryInCrab.wmul(crabToRedeem).wdiv(IERC20(crabV2).totalSupply());
 
         uint256 bullCrabBalanceBefore = bullStrategy.getCrabBalance();
 
@@ -196,24 +196,24 @@ contract ZenBullStrategyTest is Test {
 
     function _initateDepositInBull(address _depositor, uint256 _ethToCrab) internal {
         // Put some money in bull to start with
-        (uint256 ethInCrab, uint256 squeethInCrab) = testUtil.getCrabVaultDetails();
-        (uint256 wSqueethToMint, uint256 fee) =
-            testUtil.calcWsqueethToMintAndFee(_ethToCrab, squeethInCrab, ethInCrab);
+        (uint256 ethInCrab, uint256 squfuryInCrab) = testUtil.getCrabVaultDetails();
+        (uint256 wSquFuryToMint, uint256 fee) =
+            testUtil.calcWsqufuryToMintAndFee(_ethToCrab, squfuryInCrab, ethInCrab);
         uint256 crabToBeMinted =
             testUtil.calcSharesToMint(_ethToCrab.sub(fee), ethInCrab, IERC20(crabV2).totalSupply());
         uint256 bullCrabBalanceBefore = IERC20(crabV2).balanceOf(address(bullStrategy));
 
         uint256 bullShare = 1e18;
         (uint256 wethToLend, uint256 usdcToBorrow) = bullStrategy.calcLeverageEthUsdc(
-            crabToBeMinted, bullShare, ethInCrab, squeethInCrab, crabV2.totalSupply()
+            crabToBeMinted, bullShare, ethInCrab, squfuryInCrab, crabV2.totalSupply()
         );
 
         uint256 totalEthToBull =
-            testUtil.calcTotalEthToBull(wethToLend, _ethToCrab, usdcToBorrow, wSqueethToMint);
+            testUtil.calcTotalEthToBull(wethToLend, _ethToCrab, usdcToBorrow, wSquFuryToMint);
 
         FlashZen.FlashDepositParams memory params = FlashZen.FlashDepositParams({
             ethToCrab: _ethToCrab,
-            minEthFromSqth: 0,
+            minEthFromSqfu: 0,
             minEthFromUsdc: 0,
             wPowerPerpPoolFee: uint24(3000),
             usdcPoolFee: uint24(3000)

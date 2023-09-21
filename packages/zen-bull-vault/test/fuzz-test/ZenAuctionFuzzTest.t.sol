@@ -7,8 +7,8 @@ import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 //interface
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
-import { IWETH9 } from "squeeth-monorepo/interfaces/IWETH9.sol";
-import { IController } from "squeeth-monorepo/interfaces/IController.sol";
+import { IWETH9 } from "squfury-monorepo/interfaces/IWETH9.sol";
+import { IController } from "squfury-monorepo/interfaces/IController.sol";
 import { IEulerMarkets } from "../../src/interface/IEulerMarkets.sol";
 import { IEulerEToken } from "../../src/interface/IEulerEToken.sol";
 import { IEulerDToken } from "../../src/interface/IEulerDToken.sol";
@@ -18,14 +18,14 @@ import { TestUtil } from "../util/TestUtil.t.sol";
 import { SwapRouter } from "v3-periphery/SwapRouter.sol";
 import { Quoter } from "v3-periphery/lens/Quoter.sol";
 import { ZenBullStrategy } from "../../src/ZenBullStrategy.sol";
-import { CrabStrategyV2 } from "squeeth-monorepo/strategy/CrabStrategyV2.sol";
-import { Controller } from "squeeth-monorepo/core/Controller.sol";
+import { CrabStrategyV2 } from "squfury-monorepo/strategy/CrabStrategyV2.sol";
+import { Controller } from "squfury-monorepo/core/Controller.sol";
 import { ZenAuction } from "../../src/ZenAuction.sol";
 import { FlashZen } from "../../src/FlashZen.sol";
 import { SigUtil } from "../util/SigUtil.sol";
 // lib
-import { VaultLib } from "squeeth-monorepo/libs/VaultLib.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
+import { VaultLib } from "squfury-monorepo/libs/VaultLib.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
 import { UniOracle } from "../../src/UniOracle.sol";
 
 /**
@@ -64,7 +64,7 @@ contract ZenAuctionFuzzTest is Test {
     address internal usdc;
     address internal euler;
     address internal factory;
-    address internal ethWSqueethPool;
+    address internal ethWSquFuryPool;
     address internal ethUsdcPool;
     address internal eulerMarketsModule;
     address internal eToken;
@@ -121,7 +121,7 @@ contract ZenAuctionFuzzTest is Test {
         eToken = IEulerMarkets(eulerMarketsModule).underlyingToEToken(weth);
         dToken = IEulerMarkets(eulerMarketsModule).underlyingToDToken(usdc);
         wPowerPerp = controller.wPowerPerp();
-        ethWSqueethPool = controller.wPowerPerpPool();
+        ethWSquFuryPool = controller.wPowerPerpPool();
         ethUsdcPool = controller.ethQuoteCurrencyPool();
         auctionBull = new ZenAuction(
             auctionManager,
@@ -159,7 +159,7 @@ contract ZenAuctionFuzzTest is Test {
         vm.label(eulerMarketsModule, "EulerMarkets");
         vm.label(usdc, "USDC");
         vm.label(weth, "WETH");
-        vm.label(wPowerPerp, "oSQTH");
+        vm.label(wPowerPerp, "oSQFU");
         vm.label(address(crabV2), "crabV2");
         vm.label(address(swapRouter), "SwapRouter");
         vm.label(address(sigUtil), "SigUtils");
@@ -186,7 +186,7 @@ contract ZenAuctionFuzzTest is Test {
         IERC20(wPowerPerp).transfer(user1, 500e18);
         vm.prank(0x35AeD16f957b39342744B8366A8c13172507D7b8);
         IERC20(wPowerPerp).transfer(user2, 500e18);
-        // mint more oSQTH
+        // mint more oSQFU
         vm.prank(user1);
         controller.mintWPowerPerpAmount{ value: 100000e18 }(0, 10000e18, 0);
         vm.prank(user2);
@@ -283,9 +283,9 @@ contract ZenAuctionFuzzTest is Test {
             currentWethInLeverage, currentDebt, targetWethInLeverage, targetDebt, ethUsdPrice
         );
 
-        (uint256 ethInCrab, uint256 squeethInCrab) = _getCrabVaultDetails();
+        (uint256 ethInCrab, uint256 squfuryInCrab) = _getCrabVaultDetails();
         uint256 wPowerPerpAmountToTrade =
-            _calcWPowerPerpAmountFromCrab(isDepositingInCrab, crabAmount, ethInCrab, squeethInCrab);
+            _calcWPowerPerpAmountFromCrab(isDepositingInCrab, crabAmount, ethInCrab, squfuryInCrab);
 
         {
             // trader signature vars
@@ -318,11 +318,11 @@ contract ZenAuctionFuzzTest is Test {
             });
             orders.push(orderData);
         }
-        uint256 squeethEthPrice = UniOracle._getTwap(
+        uint256 squfuryEthPrice = UniOracle._getTwap(
             controller.wPowerPerpPool(), controller.wPowerPerp(), controller.weth(), TWAP, false
         );
         vm.prank(user1);
-        IERC20(weth).approve(address(auctionBull), wPowerPerpAmountToTrade.mul(squeethEthPrice));
+        IERC20(weth).approve(address(auctionBull), wPowerPerpAmountToTrade.mul(squfuryEthPrice));
         userWPowerPerpBalanceBeforeAuction = IERC20(wPowerPerp).balanceOf(user1);
         userWethBalanceBeforeAuction = IERC20(weth).balanceOf(user1);
         uint256 bullCrabBalanceBefore = IERC20(crabV2).balanceOf(address(bullStrategy));
@@ -330,14 +330,14 @@ contract ZenAuctionFuzzTest is Test {
         auctionBull.fullRebalance(
             orders,
             crabAmount,
-            squeethEthPrice,
+            squfuryEthPrice,
             targetWethInLeverage,
             (targetDebt < currentDebt) ? ethUsdPrice.wmul(8e17) : ethUsdPrice.wmul(12e17),
             3000,
             isDepositingInCrab
         );
 
-        (, uint256 squeethInCrabAfter) = _getCrabVaultDetails();
+        (, uint256 squfuryInCrabAfter) = _getCrabVaultDetails();
         currentDebt = IEulerDToken(dToken).balanceOf(address(bullStrategy));
         currentWethInLeverage = IEulerEToken(eToken).balanceOfUnderlying(address(bullStrategy));
 
@@ -352,7 +352,7 @@ contract ZenAuctionFuzzTest is Test {
                 IERC20(wPowerPerp).balanceOf(user1)
             );
             assertEq(
-                userWethBalanceBeforeAuction.sub(wPowerPerpAmountToTrade.wmul(squeethEthPrice)),
+                userWethBalanceBeforeAuction.sub(wPowerPerpAmountToTrade.wmul(squfuryEthPrice)),
                 IERC20(weth).balanceOf(user1)
             );
             assertApproxEqRel(
@@ -360,14 +360,14 @@ contract ZenAuctionFuzzTest is Test {
                 IERC20(crabV2).balanceOf(address(bullStrategy)),
                 1e5
             );
-            assertEq(squeethInCrab.add(wPowerPerpAmountToTrade), squeethInCrabAfter);
+            assertEq(squfuryInCrab.add(wPowerPerpAmountToTrade), squfuryInCrabAfter);
         } else {
             assertEq(
                 userWPowerPerpBalanceBeforeAuction.sub(wPowerPerpAmountToTrade),
                 IERC20(wPowerPerp).balanceOf(user1)
             );
             assertEq(
-                userWethBalanceBeforeAuction.add(wPowerPerpAmountToTrade.wmul(squeethEthPrice)),
+                userWethBalanceBeforeAuction.add(wPowerPerpAmountToTrade.wmul(squfuryEthPrice)),
                 IERC20(weth).balanceOf(user1)
             );
             assertApproxEqRel(
@@ -390,10 +390,10 @@ contract ZenAuctionFuzzTest is Test {
         uint256 wethToLend,
         uint256 ethToCrab,
         uint256 usdcToBorrow,
-        uint256 wSqueethToMint
+        uint256 wSquFuryToMint
     ) internal view returns (uint256) {
         uint256 totalEthToBull = wethToLend.add(ethToCrab).sub(usdcToBorrow.wdiv(ethPrice())).sub(
-            wSqueethToMint.wmul(squeethPrice())
+            wSquFuryToMint.wmul(squfuryPrice())
         ).add(1e16);
         return totalEthToBull;
     }
@@ -419,27 +419,27 @@ contract ZenAuctionFuzzTest is Test {
         return _amount;
     }
 
-    function _calcWsqueethToMintAndFee(
+    function _calcWsqufuryToMintAndFee(
         uint256 _depositedAmount,
         uint256 _strategyDebtAmount,
         uint256 _strategyCollateralAmount
     ) internal view returns (uint256, uint256) {
-        uint256 wSqueethToMint;
-        uint256 wSqueethEthPrice = squeethPrice();
+        uint256 wSquFuryToMint;
+        uint256 wSquFuryEthPrice = squfuryPrice();
         uint256 feeRate = IController(bullStrategy.powerTokenController()).feeRate();
-        uint256 feeAdjustment = wSqueethEthPrice.mul(feeRate).div(10000);
+        uint256 feeAdjustment = wSquFuryEthPrice.mul(feeRate).div(10000);
 
-        wSqueethToMint = _depositedAmount.wmul(_strategyDebtAmount).wdiv(
+        wSquFuryToMint = _depositedAmount.wmul(_strategyDebtAmount).wdiv(
             _strategyCollateralAmount.add(_strategyDebtAmount.wmul(feeAdjustment))
         );
 
-        uint256 fee = wSqueethToMint.wmul(feeAdjustment);
+        uint256 fee = wSquFuryToMint.wmul(feeAdjustment);
 
-        return (wSqueethToMint, fee);
+        return (wSquFuryToMint, fee);
     }
 
-    function squeethPrice() internal view returns (uint256) {
-        return UniOracle._getTwap(ethWSqueethPool, wPowerPerp, weth, TWAP, false);
+    function squfuryPrice() internal view returns (uint256) {
+        return UniOracle._getTwap(ethWSquFuryPool, wPowerPerp, weth, TWAP, false);
     }
 
     function ethPrice() internal view returns (uint256) {
@@ -449,24 +449,24 @@ contract ZenAuctionFuzzTest is Test {
     function _initateDepositInBull() internal {
         // Put some money in bull to start with
         uint256 ethToCrab = 5e18;
-        (uint256 ethInCrab, uint256 squeethInCrab) = _getCrabVaultDetails();
-        (uint256 wSqueethToMint, uint256 fee) =
-            _calcWsqueethToMintAndFee(ethToCrab, squeethInCrab, ethInCrab);
+        (uint256 ethInCrab, uint256 squfuryInCrab) = _getCrabVaultDetails();
+        (uint256 wSquFuryToMint, uint256 fee) =
+            _calcWsqufuryToMintAndFee(ethToCrab, squfuryInCrab, ethInCrab);
         uint256 crabToBeMinted =
             _calcSharesToMint(ethToCrab.sub(fee), ethInCrab, IERC20(crabV2).totalSupply());
         uint256 bullCrabBalanceBefore = IERC20(crabV2).balanceOf(address(bullStrategy));
 
         uint256 bullShare = 1e18;
         (uint256 wethToLend, uint256 usdcToBorrow) = bullStrategy.calcLeverageEthUsdc(
-            crabToBeMinted, bullShare, ethInCrab, squeethInCrab, crabV2.totalSupply()
+            crabToBeMinted, bullShare, ethInCrab, squfuryInCrab, crabV2.totalSupply()
         );
 
         uint256 totalEthToBull =
-            calcTotalEthToBull(wethToLend, ethToCrab, usdcToBorrow, wSqueethToMint);
+            calcTotalEthToBull(wethToLend, ethToCrab, usdcToBorrow, wSquFuryToMint);
 
         FlashZen.FlashDepositParams memory params = FlashZen.FlashDepositParams({
             ethToCrab: ethToCrab,
-            minEthFromSqth: 0,
+            minEthFromSqfu: 0,
             minEthFromUsdc: 0,
             wPowerPerpPoolFee: uint24(3000),
             usdcPoolFee: uint24(3000)
@@ -492,12 +492,12 @@ contract ZenAuctionFuzzTest is Test {
             false
         );
 
-        uint256 squeethEthPrice = UniOracle._getTwap(
+        uint256 squfuryEthPrice = UniOracle._getTwap(
             controller.wPowerPerpPool(), controller.wPowerPerp(), controller.weth(), TWAP, false
         );
-        (uint256 ethInCrab, uint256 squeethInCrab) = _getCrabVaultDetails();
+        (uint256 ethInCrab, uint256 squfuryInCrab) = _getCrabVaultDetails();
         uint256 crabUsdPrice = (
-            ethInCrab.wmul(ethUsdPrice).sub(squeethInCrab.wmul(squeethEthPrice).wmul(ethUsdPrice))
+            ethInCrab.wmul(ethUsdPrice).sub(squfuryInCrab.wmul(squfuryEthPrice).wmul(ethUsdPrice))
         ).wdiv(crabV2.totalSupply());
         uint256 equityValue = IEulerEToken(eToken).balanceOfUnderlying(address(bullStrategy)).wmul(
             ethUsdPrice
@@ -561,16 +561,16 @@ contract ZenAuctionFuzzTest is Test {
         bool _isDepositingInCrab,
         uint256 _crabAmount,
         uint256 _ethInCrab,
-        uint256 _squeethInCrab
+        uint256 _squfuryInCrab
     ) internal view returns (uint256) {
         uint256 wPowerPerpAmount;
         if (_isDepositingInCrab) {
             uint256 ethToDepositInCrab =
                 _crabAmount.wdiv(IERC20(crabV2).totalSupply()).wmul(_ethInCrab);
             (wPowerPerpAmount,) =
-                _calcWsqueethToMintAndFee(ethToDepositInCrab, _squeethInCrab, _ethInCrab);
+                _calcWsqufuryToMintAndFee(ethToDepositInCrab, _squfuryInCrab, _ethInCrab);
         } else {
-            wPowerPerpAmount = _crabAmount.wmul(_squeethInCrab).wdiv(IERC20(crabV2).totalSupply());
+            wPowerPerpAmount = _crabAmount.wmul(_squfuryInCrab).wdiv(IERC20(crabV2).totalSupply());
         }
 
         return wPowerPerpAmount;

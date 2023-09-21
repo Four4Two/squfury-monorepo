@@ -2,7 +2,7 @@ import { useAtom, useAtomValue } from 'jotai'
 import BigNumber from 'bignumber.js'
 
 import { addressAtom, networkIdAtom, web3Atom } from '../wallet/atoms'
-import { OSQUEETH_DECIMALS, SWAP_EVENT_TOPIC, TWAP_PERIOD } from '../../constants'
+import { OSQUFURY_DECIMALS, SWAP_EVENT_TOPIC, TWAP_PERIOD } from '../../constants'
 import {
   markAtom,
   currentImpliedFundingAtom,
@@ -10,7 +10,7 @@ import {
   impliedVolAtom,
   indexAtom,
   normFactorAtom,
-  osqthRefVolAtom,
+  osqfuRefVolAtom,
   ethPriceAtom,
 } from './atoms'
 import { fromTokenAmount, toTokenAmount } from '@utils/calculations'
@@ -25,11 +25,11 @@ import {
   getDailyHistoricalFunding,
   getIndex,
   getMark,
-  getOsqthRefVol,
+  getOsqfuRefVol,
 } from './utils'
-import { useGetETHandOSQTHAmount } from '../nftmanager/hooks'
+import { useGetETHandOSQFUAmount } from '../nftmanager/hooks'
 import { controllerContractAtom } from '../contracts/atoms'
-import { SQUEETH_UNI_POOL, ETH_USDC_POOL } from '@constants/address'
+import { SQUFURY_UNI_POOL, ETH_USDC_POOL } from '@constants/address'
 import useAppEffect from '@hooks/useAppEffect'
 import useInterval from '@hooks/useInterval'
 
@@ -39,7 +39,7 @@ export const useOpenDepositAndMint = () => {
   const contract = useAtomValue(controllerContractAtom)
   /**
    * @param vaultId - 0 to create new
-   * @param amount - Amount of squeeth to mint, if 0 act as add collateral
+   * @param amount - Amount of squfury to mint, if 0 act as add collateral
    * @param vaultType
    * @returns
    */
@@ -51,7 +51,7 @@ export const useOpenDepositAndMint = () => {
   ) => {
     if (!contract || !address) return
 
-    const _amount = fromTokenAmount(amount, OSQUEETH_DECIMALS).toFixed(0)
+    const _amount = fromTokenAmount(amount, OSQUFURY_DECIMALS).toFixed(0)
     const ethAmt = fromTokenAmount(collatAmount, 18).toFixed(0)
     return handleTransaction(
       contract.methods.mintWPowerPerpAmount(vaultId, _amount.toString(), 0).send({
@@ -120,14 +120,14 @@ export const useBurnAndRedeem = () => {
   const contract = useAtomValue(controllerContractAtom)
   /**
    * @param vaultId
-   * @param amount - Amount of squeeth to burn, if 0 act as remove collateral
+   * @param amount - Amount of squfury to burn, if 0 act as remove collateral
    * @param collatAmount - Amount of collat to remove
    * @returns
    */
   const burnAndRedeem = (vaultId: number, amount: BigNumber, collatAmount: BigNumber, onTxConfirmed?: () => void) => {
     if (!contract || !address) return
 
-    const _amount = fromTokenAmount(amount, OSQUEETH_DECIMALS)
+    const _amount = fromTokenAmount(amount, OSQUFURY_DECIMALS)
     const ethAmt = fromTokenAmount(collatAmount, 18)
     return handleTransaction(
       contract.methods.burnWPowerPerpAmount(vaultId, _amount.toFixed(0), ethAmt.toFixed(0)).send({
@@ -175,7 +175,7 @@ export const useGetVault = () => {
         id: vaultId,
         NFTCollateralId: NftCollateralId,
         collateralAmount: toTokenAmount(new BigNumber(collateralAmount), 18),
-        shortAmount: toTokenAmount(new BigNumber(shortAmount), OSQUEETH_DECIMALS),
+        shortAmount: toTokenAmount(new BigNumber(shortAmount), OSQUFURY_DECIMALS),
         operator,
       }
     },
@@ -195,7 +195,7 @@ export const useGetDebtAmount = () => {
       if (!contract) return new BigNumber(0)
 
       const ethUsdcPrice = await getTwapSafe(ethUsdcPool, weth, usdc, TWAP_PERIOD)
-      const _shortAmt = fromTokenAmount(shortAmount, OSQUEETH_DECIMALS)
+      const _shortAmt = fromTokenAmount(shortAmount, OSQUFURY_DECIMALS)
       const ethDebt = new BigNumber(_shortAmt).div(INDEX_SCALE).multipliedBy(normFactor).multipliedBy(ethUsdcPrice)
       return toTokenAmount(ethDebt, 18)
     },
@@ -225,7 +225,7 @@ export const useGetShortAmountFromDebt = () => {
 
     const ethUsdcPrice = await getTwapSafe(ethUsdcPool, weth, usdc, TWAP_PERIOD)
     const shortAmount = fromTokenAmount(debtAmount, 18).times(INDEX_SCALE).div(normFactor).div(ethUsdcPrice)
-    return toTokenAmount(shortAmount.toFixed(0), OSQUEETH_DECIMALS)
+    return toTokenAmount(shortAmount.toFixed(0), OSQUFURY_DECIMALS)
   }
 
   return getShortAmountFromDebt
@@ -233,15 +233,15 @@ export const useGetShortAmountFromDebt = () => {
 
 export const useGetUniNFTCollatDetail = () => {
   const normFactor = useAtomValue(normFactorAtom)
-  const getETHandOSQTHAmount = useGetETHandOSQTHAmount()
+  const getETHandOSQFUAmount = useGetETHandOSQFUAmount()
   const getTwapEthPrice = useGetTwapEthPrice()
 
   const getUniNFTCollatDetail = async (uniId: number) => {
     const ethPrice = await getTwapEthPrice()
-    const { wethAmount, oSqthAmount, position } = await getETHandOSQTHAmount(uniId)
-    const sqthValueInEth = oSqthAmount.multipliedBy(normFactor).multipliedBy(ethPrice).div(INDEX_SCALE)
+    const { wethAmount, oSqfuAmount, position } = await getETHandOSQFUAmount(uniId)
+    const sqfuValueInEth = oSqfuAmount.multipliedBy(normFactor).multipliedBy(ethPrice).div(INDEX_SCALE)
 
-    return { collateral: sqthValueInEth.plus(wethAmount), position }
+    return { collateral: sqfuValueInEth.plus(wethAmount), position }
   }
 
   return getUniNFTCollatDetail
@@ -254,7 +254,7 @@ export const useGetCollatRatioAndLiqPrice = () => {
   const contract = useAtomValue(controllerContractAtom)
   const getTwapEthPrice = useGetTwapEthPrice()
   const getDebtAmount = useGetDebtAmount()
-  const getETHandOSQTHAmount = useGetETHandOSQTHAmount()
+  const getETHandOSQFUAmount = useGetETHandOSQFUAmount()
   const getUniNFTCollatDetail = useGetUniNFTCollatDetail()
   const getCollatRatioAndLiqPrice = useCallback(
     async (collateralAmount: BigNumber, shortAmount: BigNumber, uniId?: number) => {
@@ -286,8 +286,8 @@ export const useGetCollatRatioAndLiqPrice = () => {
 
       if (debt && !debt.isZero() && debt.isPositive()) {
         const collateralPercent = Number(effectiveCollat.div(debt).times(100).toFixed(1))
-        const rSqueeth = normFactor.multipliedBy(new BigNumber(shortAmount)).dividedBy(10000)
-        if (!uniId) liquidationPrice = effectiveCollat.div(rSqueeth.multipliedBy(1.5))
+        const rSquFury = normFactor.multipliedBy(new BigNumber(shortAmount)).dividedBy(10000)
+        if (!uniId) liquidationPrice = effectiveCollat.div(rSquFury.multipliedBy(1.5))
 
         return {
           collateralPercent,
@@ -297,7 +297,7 @@ export const useGetCollatRatioAndLiqPrice = () => {
 
       return emptyState
     },
-    [contract, getDebtAmount, getETHandOSQTHAmount, getTwapEthPrice, impliedVol, isWethToken0, normFactor.toString()],
+    [contract, getDebtAmount, getETHandOSQFUAmount, getTwapEthPrice, impliedVol, isWethToken0, normFactor.toString()],
   )
 
   return getCollatRatioAndLiqPrice
@@ -464,7 +464,7 @@ const useMark = () => {
     const sub = web3.eth.subscribe(
       'logs',
       {
-        address: [SQUEETH_UNI_POOL[networkId]],
+        address: [SQUFURY_UNI_POOL[networkId]],
         topics: [SWAP_EVENT_TOPIC],
       },
       () => {
@@ -480,14 +480,14 @@ const useMark = () => {
   return mark
 }
 
-const useOsqthRefVol = async (): Promise<number> => {
+const useOsqfuRefVol = async (): Promise<number> => {
   const address = useAtomValue(addressAtom)
   const networkId = useAtomValue(networkIdAtom)
-  const [OsqthRefVol, setOsqthRefVol] = useAtom(osqthRefVolAtom)
+  const [OsqfuRefVol, setOsqfuRefVol] = useAtom(osqfuRefVolAtom)
   useEffect(() => {
-    getOsqthRefVol().then(setOsqthRefVol)
+    getOsqfuRefVol().then(setOsqfuRefVol)
   }, [address, networkId])
-  return OsqthRefVol
+  return OsqfuRefVol
 }
 
 export const useInitController = () => {
@@ -497,5 +497,5 @@ export const useInitController = () => {
   useCurrentImpliedFunding()
   useDailyHistoricalFunding()
   useNormFactor()
-  useOsqthRefVol()
+  useOsqfuRefVol()
 }

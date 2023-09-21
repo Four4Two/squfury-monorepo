@@ -2,7 +2,7 @@ import { atom, useAtomValue } from 'jotai'
 
 import { BIG_ZERO, DEFAULT_SLIPPAGE } from '@constants/index'
 import { Vault } from '../../types'
-import { readyAtom } from '../squeethPool/atoms'
+import { readyAtom } from '../squfuryPool/atoms'
 import { CRABV2_START_DATE } from '@constants/index'
 import { getCrabPnlV2ChartData } from '@utils/pricer'
 import { useQuery } from 'react-query'

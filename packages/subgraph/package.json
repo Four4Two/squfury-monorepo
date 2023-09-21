@@ -5,12 +5,12 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "yarn prepare:mainnet && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ opynfinance/squeeth",
-    "create-local": "graph create --node http://localhost:8020/ opynfinance/squeeth",
-    "remove-local": "graph remove --node http://localhost:8020/ opynfinance/squeeth",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 opynfinance/squeeth",
+    "deploy": "yarn prepare:mainnet && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ opynfinance/squfury",
+    "create-local": "graph create --node http://localhost:8020/ opynfinance/squfury",
+    "remove-local": "graph remove --node http://localhost:8020/ opynfinance/squfury",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 opynfinance/squfury",
     "prepare:ropsten": "mustache config/ropsten-config.json subgraph.template.yaml > subgraph.yaml",
-    "deploy:ropsten": "yarn prepare:ropsten && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ opynfinance/squeeth-ropsten",
+    "deploy:ropsten": "yarn prepare:ropsten && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ opynfinance/squfury-ropsten",
     "prepare:mainnet": "mustache config/mainnet-config.json subgraph.template.yaml > subgraph.yaml",
     "prepare:goerli": "mustache config/goerli-config.json subgraph.template.yaml > subgraph.yaml",
     "deploy:goerli": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ haythem96/squeeth-temp-subgraph"

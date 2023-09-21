@@ -4,7 +4,7 @@ import { Contract, BigNumber, providers } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import BigNumberJs from 'bignumber.js'
 import { WETH9, MockErc20, Controller, Oracle, WPowerPerp, CrabStrategy, ISwapRouter } from "../../../typechain";
-import { deployUniswapV3, deploySqueethCoreContracts, deployWETHAndDai, addWethDaiLiquidity, addSqueethLiquidity } from '../../setup'
+import { deployUniswapV3, deploySquFuryCoreContracts, deployWETHAndDai, addWethDaiLiquidity, addSquFuryLiquidity } from '../../setup'
 import { isSimilar, wmul, wdiv, one, oracleScaleFactor } from "../../utils"
 
 BigNumberJs.set({EXPONENTIAL_AT: 30})
@@ -12,8 +12,8 @@ BigNumberJs.set({EXPONENTIAL_AT: 30})
 describe("Crab integration test: crab vault full liquidation and shutdown of contracts", function () {
   const startingEthPrice = 3000
   const startingEthPrice1e18 = BigNumber.from(startingEthPrice).mul(one) // 3000 * 1e18
-  const scaledStartingSqueethPrice1e18 = startingEthPrice1e18.div(oracleScaleFactor) // 0.3 * 1e18
-  const scaledStartingSqueethPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
+  const scaledStartingSquFuryPrice1e18 = startingEthPrice1e18.div(oracleScaleFactor) // 0.3 * 1e18
+  const scaledStartingSquFuryPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
 
 
   const hedgeTimeThreshold = 86400  // 24h
@@ -34,8 +34,8 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
   let swapRouter: Contract
   let oracle: Oracle
   let controller: Controller
-  let wSqueethPool: Contract
-  let wSqueeth: WPowerPerp
+  let wSquFuryPool: Contract
+  let wSquFury: WPowerPerp
   let crabStrategy: CrabStrategy
   let ethDaiPool: Contract
 
@@ -59,23 +59,23 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
     swapRouter = uniDeployments.swapRouter
 
     // this will not deploy a new pool, only reuse old onces
-    const squeethDeployments = await deploySqueethCoreContracts(
+    const squfuryDeployments = await deploySquFuryCoreContracts(
       weth,
       dai, 
       positionManager, 
       uniswapFactory,
-      scaledStartingSqueethPrice,
+      scaledStartingSquFuryPrice,
       startingEthPrice
     )
-    controller = squeethDeployments.controller
-    wSqueeth = squeethDeployments.wsqueeth
-    oracle = squeethDeployments.oracle
-    // shortSqueeth = squeethDeployments.shortSqueeth
-    wSqueethPool = squeethDeployments.wsqueethEthPool
-    ethDaiPool = squeethDeployments.ethDaiPool
+    controller = squfuryDeployments.controller
+    wSquFury = squfuryDeployments.wsqufury
+    oracle = squfuryDeployments.oracle
+    // shortSquFury = squfuryDeployments.shortSquFury
+    wSquFuryPool = squfuryDeployments.wsqufuryEthPool
+    ethDaiPool = squfuryDeployments.ethDaiPool
 
     const CrabStrategyContract = await ethers.getContractFactory("CrabStrategy");
-    crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, uniswapFactory.address, wSqueethPool.address, hedgeTimeThreshold, hedgePriceThreshold, auctionTime, minPriceMultiplier, maxPriceMultiplier)) as CrabStrategy;
+    crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, uniswapFactory.address, wSquFuryPool.address, hedgeTimeThreshold, hedgePriceThreshold, auctionTime, minPriceMultiplier, maxPriceMultiplier)) as CrabStrategy;
   
     const strategyCap = ethers.utils.parseUnits("1000")
     await crabStrategy.connect(owner).setStrategyCap(strategyCap)
@@ -97,12 +97,12 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
     await provider.send("evm_increaseTime", [600])
     await provider.send("evm_mine", [])
 
-    await addSqueethLiquidity(
-      scaledStartingSqueethPrice, 
+    await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice, 
       '1000000',
       '2000000', 
       owner.address, 
-      wSqueeth, 
+      wSquFury, 
       weth, 
       positionManager, 
       controller
@@ -117,17 +117,17 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
     const msgvalue = ethers.utils.parseUnits('20')
     const ethPrice = await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 600, true)
 
-    const squeethDelta = ethPrice.mul(2).div(1e4);
-    const debtToMint = wdiv(ethToDeposit, squeethDelta);
-    const depositorSqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+    const squfuryDelta = ethPrice.mul(2).div(1e4);
+    const debtToMint = wdiv(ethToDeposit, squfuryDelta);
+    const depositorSquFuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
     await crabStrategy.connect(depositor).deposit({value: msgvalue})
 
     const totalSupply = (await crabStrategy.totalSupply())
     const depositorCrab = (await crabStrategy.balanceOf(depositor.address))
     const [strategyOperatorBefore, strategyNftIdBefore, strategyCollateralAmountBefore, debtAmount] = await crabStrategy.getVaultDetails()
-    const depositorSqueethBalance = await wSqueeth.balanceOf(depositor.address)
-    const strategyContractSqueeth = await wSqueeth.balanceOf(crabStrategy.address)
+    const depositorSquFuryBalance = await wSquFury.balanceOf(depositor.address)
+    const strategyContractSquFury = await wSquFury.balanceOf(crabStrategy.address)
     const lastHedgeTime = await crabStrategy.timeAtLastHedge()
     const currentBlockNumber = await provider.getBlockNumber()
     const currentBlock = await provider.getBlock(currentBlockNumber)
@@ -137,8 +137,8 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
     expect(depositorCrab.eq(ethToDeposit)).to.be.true
     // these had to be adjusted - it seems the eth price is a bit different than expected maybe? but only in coverage???
     expect(isSimilar(debtAmount.toString(), debtToMint.toString(),3)).to.be.true
-    expect(isSimilar((depositorSqueethBalance.sub(depositorSqueethBalanceBefore)).toString(),(debtToMint).toString(),3)).to.be.true
-    expect(strategyContractSqueeth.eq(BigNumber.from(0))).to.be.true
+    expect(isSimilar((depositorSquFuryBalance.sub(depositorSquFuryBalanceBefore)).toString(),(debtToMint).toString(),3)).to.be.true
+    expect(strategyContractSquFury.eq(BigNumber.from(0))).to.be.true
     expect(lastHedgeTime.eq(timeStamp)).to.be.true
     
   })
@@ -165,15 +165,15 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
       await (swapRouter as ISwapRouter).connect(owner).exactOutputSingle(exactOutputParam)
     })
 
-    before('push squeeth price higher', async() => {
-      // set squeeth price higher by buying 50% of squeeth in the pool
-      const poolSqueethBalance = await wSqueeth.balanceOf(wSqueethPool.address)
+    before('push squfury price higher', async() => {
+      // set squfury price higher by buying 50% of squfury in the pool
+      const poolSquFuryBalance = await wSquFury.balanceOf(wSquFuryPool.address)
 
-      const maxWeth = poolSqueethBalance.mul(scaledStartingSqueethPrice1e18).mul(20).div(one)
+      const maxWeth = poolSquFuryBalance.mul(scaledStartingSquFuryPrice1e18).mul(20).div(one)
             
       const exactOutputParam = {
         tokenIn: weth.address,
-        tokenOut: wSqueeth.address,
+        tokenOut: wSquFury.address,
         fee: 3000,
         recipient: owner.address,
         deadline: (await provider.getBlock(await provider.getBlockNumber())).timestamp + 86400,
@@ -198,7 +198,7 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
       const mintAmount = vaultBefore.shortAmount
       const collateralRequired = mintAmount.mul(newEthPrice).mul(2).div(oracleScaleFactor).div(one).mul(2)
 
-      // mint squeeth to liquidate vault0!
+      // mint squfury to liquidate vault0!
       await controller.connect(liquidator).mintWPowerPerpAmount(0, mintAmount, 0, {value: collateralRequired})
     })
 
@@ -210,21 +210,21 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
       const vaultBefore = await controller.vaults(vaultId)
       
       // state before liquidation
-      const liquidatorSqueethBefore = await wSqueeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryBefore = await wSquFury.balanceOf(liquidator.address)
       const liquidatorBalanceBefore = await provider.getBalance(liquidator.address)
 
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount
 
-      await controller.connect(liquidator).liquidate(vaultId, wSqueethAmountToLiquidate);
+      await controller.connect(liquidator).liquidate(vaultId, wSquFuryAmountToLiquidate);
       
       const collateralToGet = vaultBefore.collateralAmount
 
       const vaultAfter = await controller.vaults(vaultId)
       const liquidatorBalanceAfter = await provider.getBalance(liquidator.address)
-      const liquidatorSqueethAfter = await wSqueeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryAfter = await wSquFury.balanceOf(liquidator.address)
       
       // expect(collateralToGet.eq(liquidatorBalanceAfter.sub(liquidatorBalanceBefore))).to.be.true
-      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSqueethBefore.sub(liquidatorSqueethAfter))).to.be.true
+      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSquFuryBefore.sub(liquidatorSquFuryAfter))).to.be.true
       expect(vaultAfter.shortAmount.eq(BigNumber.from(0))).to.be.equal
       expect(vaultAfter.collateralAmount.eq(BigNumber.from(0))).to.be.equal
       
@@ -270,15 +270,15 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
         await expect(crabStrategy.connect(depositor2).deposit({value: msgvalue})).to.be.revertedWith("Crab contracts shut down")
       })
 
-    it("depositor should revert trying to flashWithdraw with AS due to amount of wSqueeth to buy being 0", async () => {
-      const wSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 1, false)
+    it("depositor should revert trying to flashWithdraw with AS due to amount of wSquFury to buy being 0", async () => {
+      const wSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 1, false)
 
       const userCrabBalanceBefore = await crabStrategy.balanceOf(depositor.address);
       const crabTotalSupply = await crabStrategy.totalSupply()
       const [strategyOperatorBefore, strategyNftIdBefore, strategyCollateralAmountBefore, strategyDebtAmountBefore] = await crabStrategy.getVaultDetails()
       const crabRatio = wdiv(userCrabBalanceBefore, crabTotalSupply);
       const debtToRepay = wmul(crabRatio,strategyDebtAmountBefore);
-      const ethCostOfDebtToRepay = wmul(debtToRepay,wSqueethPrice)
+      const ethCostOfDebtToRepay = wmul(debtToRepay,wSquFuryPrice)
       const userCollateral = wmul(crabRatio, strategyCollateralAmountBefore)
       const ethToWithdraw = userCollateral.sub(ethCostOfDebtToRepay);
       const maxEthToPay = ethCostOfDebtToRepay.mul(11).div(10)
@@ -296,13 +296,13 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
       const crabRatio = wdiv(userCrabBalanceBefore, crabTotalSupply);
 
       const userCollateral = wmul(crabRatio, strategyCollateralAmountBefore)
-      const userSqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+      const userSquFuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
       await crabStrategy.connect(depositor).withdraw(userCrabBalanceBefore)
 
       const userEthBalanceAfter = await provider.getBalance(depositor.address)
       const userCrabBalanceAfter = await crabStrategy.balanceOf(depositor.address);
-      const userSqueethBalanceAfter = await wSqueeth.balanceOf(depositor.address)
+      const userSquFuryBalanceAfter = await wSquFury.balanceOf(depositor.address)
 
       const vaultId = await crabStrategy.vaultId();
       const isVaultSafe = await controller.isVaultSafe((await crabStrategy.vaultId()))
@@ -316,7 +316,7 @@ describe("Crab integration test: crab vault full liquidation and shutdown of con
       // expect(userEthBalanceAfter.sub(userEthBalanceBefore).eq(BigNumber.from(0))).to.be.true
       expect(userCrabBalanceAfter.eq(BigNumber.from(0))).to.be.true
       expect(userCrabBalanceBefore.sub(userCrabBalanceAfter).eq(userCrabBalanceBefore)).to.be.true
-      expect(userSqueethBalanceAfter.sub(userSqueethBalanceBefore).eq(BigNumber.from(0))).to.be.true
+      expect(userSquFuryBalanceAfter.sub(userSquFuryBalanceBefore).eq(BigNumber.from(0))).to.be.true
       expect(collateralAfter.eq(strategyCollateralAmountBefore.sub(userCollateral))).to.be.true
       expect(collateralAfter.eq(BigNumber.from(0))).to.be.true
       expect(debtAfter.eq(BigNumber.from(0))).to.be.true

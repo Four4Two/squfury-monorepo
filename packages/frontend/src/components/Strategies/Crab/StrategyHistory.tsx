@@ -114,12 +114,12 @@ export const CrabStrategyHistory: React.FC = () => {
                     })}
                   </Typography>
                 </div>
-                <div className={clsx(classes.txSubItem, d.isSellingSqueeth ? classes.red : classes.green)}>
+                <div className={clsx(classes.txSubItem, d.isSellingSquFury ? classes.red : classes.green)}>
                   <Typography variant="subtitle1">
-                    <b style={{ fontWeight: 600 }}>{d.oSqueethAmount.toFixed(6)}</b> oSQTH
+                    <b style={{ fontWeight: 600 }}>{d.oSquFuryAmount.toFixed(6)}</b> oSQFU
                   </Typography>
                 </div>
-                <div className={clsx(classes.txSubItem, d.isSellingSqueeth ? classes.green : classes.red)}>
+                <div className={clsx(classes.txSubItem, d.isSellingSquFury ? classes.green : classes.red)}>
                   <Typography variant="subtitle1">
                     <b style={{ fontWeight: 600 }}>{d.ethAmount.toFixed(6)}</b> ETH
                   </Typography>

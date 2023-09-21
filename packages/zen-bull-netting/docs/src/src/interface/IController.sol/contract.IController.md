@@ -1,5 +1,5 @@
 # IController
-[Git Source](https://github.com/opynfinance/squeeth-monorepo/blob/334783aa87db73939fb00d5b133216b0033dfece/src/interface/IController.sol)
+[Git Source](https://github.com/opynfinance/squfury-monorepo/blob/334783aa87db73939fb00d5b133216b0033dfece/src/interface/IController.sol)
 
 
 ## Functions

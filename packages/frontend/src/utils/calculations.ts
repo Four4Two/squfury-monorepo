@@ -42,7 +42,7 @@ export function getCollatPercentStatus(collatPercent: number) {
  *
  * Calculation is done with the help of https://docs.google.com/spreadsheets/d/1k1Y_WZ4Of9Prsn5hpHX2BXfdPuUg24X_KBrgYvV8Yw4/edit#gid=0
  */
-export function getBreakEvenForLongSqueeth(
+export function getBreakEvenForLongSquFury(
   markPrice: BigNumber,
   indexPrice: BigNumber,
   normFactor: BigNumber,

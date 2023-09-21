@@ -41,10 +41,10 @@ contract TestWithdrawAuction is BaseForkSetup {
         vm.prank(0x06CECFbac34101aE41C88EbC2450f8602b3d164b);
         crab.transfer(withdrawer, 20e18);
 
-        // send sqth to market makers todo
+        // send sqfu to market makers todo
         vm.startPrank(0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9);
-        sqth.transfer(mm1, 1000e18);
-        sqth.transfer(mm2, 1000e18);
+        sqfu.transfer(mm1, 1000e18);
+        sqfu.transfer(mm2, 1000e18);
         vm.stopPrank();
 
         // deposit crab for withdrawing
@@ -59,16 +59,16 @@ contract TestWithdrawAuction is BaseForkSetup {
 
     function testWithdrawAuction() public {
         WithdrawAuctionParams memory params;
-        // find the sqth to buy to make the trade
+        // find the sqfu to buy to make the trade
         params.crabToWithdraw = 10e18;
-        uint256 sqthToBuy = crab.getWsqueethFromCrabAmount(params.crabToWithdraw);
+        uint256 sqfuToBuy = crab.getWsqufuryFromCrabAmount(params.crabToWithdraw);
         UniswapQuote quote = new UniswapQuote();
-        uint256 sqthPrice = quote.getSqthPrice(1e18);
-        params.clearingPrice = (sqthPrice * 1001) / 1000;
+        uint256 sqfuPrice = quote.getSqfuPrice(1e18);
+        params.clearingPrice = (sqfuPrice * 1001) / 1000;
 
-        // get the orders for that sqth
+        // get the orders for that sqfu
         vm.prank(mm1);
-        sqth.approve(address(netting), 1000000e18);
+        sqfu.approve(address(netting), 1000000e18);
 
         Order memory order0 = Order(0, mm1, 1e18, params.clearingPrice, false, block.timestamp, 2, 1, 0x00, 0x00);
         Sign memory s0;
@@ -79,7 +79,7 @@ contract TestWithdrawAuction is BaseForkSetup {
         orders.push(order0);
 
         Order memory order =
-            Order(0, mm1, sqthToBuy - 1e18, params.clearingPrice, false, block.timestamp, 0, 1, 0x00, 0x00);
+            Order(0, mm1, sqfuToBuy - 1e18, params.clearingPrice, false, block.timestamp, 0, 1, 0x00, 0x00);
         Sign memory s1;
         (s1.v, s1.r, s1.s) = vm.sign(mm1Pk, sig.getTypedDataHash(order));
         order.v = s1.v;
@@ -89,11 +89,11 @@ contract TestWithdrawAuction is BaseForkSetup {
         params.orders = orders;
 
         // find the minUSDC to receive
-        // get col and wsqth from crab amount, find the equity value in eth
+        // get col and wsqfu from crab amount, find the equity value in eth
         (,, uint256 collateral,) = crab.getVaultDetails();
         Portion memory p;
         p.collateral = (params.crabToWithdraw * collateral) / crab.totalSupply();
-        p.debt = crab.getWsqueethFromCrabAmount(params.crabToWithdraw);
+        p.debt = crab.getWsqufuryFromCrabAmount(params.crabToWithdraw);
         uint256 equityInEth = p.collateral - (p.debt * params.clearingPrice) / 1e18;
 
         params.minUSDC = (quote.convertWETHToUSDC(equityInEth) * 999) / 1000;
@@ -111,11 +111,11 @@ contract TestWithdrawAuction is BaseForkSetup {
         timeUSDC.end = ERC20(usdc).balanceOf(withdrawer);
         timeWETH.end = IWETH(weth).balanceOf(mm1);
         assertGe(timeUSDC.end - timeUSDC.start, params.minUSDC);
-        assertGe(timeWETH.end - timeWETH.start, (sqthToBuy * sqthPrice) / 1e18);
+        assertGe(timeWETH.end - timeWETH.start, (sqfuToBuy * sqfuPrice) / 1e18);
 
         // and eth recevied for mm
         assertEq(address(netting).balance, 0);
-        assertEq(ERC20(sqth).balanceOf(address(netting)), 0, "sqth balance");
+        assertEq(ERC20(sqfu).balanceOf(address(netting)), 0, "sqfu balance");
         assertLe(ERC20(usdc).balanceOf(address(netting)), 1, "usdc balance");
         assertEq(ICrabStrategyV2(crab).balanceOf(address(netting)), 1e18, "crab balance");
         assertEq(netting.crabBalance(address(withdrawer)), 11e18 - params.crabToWithdraw);
@@ -129,16 +129,16 @@ contract TestWithdrawAuction is BaseForkSetup {
         vm.stopPrank();
 
         WithdrawAuctionParams memory params;
-        // find the sqth to buy to make the trade
+        // find the sqfu to buy to make the trade
         params.crabToWithdraw = 10e18;
-        uint256 sqthToBuy = crab.getWsqueethFromCrabAmount(params.crabToWithdraw);
+        uint256 sqfuToBuy = crab.getWsqufuryFromCrabAmount(params.crabToWithdraw);
         UniswapQuote quote = new UniswapQuote();
-        uint256 sqthPrice = quote.getSqthPrice(1e18);
-        params.clearingPrice = (sqthPrice * 1001) / 1000;
+        uint256 sqfuPrice = quote.getSqfuPrice(1e18);
+        params.clearingPrice = (sqfuPrice * 1001) / 1000;
 
-        // get the orders for that sqth
+        // get the orders for that sqfu
         vm.prank(mm1);
-        sqth.approve(address(netting), 1000000e18);
+        sqfu.approve(address(netting), 1000000e18);
 
         Order memory order0 = Order(0, mm1, 1e18, params.clearingPrice, false, block.timestamp, 2, 1, 0x00, 0x00);
         Sign memory s0;
@@ -149,7 +149,7 @@ contract TestWithdrawAuction is BaseForkSetup {
         orders.push(order0);
 
         Order memory order =
-            Order(0, mm1, sqthToBuy - 1e18, params.clearingPrice, false, block.timestamp, 0, 1, 0x00, 0x00);
+            Order(0, mm1, sqfuToBuy - 1e18, params.clearingPrice, false, block.timestamp, 0, 1, 0x00, 0x00);
         Sign memory s1;
         (s1.v, s1.r, s1.s) = vm.sign(mm1Pk, sig.getTypedDataHash(order));
         order.v = s1.v;
@@ -159,11 +159,11 @@ contract TestWithdrawAuction is BaseForkSetup {
         params.orders = orders;
 
         // find the minUSDC to receive
-        // get col and wsqth from crab amount, find the equity value in eth
+        // get col and wsqfu from crab amount, find the equity value in eth
         (,, uint256 collateral,) = crab.getVaultDetails();
         Portion memory p;
         p.collateral = (params.crabToWithdraw * collateral) / crab.totalSupply();
-        p.debt = crab.getWsqueethFromCrabAmount(params.crabToWithdraw);
+        p.debt = crab.getWsqufuryFromCrabAmount(params.crabToWithdraw);
         uint256 equityInEth = p.collateral - (p.debt * params.clearingPrice) / 1e18;
 
         params.minUSDC = (quote.convertWETHToUSDC(equityInEth) * 999) / 1000;
@@ -181,29 +181,29 @@ contract TestWithdrawAuction is BaseForkSetup {
         timeUSDC.end = ERC20(usdc).balanceOf(withdrawer);
         timeWETH.end = IWETH(weth).balanceOf(mm1);
         assertGe(timeUSDC.end - timeUSDC.start, params.minUSDC);
-        assertGe(timeWETH.end - timeWETH.start, (sqthToBuy * sqthPrice) / 1e18);
+        assertGe(timeWETH.end - timeWETH.start, (sqfuToBuy * sqfuPrice) / 1e18);
 
         // and eth recevied for mm
         assertEq(address(netting).balance, 0);
-        assertEq(ERC20(sqth).balanceOf(address(netting)), 0, "sqth balance");
+        assertEq(ERC20(sqfu).balanceOf(address(netting)), 0, "sqfu balance");
         assertLe(ERC20(usdc).balanceOf(address(netting)), 1, "usdc balance");
         assertEq(ICrabStrategyV2(crab).balanceOf(address(netting)), 1e18, "crab balance");
         assertEq(netting.crabBalance(address(withdrawer)), 11e18 - params.crabToWithdraw);
         assertEq(IWETH(weth).balanceOf(address(netting)), 0, "weth balance");
     }
 
-    function testSqthPriceAboveThreshold() public {
+    function testSqfuPriceAboveThreshold() public {
         WithdrawAuctionParams memory params;
-        // find the sqth to buy to make the trade
+        // find the sqfu to buy to make the trade
         params.crabToWithdraw = 10e18;
-        uint256 sqthToBuy = 1e6;
+        uint256 sqfuToBuy = 1e6;
         UniswapQuote quote = new UniswapQuote();
-        uint256 sqthPrice = quote.getSqthPrice(1e18);
-        params.clearingPrice = (sqthPrice * 106) / 100;
+        uint256 sqfuPrice = quote.getSqfuPrice(1e18);
+        params.clearingPrice = (sqfuPrice * 106) / 100;
 
-        // get the orders for that sqth
+        // get the orders for that sqfu
 
-        Order memory order = Order(0, mm1, sqthToBuy, params.clearingPrice, false, block.timestamp, 0, 1, 0x00, 0x00);
+        Order memory order = Order(0, mm1, sqfuToBuy, params.clearingPrice, false, block.timestamp, 0, 1, 0x00, 0x00);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(mm1Pk, sig.getTypedDataHash(order));
         order.v = v;
         order.r = r;

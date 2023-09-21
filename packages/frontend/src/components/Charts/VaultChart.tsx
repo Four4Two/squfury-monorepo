@@ -7,8 +7,8 @@ import React, { useState } from 'react'
 import { collatRatioAtom, useGetVaultPNLWithRebalance } from 'src/state/ethPriceCharts/atoms'
 
 import { Links, Vaults } from '../../constants'
-import { SqueethTab, SqueethTabs } from '../Tabs'
-import ShortSqueethPayoff from './ShortSqueethPayoff'
+import { SquFuryTab, SquFuryTabs } from '../Tabs'
+import ShortSquFuryPayoff from './ShortSquFuryPayoff'
 
 // const Chart = dynamic(() => import('kaktana-react-lightweight-charts'), { ssr: false })
 
@@ -105,9 +105,9 @@ export function VaultChart({
   //   if (vault === Vaults.Short)
   //     return [
   //       // { data: shortEthPNL, legend: 'Short ETH PNL' },
-  //       // { data: shortSeries, legend: 'Short Squeeth PNL (incl. funding)' },
+  //       // { data: shortSeries, legend: 'Short SquFury PNL (incl. funding)' },
   //       { data: convertPNLToPriceChart(shortEthPNL, startingETHPrice), legend: 'Short ETH' },
-  //       { data: convertPNLToPriceChart(shortSeries, startingETHPrice), legend: 'Short Squeeth (incl. funding)' },
+  //       { data: convertPNLToPriceChart(shortSeries, startingETHPrice), legend: 'Short SquFury (incl. funding)' },
   //     ]
   //   return [{ data: seriesRebalance, legend: 'PNL' }]
   // }, [vault, longEthPNL, shortEthPNL, seriesRebalance, getStableYieldPNL, longAmount, shortSeries])
@@ -143,9 +143,9 @@ export function VaultChart({
   //   if (vault === Vaults.Short)
   //     return [
   //       // { data: shortEthPNL, legend: 'Short ETH PNL' },
-  //       // { data: shortSeries, legend: 'Short Squeeth PNL (incl. funding)' },
+  //       // { data: shortSeries, legend: 'Short SquFury PNL (incl. funding)' },
   //       { data: convertPNLToPriceChart(shortEthPNL, startingETHPrice), legend: 'Short ETH' },
-  //       { data: convertPNLToPriceChart(shortSeries, startingETHPrice), legend: 'Short Squeeth (incl. funding)' },
+  //       { data: convertPNLToPriceChart(shortSeries, startingETHPrice), legend: 'Short SquFury (incl. funding)' },
   //     ]
   //   return [{ data: seriesRebalance, legend: 'PNL' }]
   // }, [vault, longEthPNL, shortEthPNL, seriesRebalance, getStableYieldPNL, longAmount, startingETHPrice, shortSeries])
@@ -165,18 +165,18 @@ export function VaultChart({
   return (
     <div>
       <div className={classes.navDiv}>
-        <SqueethTabs
+        <SquFuryTabs
           style={{ background: 'transparent' }}
           className={classes.chartNav}
           value={chartType}
           onChange={(evt, val) => setChartType(val)}
           aria-label="Sub nav tabs"
         >
-          {/* <SqueethTab label={`Historical ${days}D PNL`} /> */}
-          <SqueethTab label="Payoff" />
-          {/* <SqueethTab label="Details" /> */}
-          <SqueethTab label="Risks" />
-        </SqueethTabs>
+          {/* <SquFuryTab label={`Historical ${days}D PNL`} /> */}
+          <SquFuryTab label="Payoff" />
+          {/* <SquFuryTab label="Details" /> */}
+          <SquFuryTab label="Risks" />
+        </SquFuryTabs>
         {/* <Hidden smDown>
           {chartType === 0 ? (
             <TextField
@@ -208,22 +208,22 @@ export function VaultChart({
       {chartType === 0 ? (
         <div className={classes.payoffContainer}>
           <div className={classes.shortPayoff}>
-            <ShortSqueethPayoff ethPrice={ethPrice.toNumber()} collatRatio={collatRatio} />
+            <ShortSquFuryPayoff ethPrice={ethPrice.toNumber()} collatRatio={collatRatio} />
           </div>
 
           <div className={classes.shortDescription}>
             <Typography className={classes.cardTitle} variant="h6">
-              What is short squeeth?
+              What is short squfury?
             </Typography>
             <Typography variant="body2" className={classes.cardDetail}>
-              Short squeeth (ETH&sup2;) is an ETH collateralized short ETH&sup2; position. Your returns will be a
-              combination of being short oSQTH and long ETH collateral. You earn a funding rate for taking on this
-              position. You enter the position by putting down collateral, minting, and selling squeeth. You provide ETH
-              collateral to mint squeeth, and your collateralization ratio determines your exposure. If you become
+              Short squfury (ETH&sup2;) is an ETH collateralized short ETH&sup2; position. Your returns will be a
+              combination of being short oSQFU and long ETH collateral. You earn a funding rate for taking on this
+              position. You enter the position by putting down collateral, minting, and selling squfury. You provide ETH
+              collateral to mint squfury, and your collateralization ratio determines your exposure. If you become
               undercollateralized, you could be liquidated.{' '}
               <a
                 className={classes.header}
-                href="https://opyn.gitbook.io/squeeth-faq/squeeth/beginner-squeeth-faq"
+                href="https://opyn.gitbook.io/squfury-faq/squfury/beginner-squfury-faq"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -247,21 +247,21 @@ export function VaultChart({
         // )
         // : chartType === 1 ? (
         //   <div className={classes.payoffContainer}>
-        //     <ShortSqueethPayoff ethPrice={ethPrice.toNumber()} collatRatio={collatRatio} />
+        //     <ShortSquFuryPayoff ethPrice={ethPrice.toNumber()} collatRatio={collatRatio} />
         //   </div>
         // chartType === 1 ? (
         //   <div style={{ overflow: 'auto', maxHeight: '300px' }}>
         //     <Typography className={classes.cardTitle} variant="h6">
-        //       What is short squeeth?
+        //       What is short squfury?
         //     </Typography>
         //     <Typography variant="body2" className={classes.cardDetail}>
-        //       Short squeeth (ETH&sup2;) is short an ETH&sup2; position. You earn a funding rate for taking on this
-        //       position. You enter the position by putting down collateral, minting, and selling squeeth. You provide ETH
-        //       collateral to mint squeeth, and your collateralization ratio determines your exposure. If you become
+        //       Short squfury (ETH&sup2;) is short an ETH&sup2; position. You earn a funding rate for taking on this
+        //       position. You enter the position by putting down collateral, minting, and selling squfury. You provide ETH
+        //       collateral to mint squfury, and your collateralization ratio determines your exposure. If you become
         //       undercollateralized, you could be liquidated.{' '}
         //       <a
         //         className={classes.header}
-        //         href="https://opyn.gitbook.io/squeeth/resources/squeeth-faq"
+        //         href="https://opyn.gitbook.io/squfury/resources/squfury-faq"
         //         target="_blank"
         //         rel="noreferrer"
         //       >
@@ -281,11 +281,11 @@ export function VaultChart({
             position performs best when ETH price does not move much. If ETH price moves considerably, it is likely
             unprofitable.
             <br /> <br />
-            Squeeth smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts
+            SquFury smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts
             are experimental technology and we encourage caution only risking funds you can afford to lose.
             <a
               className={classes.header}
-              href="https://opyn.gitbook.io/squeeth-faq/squeeth/risks"
+              href="https://opyn.gitbook.io/squfury-faq/squfury/risks"
               target="_blank"
               rel="noreferrer"
             >

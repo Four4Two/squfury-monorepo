@@ -1,5 +1,5 @@
 import LabelWithTooltip from '@components/LabelWithTooltip'
-import SqueethCard from '@components/SqueethCard'
+import SquFuryCard from '@components/SquFuryCard'
 import useYourVaults from '../../hooks/useYourVaults'
 import { Grid, Typography } from '@material-ui/core'
 import { toTokenAmount } from '../../utils/calculations'
@@ -23,7 +23,7 @@ const YourVaults: FC = () => {
       {vaults?.map((vault, index) => (
         <Link key={vault.id} href={`/vault/${vault.id}`} passHref>
           <a>
-            <SqueethCard mt={index ? 2 : 0}>
+            <SquFuryCard mt={index ? 2 : 0}>
               <Grid container>
                 <Grid item md={4}>
                   <LabelWithTooltip labelVariant="caption" label="Id" />
@@ -33,7 +33,7 @@ const YourVaults: FC = () => {
                 <Grid item md={4}>
                   <LabelWithTooltip labelVariant="caption" label="Short Amount" />
                   <Typography variant="body1">
-                    {toTokenAmount(new BigNumber(vault.shortAmount), 18).toFixed(4)}&nbsp; oSQTH
+                    {toTokenAmount(new BigNumber(vault.shortAmount), 18).toFixed(4)}&nbsp; oSQFU
                   </Typography>
                 </Grid>
 
@@ -44,7 +44,7 @@ const YourVaults: FC = () => {
                   </Typography>
                 </Grid>
               </Grid>
-            </SqueethCard>
+            </SquFuryCard>
           </a>
         </Link>
       ))}

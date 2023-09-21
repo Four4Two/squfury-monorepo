@@ -3,12 +3,12 @@ import React, { useContext, useReducer, Reducer } from 'react'
 import { useAtomValue } from 'jotai'
 import { addressesAtom } from 'src/state/positions/atoms'
 import { useTokenBalance } from '@hooks/contracts/useTokenBalance'
-import { OSQUEETH_DECIMALS } from '@constants/index'
+import { OSQUFURY_DECIMALS } from '@constants/index'
 import useAppEffect from '@hooks/useAppEffect'
 
 export enum Steps {
   SELECT_METHOD = 1,
-  GET_SQUEETH,
+  GET_SQUFURY,
   PROVIDE_LIQUIDITY,
 }
 
@@ -63,8 +63,8 @@ const tradeReducer: (state: LPType, action: any) => LPType = (state, action: Act
     case LPActions.SELECT_METHOD:
       return updateBoundary({
         ...state,
-        step: Steps.GET_SQUEETH,
-        mostForwardStep: state.mostForwardStep === Steps.SELECT_METHOD ? Steps.GET_SQUEETH : state.mostForwardStep,
+        step: Steps.GET_SQUFURY,
+        mostForwardStep: state.mostForwardStep === Steps.SELECT_METHOD ? Steps.GET_SQUFURY : state.mostForwardStep,
         obtainMethod: action.payload,
       })
     case LPActions.GO_BACK:
@@ -86,14 +86,14 @@ const useLPState = () => useContext<LPContextType>(LPContext)
 const LPProvider: React.FC = ({ children }) => {
   const [lpState, dispatch] = useReducer<Reducer<LPType, ActionType>>(tradeReducer, initialState)
 
-  const { oSqueeth } = useAtomValue(addressesAtom)
-  const { value: oSqueethBal } = useTokenBalance(oSqueeth, 15, OSQUEETH_DECIMALS)
+  const { oSquFury } = useAtomValue(addressesAtom)
+  const { value: oSquFuryBal } = useTokenBalance(oSquFury, 15, OSQUFURY_DECIMALS)
 
   useAppEffect(() => {
-    if (oSqueethBal.isZero() || lpState.step === Steps.PROVIDE_LIQUIDITY) return
+    if (oSquFuryBal.isZero() || lpState.step === Steps.PROVIDE_LIQUIDITY) return
 
     dispatch({ type: LPActions.GO_TO_PROVIDE_LIQUIDITY })
-  }, [oSqueethBal])
+  }, [oSquFuryBal])
 
   return <LPContext.Provider value={{ lpState, dispatch }}>{children}</LPContext.Provider>
 }

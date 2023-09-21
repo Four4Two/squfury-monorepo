@@ -4,7 +4,7 @@ import { QueryClient } from 'react-query'
 
 import { BIG_ZERO, TWELVEDATA_NO_PRICEDATA_DURATION } from '../constants/'
 import { swaps_swaps } from '../queries/uniswap/__generated__/swaps'
-import { VaultHistory_vaultHistories } from '../queries/squeeth/__generated__/VaultHistory'
+import { VaultHistory_vaultHistories } from '../queries/squfury/__generated__/VaultHistory'
 import { toTokenAmount } from '@utils/calculations'
 import { getHistoricEthPrice, getHistoricEthPrices } from '@hooks/useETHPrice'
 import { getETHWithinOneDayPrices } from '@utils/ethPriceCharts'
@@ -89,24 +89,24 @@ export async function calcETHCollateralPnl(
 }
 /**
  * getRelevantSwaps - gets the swaps that constitute the users current position
- * @param squeethAmount
+ * @param squfuryAmount
  * @param swaps
  * @param isWethToken0
  * @param isLong
- * @returns array of swaps that add up to the user's squeethAmount
+ * @returns array of swaps that add up to the user's squfuryAmount
  */
-const getRelevantSwaps = (squeethAmount: BigNumber, swaps: swaps_swaps[], isWethToken0: boolean, isLong = false) => {
-  let totalSqueeth = BIG_ZERO
+const getRelevantSwaps = (squfuryAmount: BigNumber, swaps: swaps_swaps[], isWethToken0: boolean, isLong = false) => {
+  let totalSquFury = BIG_ZERO
   const relevantSwaps = []
   for (let index = swaps.length - 1; index >= 0; index--) {
-    const squeethAmountFromSwapsData = new BigNumber(isWethToken0 ? swaps[index].amount1 : swaps[index].amount0)
-    // squeethAmountFromSwaps data from uniswap is -ve when it's a buy and +ve when it's a sell
-    const sqthAmount = isLong ? squeethAmountFromSwapsData.negated() : squeethAmountFromSwapsData
-    totalSqueeth = totalSqueeth.plus(sqthAmount)
+    const squfuryAmountFromSwapsData = new BigNumber(isWethToken0 ? swaps[index].amount1 : swaps[index].amount0)
+    // squfuryAmountFromSwaps data from uniswap is -ve when it's a buy and +ve when it's a sell
+    const sqfuAmount = isLong ? squfuryAmountFromSwapsData.negated() : squfuryAmountFromSwapsData
+    totalSquFury = totalSquFury.plus(sqfuAmount)
     relevantSwaps.push(swaps[index])
 
-    //checking if the squeethAmount of the swaps in the relevantSwaps array add up to the user's position
-    if (squeethAmount.isEqualTo(totalSqueeth)) {
+    //checking if the squfuryAmount of the swaps in the relevantSwaps array add up to the user's position
+    if (squfuryAmount.isEqualTo(totalSquFury)) {
       break
     }
   }
@@ -168,10 +168,10 @@ export async function calcDollarShortUnrealizedpnl(
   isWethToken0: boolean,
   positionValue: BigNumber,
   uniswapEthPrice: BigNumber,
-  squeethAmount: BigNumber,
+  squfuryAmount: BigNumber,
   ethCollateralPnl: BigNumber,
 ) {
-  const relevantSwaps = getRelevantSwaps(squeethAmount, swaps, isWethToken0)
+  const relevantSwaps = getRelevantSwaps(squfuryAmount, swaps, isWethToken0)
   const relevantSwapsWithEthPrice = await getSwapsWithEthPrice(relevantSwaps)
 
   const { totalWethInUSD, priceError } = relevantSwapsWithEthPrice.reduce(
@@ -205,9 +205,9 @@ export async function calcDollarLongUnrealizedpnl(
   isWethToken0: boolean,
   positionValue: BigNumber,
   uniswapEthPrice: BigNumber,
-  squeethAmount: BigNumber,
+  squfuryAmount: BigNumber,
 ) {
-  const relevantSwaps = getRelevantSwaps(squeethAmount, swaps, isWethToken0, true)
+  const relevantSwaps = getRelevantSwaps(squfuryAmount, swaps, isWethToken0, true)
   const relevantSwapsWithEthPrice = await getSwapsWithEthPrice(relevantSwaps)
 
   const { totalUSDWethAmount, priceError } = relevantSwapsWithEthPrice.reduce(

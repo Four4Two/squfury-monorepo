@@ -23,8 +23,8 @@ import {
   shortPositionValueAtom,
   swapsAtom,
 } from '../positions/atoms'
-import { readyAtom } from '../squeethPool/atoms'
-import { useGetBuyQuote, useGetSellQuote, useGetWSqueethPositionValue } from '../squeethPool/hooks'
+import { readyAtom } from '../squfuryPool/atoms'
+import { useGetBuyQuote, useGetSellQuote, useGetWSquFuryPositionValue } from '../squfuryPool/hooks'
 import { BIG_ZERO } from '@constants/index'
 import { PositionType } from '../../types'
 import { useVaultData } from '@hooks/useVaultData'
@@ -76,7 +76,7 @@ export function useEthCollateralPnl() {
 /* depreciated */
 export function useBuyAndSellQuote() {
   const { loading: positionsLoading } = useSwaps()
-  const { squeethAmount } = useComputeSwaps()
+  const { squfuryAmount } = useComputeSwaps()
   const getSellQuote = useGetSellQuote()
   const getBuyQuote = useGetBuyQuote()
   const [buyQuote, setBuyQuote] = useAtom(buyQuoteAtom)
@@ -87,49 +87,49 @@ export function useBuyAndSellQuote() {
   useAppEffect(() => {
     if (!ready || positionsLoading) return
 
-    const p1 = getSellQuote(squeethAmount).then(setSellQuote)
-    const p2 = getBuyQuote(squeethAmount).then((val) => setBuyQuote(val.amountIn))
+    const p1 = getSellQuote(squfuryAmount).then(setSellQuote)
+    const p2 = getBuyQuote(squfuryAmount).then((val) => setBuyQuote(val.amountIn))
     Promise.all([p1, p2]).then(() => setLoading(false))
-  }, [getBuyQuote, getSellQuote, positionsLoading, ready, squeethAmount, setBuyQuote, setLoading, setSellQuote])
+  }, [getBuyQuote, getSellQuote, positionsLoading, ready, squfuryAmount, setBuyQuote, setLoading, setSellQuote])
 
   return { buyQuote, sellQuote }
 }
 
 export function useCurrentLongPositionValue() {
-  const { squeethAmount } = useComputeSwaps()
-  const getWSqueethPositionValue = useGetWSqueethPositionValue()
+  const { squfuryAmount } = useComputeSwaps()
+  const getWSquFuryPositionValue = useGetWSquFuryPositionValue()
   const [positionValue, setPositionValue] = useAtom(longPositionValueAtom)
   const positionType = useAtomValue(positionTypeAtom)
 
   useAppEffect(() => {
-    if (squeethAmount.isZero() || positionType != PositionType.LONG) {
+    if (squfuryAmount.isZero() || positionType != PositionType.LONG) {
       setPositionValue(BIG_ZERO)
       return
     }
 
-    const squeethPositionValueInUSD = getWSqueethPositionValue(squeethAmount)
-    setPositionValue(squeethPositionValueInUSD)
-  }, [squeethAmount, positionType, getWSqueethPositionValue, setPositionValue])
+    const squfuryPositionValueInUSD = getWSquFuryPositionValue(squfuryAmount)
+    setPositionValue(squfuryPositionValueInUSD)
+  }, [squfuryAmount, positionType, getWSquFuryPositionValue, setPositionValue])
 
   return positionValue
 }
 
 export function useCurrentShortPositionValue() {
-  const { squeethAmount } = useComputeSwaps()
-  const getWSqueethPositionValue = useGetWSqueethPositionValue()
+  const { squfuryAmount } = useComputeSwaps()
+  const getWSquFuryPositionValue = useGetWSquFuryPositionValue()
 
   const [positionValue, setPositionValue] = useAtom(shortPositionValueAtom)
   const positionType = useAtomValue(positionTypeAtom)
 
   useAppEffect(() => {
-    if (squeethAmount.isZero() || positionType != PositionType.SHORT) {
+    if (squfuryAmount.isZero() || positionType != PositionType.SHORT) {
       setPositionValue(BIG_ZERO)
       return
     }
 
-    const squeethPositionValueInUSD = getWSqueethPositionValue(squeethAmount)
-    setPositionValue(squeethPositionValueInUSD)
-  }, [squeethAmount, setPositionValue, positionType, getWSqueethPositionValue])
+    const squfuryPositionValueInUSD = getWSquFuryPositionValue(squfuryAmount)
+    setPositionValue(squfuryPositionValueInUSD)
+  }, [squfuryAmount, setPositionValue, positionType, getWSquFuryPositionValue])
 
   return positionValue
 }
@@ -179,7 +179,7 @@ export function useShortGain() {
 }
 
 export function useLongUnrealizedPNL() {
-  const { squeethAmount } = useComputeSwaps()
+  const { squfuryAmount } = useComputeSwaps()
   const isWethToken0 = useAtomValue(isWethToken0Atom)
   const positionType = useAtomValue(positionTypeAtom)
   const longPositionValue = useAtomValue(longPositionValueAtom)
@@ -197,7 +197,7 @@ export function useLongUnrealizedPNL() {
         swaps?.length &&
         !index.isZero() &&
         !longPositionValue.isZero() &&
-        !squeethAmount.isZero() &&
+        !squfuryAmount.isZero() &&
         positionType === PositionType.LONG
       ) {
         const pnl = await calcDollarLongUnrealizedpnl(
@@ -205,20 +205,20 @@ export function useLongUnrealizedPNL() {
           isWethToken0,
           longPositionValue,
           toTokenAmount(index, 18).sqrt(),
-          squeethAmount,
+          squfuryAmount,
         )
         setLongUnrealizedPNL((prevState) => ({ ...prevState, ...pnl }))
       } else {
         setLongUnrealizedPNL({ usd: BIG_ZERO, eth: BIG_ZERO, loading: true })
       }
     })()
-  }, [isToHidePnL, index, isWethToken0, swaps, squeethAmount, positionType, setLongUnrealizedPNL, longPositionValue])
+  }, [isToHidePnL, index, isWethToken0, swaps, squfuryAmount, positionType, setLongUnrealizedPNL, longPositionValue])
 
   return longUnrealizedPNL
 }
 
 export function useShortUnrealizedPNL() {
-  const { squeethAmount } = useComputeSwaps()
+  const { squfuryAmount } = useComputeSwaps()
   const isWethToken0 = useAtomValue(isWethToken0Atom)
   const positionType = useAtomValue(positionTypeAtom)
   const ethCollateralPnl = useEthCollateralPnl()
@@ -240,7 +240,7 @@ export function useShortUnrealizedPNL() {
         !shortPositionValue.isZero() &&
         !index.isZero() &&
         !ethCollateralPnl.isZero() &&
-        !squeethAmount.isZero() &&
+        !squfuryAmount.isZero() &&
         positionType === PositionType.SHORT &&
         !swapsLoading
       ) {
@@ -249,7 +249,7 @@ export function useShortUnrealizedPNL() {
           isWethToken0,
           shortPositionValue,
           toTokenAmount(index, 18).sqrt(),
-          squeethAmount,
+          squfuryAmount,
           ethCollateralPnl,
         )
         setShortUnrealizedPNL({
@@ -266,7 +266,7 @@ export function useShortUnrealizedPNL() {
     index,
     isWethToken0,
     swaps,
-    squeethAmount,
+    squfuryAmount,
     positionType,
     setShortUnrealizedPNL,
     swapsLoading,

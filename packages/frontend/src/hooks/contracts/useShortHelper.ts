@@ -1,12 +1,12 @@
 import BigNumber from 'bignumber.js'
 import { useAtomValue } from 'jotai'
 
-import { WETH_DECIMALS, OSQUEETH_DECIMALS } from '../../constants'
+import { WETH_DECIMALS, OSQUFURY_DECIMALS } from '../../constants'
 import { fromTokenAmount } from '@utils/calculations'
 import { addressAtom } from 'src/state/wallet/atoms'
 import { useHandleTransaction } from 'src/state/wallet/hooks'
 import { addressesAtom } from 'src/state/positions/atoms'
-import { useGetBuyParam, useGetSellParam } from 'src/state/squeethPool/hooks'
+import { useGetBuyParam, useGetSellParam } from 'src/state/squfuryPool/hooks'
 import { shortHelperContractAtom } from '../../state/contracts/atoms'
 import { normFactorAtom } from 'src/state/controller/atoms'
 
@@ -22,9 +22,9 @@ export const useShortHelper = () => {
   const normalizationFactor = useAtomValue(normFactorAtom)
 
   /**
-   * deposit collat, mint squeeth and sell it in uniSwap
+   * deposit collat, mint squfury and sell it in uniSwap
    * @param vaultId - 0 to create new
-   * @param amount - Amount of squeeth to mint
+   * @param amount - Amount of squfury to mint
    * @param vaultType
    * @returns
    */
@@ -34,7 +34,7 @@ export const useShortHelper = () => {
     const _exactInputParams = await getSellParam(amount)
     _exactInputParams.recipient = shortHelper
 
-    const _amount = fromTokenAmount(amount, OSQUEETH_DECIMALS).multipliedBy(normalizationFactor)
+    const _amount = fromTokenAmount(amount, OSQUFURY_DECIMALS).multipliedBy(normalizationFactor)
     const ethAmt = fromTokenAmount(collatAmount, 18)
     const result = await handleTransaction(
       contract.methods.openShort(vaultId, _amount.toFixed(0), 0, _exactInputParams).send({
@@ -50,19 +50,19 @@ export const useShortHelper = () => {
   /**
    * Buy back and close vault, withdraw collateral
    * @param vaultId
-   * @param amount - Amount of squeeth to buy back
+   * @param amount - Amount of squfury to buy back
    * @returns
    */
   const closeShort = async (vaultId: number, amount: BigNumber, withdrawAmt: BigNumber, onTxConfirmed?: () => void) => {
     if (!contract || !address) return
 
-    const _amount = fromTokenAmount(amount, OSQUEETH_DECIMALS)
+    const _amount = fromTokenAmount(amount, OSQUFURY_DECIMALS)
     const _withdrawAmt = fromTokenAmount(withdrawAmt.isPositive() ? withdrawAmt : 0, WETH_DECIMALS)
     const _exactOutputParams = await getBuyParam(amount)
 
     _exactOutputParams.recipient = shortHelper
 
-    // _burnSqueethAmount and _withdrawAmount will be same as we are putting 1:1 collat now
+    // _burnSquFuryAmount and _withdrawAmount will be same as we are putting 1:1 collat now
     const result = await handleTransaction(
       contract.methods.closeShort(vaultId, _amount.toString(), _withdrawAmt.toFixed(0), _exactOutputParams).send({
         from: address,

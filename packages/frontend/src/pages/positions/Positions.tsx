@@ -22,18 +22,18 @@ import {
   usePositionsAndFeesComputation,
 } from 'src/state/positions/hooks'
 import { activePositionsAtom, positionTypeAtom } from 'src/state/positions/atoms'
-import { poolAtom } from 'src/state/squeethPool/atoms'
+import { poolAtom } from 'src/state/squfuryPool/atoms'
 import { indexAtom } from 'src/state/controller/atoms'
 import useAppMemo from '@hooks/useAppMemo'
 import useStyles from './useStyles'
 import CrabPosition from './CrabPosition'
 import CrabPositionV2 from './CrabPositionV2'
 import YourVaults from './YourVaults'
-import LongSqueeth from './LongSqueeth'
-import ShortSqueeth from './ShortSqueeth'
-import LPedSqueeth from './LPedSqueeth'
-import MintedSqueeth from './MintedSqueeth'
-import ShortSqueethLiquidated from './ShortSqueethLiquidated'
+import LongSquFury from './LongSquFury'
+import ShortSquFury from './ShortSquFury'
+import LPedSquFury from './LPedSquFury'
+import MintedSquFury from './MintedSquFury'
+import ShortSquFuryLiquidated from './ShortSquFuryLiquidated'
 import {
   useCurrentCrabPositionValue,
   useCurrentCrabPositionValueV2,
@@ -55,9 +55,9 @@ export default function Positions() {
   const positionType = useAtomValue(positionTypeAtom)
   const activePositions = useAtomValue(activePositionsAtom)
 
-  const { squeethAmount } = useComputeSwaps()
+  const { squfuryAmount } = useComputeSwaps()
   const { validVault: vault, vaultId } = useFirstValidVault()
-  const lpedSqueeth = useLpDebt()
+  const lpedSquFury = useLpDebt()
   const mintedDebt = useMintedDebt()
   const shortDebt = useShortDebt()
   const index = useAtomValue(indexAtom)
@@ -144,23 +144,23 @@ export default function Positions() {
         {shortDebt.isZero() &&
         depositedEth.isZero() &&
         depositedEthV2.isZero() &&
-        squeethAmount.isZero() &&
+        squfuryAmount.isZero() &&
         mintedDebt.isZero() &&
-        lpedSqueeth.isZero() ? (
+        lpedSquFury.isZero() ? (
           <div className={classes.empty}>
             <Typography>No active positions</Typography>
           </div>
         ) : null}
 
-        {positionType === PositionType.LONG && <LongSqueeth />}
+        {positionType === PositionType.LONG && <LongSquFury />}
 
-        {positionType === PositionType.SHORT && <ShortSqueeth />}
+        {positionType === PositionType.SHORT && <ShortSquFury />}
 
-        {lpedSqueeth.isGreaterThan(0) && !fullyLiquidated && <LPedSqueeth vaultExists={vaultExists} />}
+        {lpedSquFury.isGreaterThan(0) && !fullyLiquidated && <LPedSquFury vaultExists={vaultExists} />}
 
-        {mintedDebt.isGreaterThan(0) && !fullyLiquidated && <MintedSqueeth vaultExists={vaultExists} />}
+        {mintedDebt.isGreaterThan(0) && !fullyLiquidated && <MintedSquFury vaultExists={vaultExists} />}
 
-        {liquidations.length > 0 && <ShortSqueethLiquidated />}
+        {liquidations.length > 0 && <ShortSquFuryLiquidated />}
 
         {!!address && currentCrabPositionValueInETH.isGreaterThan(0) && (
           <CrabPosition

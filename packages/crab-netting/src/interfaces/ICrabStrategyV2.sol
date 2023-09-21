@@ -12,7 +12,7 @@ interface ICrabStrategyV2 is IERC20 {
 
     function flashDeposit(uint256 _ethToDeposit, uint24 _poolFee) external payable;
 
-    function getWsqueethFromCrabAmount(uint256 _crabAmount) external view returns (uint256);
+    function getWsqufuryFromCrabAmount(uint256 _crabAmount) external view returns (uint256);
 
     function powerTokenController() external view returns (address);
 
@@ -22,5 +22,5 @@ interface ICrabStrategyV2 is IERC20 {
 
     function oracle() external view returns (address);
 
-    function ethWSqueethPool() external view returns (address);
+    function ethWSquFuryPool() external view returns (address);
 }

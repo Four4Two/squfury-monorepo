@@ -28,9 +28,9 @@ import { connectedWalletAtom, isTransactionFirstStepAtom, supportedNetworkAtom }
 import { useSelectWallet, useTransactionStatus, useWalletBalance } from '@state/wallet/hooks'
 import { addressesAtom, isLongAtom, vaultHistoryUpdatingAtom } from '@state/positions/atoms'
 import { useETHPrice } from '@hooks/useETHPrice'
-import { useOSQTHPrice } from '@hooks/useOSQTHPrice'
+import { useOSQFUPrice } from '@hooks/useOSQFUPrice'
 import { collatRatioAtom } from '@state/ethPriceCharts/atoms'
-import { useGetBuyQuote, useGetSellQuote } from '@state/squeethPool/hooks'
+import { useGetBuyQuote, useGetSellQuote } from '@state/squfuryPool/hooks'
 import {
   useGetCollatRatioAndLiqPrice,
   useGetDebtAmount,
@@ -43,7 +43,7 @@ import {
   quoteAtom,
   sellCloseQuoteAtom,
   slippageAmountAtom,
-  sqthTradeAmountAtom,
+  sqfuTradeAmountAtom,
   tradeCompletedAtom,
   tradeSuccessAtom,
   tradeTypeAtom,
@@ -59,7 +59,7 @@ import { useVaultHistoryQuery } from '@hooks/useVaultHistory'
 import useAppMemo from '@hooks/useAppMemo'
 import Metric from '@components/Metric'
 import ethLogo from 'public/images/eth-logo.svg'
-import osqthLogo from 'public/images/osqth-logo.svg'
+import osqfuLogo from 'public/images/osqfu-logo.svg'
 import Checkbox from '@components/Checkbox'
 import CollatRatioSlider from '@components/CollatRatioSlider'
 import { formatNumber, formatCurrency } from '@utils/formatter'
@@ -136,7 +136,7 @@ const useStyles = makeStyles((theme) =>
       marginLeft: theme.spacing(0.5),
       color: theme.palette.text.secondary,
     },
-    squeethExp: {
+    squfuryExp: {
       display: 'flex',
       justifyContent: 'space-between',
       borderRadius: theme.spacing(1),
@@ -148,7 +148,7 @@ const useStyles = makeStyles((theme) =>
       textAlign: 'left',
       backgroundColor: theme.palette.background.stone,
     },
-    squeethExpTxt: {
+    squfuryExpTxt: {
       fontSize: '20px',
     },
     divider: {
@@ -276,19 +276,19 @@ const OpenShort: React.FC<SellType> = ({ open }) => {
   const [usingDefaultCollatRatio, setUsingDefaultCollatRatio] = useState(true)
 
   const [quote, setQuote] = useAtom(quoteAtom)
-  const [sqthTradeAmount, setSqthTradeAmount] = useAtom(sqthTradeAmountAtom)
+  const [sqfuTradeAmount, setSqfuTradeAmount] = useAtom(sqfuTradeAmountAtom)
   const [isTxFirstStep, setIsTxFirstStep] = useAtom(isTransactionFirstStepAtom)
   const normalizationFactor = useAtomValue(normFactorAtom)
 
   const [slippageAmount, setSlippage] = useAtom(slippageAmountAtom)
   const tradeType = useAtomValue(tradeTypeAtom)
-  const amount = useAppMemo(() => new BigNumber(sqthTradeAmount), [sqthTradeAmount])
+  const amount = useAppMemo(() => new BigNumber(sqfuTradeAmount), [sqfuTradeAmount])
   const collateral = useAppMemo(() => new BigNumber(ethTradeAmount), [ethTradeAmount])
   const isLong = useAtomValue(isLongAtom)
 
   const { updateVault, vaults: shortVaults, loading: vaultIDLoading } = useVaultManager()
   const { validVault: vault, vaultId } = useFirstValidVault()
-  const { squeethAmount: shortSqueethAmount } = useComputeSwaps()
+  const { squfuryAmount: shortSquFuryAmount } = useComputeSwaps()
   const [isVaultHistoryUpdating, setVaultHistoryUpdating] = useAtom(vaultHistoryUpdatingAtom)
   const { existingCollatPercent } = useVaultData(vault)
   const collatPercentAtom = collatPercentFamily(200)
@@ -307,14 +307,14 @@ const OpenShort: React.FC<SellType> = ({ open }) => {
 
   // useAppEffect(() => {
   //   if (!open && shortVaults.length && shortVaults[firstValidVault].shortAmount.lt(amount)) {
-  //     setSqthTradeAmount(shortVaults[firstValidVault].shortAmount.toString())
+  //     setSqfuTradeAmount(shortVaults[firstValidVault].shortAmount.toString())
   //   }
   // }, [shortVaults?.length, open])
 
   useAppEffect(() => {
     const debt = collateral.times(100).dividedBy(new BigNumber(collatPercent))
-    getShortAmountFromDebt(debt).then((s) => setSqthTradeAmount(s.toString()))
-  }, [collatPercent, collateral, normalizationFactor, tradeType, open, getShortAmountFromDebt, setSqthTradeAmount])
+    getShortAmountFromDebt(debt).then((s) => setSqfuTradeAmount(s.toString()))
+  }, [collatPercent, collateral, normalizationFactor, tradeType, open, getShortAmountFromDebt, setSqfuTradeAmount])
 
   useAppEffect(() => {
     if (!vault) return
@@ -389,7 +389,7 @@ const OpenShort: React.FC<SellType> = ({ open }) => {
   }, [amount, collatPercent, shortVaults, open, tradeType, getDebtAmount, vault])
 
   const ethPrice = useETHPrice()
-  const { data: osqthPrice } = useOSQTHPrice()
+  const { data: osqfuPrice } = useOSQFUPrice()
   const setCollatRatio = useUpdateAtom(collatRatioAtom)
 
   let openError: string | undefined
@@ -472,7 +472,7 @@ const OpenShort: React.FC<SellType> = ({ open }) => {
       {confirmed && !isTxFirstStep ? (
         <div>
           <Confirmed
-            confirmationMessage={`Opened ${confirmedAmount} Squeeth Short Position`}
+            confirmationMessage={`Opened ${confirmedAmount} SquFury Short Position`}
             txnHash={transactionData?.hash ?? ''}
             confirmType={ConfirmType.TRADE}
           />
@@ -510,7 +510,7 @@ const OpenShort: React.FC<SellType> = ({ open }) => {
       ) : (
         <>
           <Typography variant="h4" className={classes.title}>
-            Use ETH collateral to mint & sell oSQTH
+            Use ETH collateral to mint & sell oSQFU
           </Typography>
 
           <Box display="flex" flexDirection="column">
@@ -594,10 +594,10 @@ const OpenShort: React.FC<SellType> = ({ open }) => {
                 label="Sell"
                 value={!amount.isNaN() ? amount.toFixed(4) : Number(0).toLocaleString()}
                 readOnly
-                symbol="oSQTH"
-                logo={osqthLogo}
-                balance={shortSqueethAmount}
-                usdPrice={osqthPrice}
+                symbol="oSQFU"
+                logo={osqfuLogo}
+                balance={shortSquFuryAmount}
+                usdPrice={osqfuPrice}
                 showMaxAction={false}
               />
             </Box>
@@ -760,14 +760,14 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
 
   const quote = useAtomValue(quoteAtom)
   const [sellCloseQuote, setSellCloseQuote] = useAtom(sellCloseQuoteAtom)
-  const [sqthTradeAmount, setSqthTradeAmount] = useAtom(sqthTradeAmountAtom)
-  const resetSqthTradeAmount = useResetAtom(sqthTradeAmountAtom)
+  const [sqfuTradeAmount, setSqfuTradeAmount] = useAtom(sqfuTradeAmountAtom)
+  const resetSqfuTradeAmount = useResetAtom(sqfuTradeAmountAtom)
   const [usingDefaultCollatRatio, setUsingDefaultCollatRatio] = useState(true)
 
   const setTradeSuccess = useUpdateAtom(tradeSuccessAtom)
   const [slippageAmount, setSlippage] = useAtom(slippageAmountAtom)
   const tradeType = useAtomValue(tradeTypeAtom)
-  const amount = useAppMemo(() => new BigNumber(sqthTradeAmount), [sqthTradeAmount])
+  const amount = useAppMemo(() => new BigNumber(sqfuTradeAmount), [sqfuTradeAmount])
   const { data } = useWalletBalance()
   const balance = Number(toTokenAmount(data ?? BIG_ZERO, 18).toFixed(4))
 
@@ -776,7 +776,7 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
   const { existingCollatPercent } = useVaultData(vault)
   const setCollatRatio = useUpdateAtom(collatRatioAtom)
   const ethPrice = useETHPrice()
-  const { data: osqthPrice } = useOSQTHPrice()
+  const { data: osqfuPrice } = useOSQFUPrice()
   const [isVaultHistoryUpdating, setVaultHistoryUpdating] = useAtom(vaultHistoryUpdatingAtom)
   const vaultHistoryQuery = useVaultHistoryQuery(Number(vaultId), isVaultHistoryUpdating)
   const { isRestricted, isWithdrawAllowed } = useRestrictUser()
@@ -791,7 +791,7 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
   // useAppEffect(() => {
   //   if (shortVaults[firstValidVault]?.shortAmount && shortVaults[firstValidVault]?.shortAmount.lt(amount)) {
   //     console.log('looking for something weird')
-  //     setSqthTradeAmount(shortVaults[firstValidVault]?.shortAmount.toString())
+  //     setSqfuTradeAmount(shortVaults[firstValidVault]?.shortAmount.toString())
   //   }
   // }, [vault?.shortAmount.toString(), amount.toString()])
 
@@ -864,7 +864,7 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
           setConfirmedAmount(amount.toFixed(6).toString())
           setTradeSuccess(true)
           setTradeCompleted(true)
-          resetSqthTradeAmount()
+          resetSqfuTradeAmount()
           setIsVaultApproved(false)
           localStorage.removeItem('collatPercent')
           setVaultHistoryUpdating(true)
@@ -883,7 +883,7 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
     collatPercent,
     getDebtAmount,
     isVaultApproved,
-    resetSqthTradeAmount,
+    resetSqfuTradeAmount,
     setIsTxFirstStep,
     setTradeCompleted,
     setTradeSuccess,
@@ -898,11 +898,11 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
 
   const setShortCloseMax = useAppCallback(() => {
     if (finalShortAmount.isGreaterThan(0)) {
-      setSqthTradeAmount(finalShortAmount.toString())
+      setSqfuTradeAmount(finalShortAmount.toString())
       setCollatPercent(150)
       setCloseType(CloseType.FULL)
     }
-  }, [finalShortAmount, setSqthTradeAmount])
+  }, [finalShortAmount, setSqfuTradeAmount])
 
   // let openError: string | undefined
   let closeError: string | undefined
@@ -959,14 +959,14 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
 
   useAppEffect(() => {
     if (finalShortAmount.isGreaterThan(0)) {
-      setSqthTradeAmount(finalShortAmount.toString())
+      setSqfuTradeAmount(finalShortAmount.toString())
       setCollatPercent(150)
       setCloseType(CloseType.FULL)
     }
-  }, [tradeType, open, finalShortAmount, setSqthTradeAmount])
+  }, [tradeType, open, finalShortAmount, setSqfuTradeAmount])
 
   const handleAmountInput = (v: string) => {
-    setSqthTradeAmount(v)
+    setSqfuTradeAmount(v)
   }
 
   const error = closeError
@@ -988,7 +988,7 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
       {confirmed && !isTxFirstStep ? (
         <div>
           <Confirmed
-            confirmationMessage={`Closed ${confirmedAmount} Squeeth Short Position`}
+            confirmationMessage={`Closed ${confirmedAmount} SquFury Short Position`}
             txnHash={transactionData?.hash ?? ''}
             confirmType={ConfirmType.TRADE}
           />
@@ -1026,18 +1026,18 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
       ) : (
         <>
           <Typography variant="h4" className={classes.title}>
-            Buy back oSQTH & close position
+            Buy back oSQFU & close position
           </Typography>
 
           <Box display="flex" flexDirection="column">
             <InputToken
-              id="close-short-osqth-input"
-              value={sqthTradeAmount}
+              id="close-short-osqfu-input"
+              value={sqfuTradeAmount}
               onInputChange={(v) => handleAmountInput(v)}
-              symbol="oSQTH"
-              logo={osqthLogo}
+              symbol="oSQFU"
+              logo={osqfuLogo}
               balance={finalShortAmount}
-              usdPrice={osqthPrice}
+              usdPrice={osqfuPrice}
               onBalanceClick={() => handleAmountInput(finalShortAmount.toString())}
               error={!!closeError}
               helperText={closeError}
@@ -1053,7 +1053,7 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
                   if (event.target.value === CloseType.FULL) {
                     setShortCloseMax()
                   } else {
-                    setSqthTradeAmount('0')
+                    setSqfuTradeAmount('0')
                   }
                   setCollatPercent(200)
                   return setCloseType(event.target.value as CloseType)
@@ -1232,7 +1232,7 @@ const CloseShort: React.FC<SellType> = ({ open }) => {
                   className={classes.amountInput}
                   disabled={
                     !supportedNetwork ||
-                    sqthTradeAmount === '0' ||
+                    sqfuTradeAmount === '0' ||
                     buyLoading ||
                     transactionInProgress ||
                     collatPercent < 150 ||

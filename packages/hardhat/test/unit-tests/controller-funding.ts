@@ -5,7 +5,7 @@ import { BigNumber, providers, utils } from "ethers";
 import { getNow, isSimilar, one, oracleScaleFactor } from "../utils";
 import { Controller, MockWPowerPerp, MockShortPowerPerp, MockOracle, MockUniswapV3Pool, MockErc20, MockUniPositionManager, ABDKMath64x64} from "../../typechain";
 
-const squeethETHPrice = BigNumber.from('3030').mul(one).div(oracleScaleFactor)
+const squfuryETHPrice = BigNumber.from('3030').mul(one).div(oracleScaleFactor)
 const ethUSDPrice = BigNumber.from('3000').mul(one)
 const scaledEthPrice = ethUSDPrice.div(oracleScaleFactor)
 
@@ -13,10 +13,10 @@ const mintAmount = BigNumber.from('100').mul(one)
 const collateralAmount = BigNumber.from('50').mul(one)
 
 describe("Controller Funding tests", function () {
-  let squeeth: MockWPowerPerp;
-  let shortSqueeth: MockShortPowerPerp;
+  let squfury: MockWPowerPerp;
+  let shortSquFury: MockShortPowerPerp;
   let controller: Controller;
-  let squeethEthPool: MockUniswapV3Pool;
+  let squfuryEthPool: MockUniswapV3Pool;
   let ethUSDPool: MockUniswapV3Pool;
   let uniPositionManager: MockUniPositionManager
   let oracle: MockOracle;
@@ -38,10 +38,10 @@ describe("Controller Funding tests", function () {
 
   this.beforeAll("Setup environment", async () => {
     const MockSQUContract = await ethers.getContractFactory("MockWPowerPerp");
-    squeeth = (await MockSQUContract.deploy()) as MockWPowerPerp;
+    squfury = (await MockSQUContract.deploy()) as MockWPowerPerp;
 
     const NFTContract = await ethers.getContractFactory("MockShortPowerPerp");
-    shortSqueeth = (await NFTContract.deploy()) as MockShortPowerPerp;
+    shortSquFury = (await NFTContract.deploy()) as MockShortPowerPerp;
 
     const OracleContract = await ethers.getContractFactory("MockOracle");
     oracle = (await OracleContract.deploy()) as MockOracle;
@@ -51,17 +51,17 @@ describe("Controller Funding tests", function () {
     usdc = (await MockErc20Contract.deploy("USDC", "USDC", 6)) as MockErc20;
 
     const MockUniswapV3PoolContract = await ethers.getContractFactory("MockUniswapV3Pool");
-    squeethEthPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
+    squfuryEthPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
     ethUSDPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
 
     const MockPositionManager = await ethers.getContractFactory("MockUniPositionManager");
     uniPositionManager = (await MockPositionManager.deploy()) as MockUniPositionManager;
 
-    await squeethEthPool.setPoolTokens(weth.address, squeeth.address);
+    await squfuryEthPool.setPoolTokens(weth.address, squfury.address);
     await ethUSDPool.setPoolTokens(weth.address, usdc.address);
 
 
-    await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPrice) // eth per 1 squeeth
+    await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPrice) // eth per 1 squfury
     await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPrice)  // usdc per 1 eth
   });
 
@@ -78,7 +78,7 @@ describe("Controller Funding tests", function () {
       const SqrtPriceExternalLibrary = (await SqrtPriceExternal.deploy());
   
       const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
-        controller = (await ControllerContract.deploy(oracle.address, shortSqueeth.address, squeeth.address, weth.address, usdc.address, ethUSDPool.address, squeethEthPool.address, uniPositionManager.address, 3000)) as Controller;
+        controller = (await ControllerContract.deploy(oracle.address, shortSquFury.address, squfury.address, weth.address, usdc.address, ethUSDPool.address, squfuryEthPool.address, uniPositionManager.address, 3000)) as Controller;
     });
   });
 
@@ -118,11 +118,11 @@ describe("Controller Funding tests", function () {
         const now = await getNow(provider)
 
         // Set very low mark price
-        const squeethETHPriceNew = ethers.utils.parseUnits('2000').div(oracleScaleFactor)
+        const squfuryETHPriceNew = ethers.utils.parseUnits('2000').div(oracleScaleFactor)
         const ethUSDPriceNew = ethers.utils.parseUnits('3000')
 
         // Set prices
-        await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPriceNew) // eth per 1 squeeth
+        await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPriceNew) // eth per 1 squfury
         await oracle.connect(random).setPrice(ethUSDPool.address, ethUSDPriceNew)  // usdc per 1 eth
 
         // Get new mark and index
@@ -157,11 +157,11 @@ describe("Controller Funding tests", function () {
         const now = await getNow(provider)
 
         // Set very high mark price
-        const squeethETHPriceNew = ethers.utils.parseUnits('6000').div(oracleScaleFactor)
+        const squfuryETHPriceNew = ethers.utils.parseUnits('6000').div(oracleScaleFactor)
         const ethUSDPriceNew = ethers.utils.parseUnits('3000')
 
         // Set prices
-        await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPriceNew) // eth per 1 squeeth
+        await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPriceNew) // eth per 1 squfury
         await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPriceNew)  // usdc per 1 eth
 
         // Get new mark and index
@@ -188,7 +188,7 @@ describe("Controller Funding tests", function () {
         expect(isSimilar(expectedNormalizationFactor.toString(), normalizationFactorAfter.toString(), 14)).to.be.true
       })
       it('calling apply funding with little time elapsed should not affect norm factor', async() => {
-        await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPrice) // eth per 1 squeeth
+        await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPrice) // eth per 1 squfury
         await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPrice)  // usdc per 1 eth
         
         await controller.applyFunding()
@@ -217,26 +217,26 @@ describe("Controller Funding tests", function () {
 
       describe('mint', async() => {
         let vaultId: BigNumber
-        let maxSqueethToMint: BigNumber
+        let maxSquFuryToMint: BigNumber
         const secondsElapsed = 21600 // 6 hours
 
         before('prepare a vault', async() => {
           fundingPeriod = await controller.FUNDING_PERIOD()
 
           // set prices back
-          await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPrice) // eth per 1 squeeth
+          await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPrice) // eth per 1 squfury
           await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPrice)  // usdc per 1 eth
           await controller.applyFunding()
           
-          vaultId = await shortSqueeth.nextId()
-          // mint max amount of rSqueeth
-          maxSqueethToMint = collateralAmount.mul(one).mul(one).div(collatRatio).div(scaledEthPrice)
+          vaultId = await shortSquFury.nextId()
+          // mint max amount of rSquFury
+          maxSquFuryToMint = collateralAmount.mul(one).mul(one).div(collatRatio).div(scaledEthPrice)
 
-          await controller.connect(seller1).mintPowerPerpAmount(0, maxSqueethToMint, 0, {value: collateralAmount})
+          await controller.connect(seller1).mintPowerPerpAmount(0, maxSquFuryToMint, 0, {value: collateralAmount})
 
           // advance time
         })
-        it('should revert if minting too much squeeth after funding', async() => {
+        it('should revert if minting too much squfury after funding', async() => {
           const mark = await controller.getDenormalizedMarkForFunding(1)
           const index = await controller.getIndex(1)
 
@@ -251,10 +251,10 @@ describe("Controller Funding tests", function () {
           const multiplier = getNormFactorMultiplier(mark, index, secondsElapsed, fundingPeriod)
           const expectedNormalizationFactor = normalizationFactorBefore.mul(multiplier).div(one)
 
-          const currentRSqueeth = shortAmount.mul(expectedNormalizationFactor).div(one)
-          const maxShortRSqueeth = one.mul(one).mul(collateral).div(scaledEthPrice).div(collatRatio)
+          const currentRSquFury = shortAmount.mul(expectedNormalizationFactor).div(one)
+          const maxShortRSquFury = one.mul(one).mul(collateral).div(scaledEthPrice).div(collatRatio)
 
-          const expectedAmountCanMint = maxShortRSqueeth.sub(currentRSqueeth)
+          const expectedAmountCanMint = maxShortRSquFury.sub(currentRSquFury)
 
           await provider.send("evm_setNextBlockTimestamp", [now + secondsElapsed])
           await expect(controller.connect(seller1).mintPowerPerpAmount(vaultId, expectedAmountCanMint.mul(10001).div(10000), 0, {value: 0})).to.be.revertedWith(
@@ -262,16 +262,16 @@ describe("Controller Funding tests", function () {
           )
         })
 
-        it('should mint more wSqueeth after funding', async() => {
+        it('should mint more wSquFury after funding', async() => {
           const mark = await controller.getDenormalizedMarkForFunding(1)
           const index = await controller.getIndex(1)
 
   
           const multiplier = getNormFactorMultiplier(mark, index, secondsElapsed, fundingPeriod)
 
-          // 1 squeeth - 1squeeth * 0.99
+          // 1 squfury - 1squfury * 0.99
 
-          const expectedAmountCanMint = maxSqueethToMint.sub(maxSqueethToMint.mul(multiplier).div(one))
+          const expectedAmountCanMint = maxSquFuryToMint.sub(maxSquFuryToMint.mul(multiplier).div(one))
 
           // set next block to be 1 seconds after last block, so the max we can mint is almost the same
           const now = await getNow(provider)
@@ -287,7 +287,7 @@ describe("Controller Funding tests", function () {
         before('prepare a vault and stimulate time passes', async() => {
           fundingPeriod = await controller.FUNDING_PERIOD()
 
-          vaultId = await shortSqueeth.nextId()  
+          vaultId = await shortSquFury.nextId()  
           // put vaultId as 0 to open vault
           await controller.connect(seller1).mintPowerPerpAmount(0, mintAmount,0, {value: collateralAmount})
           const now = await getNow(provider)
@@ -348,11 +348,11 @@ describe("Controller Funding tests", function () {
         const now = await getNow(provider)
 
         // Set very low mark price
-        const squeethETHPriceNew = 0
+        const squfuryETHPriceNew = 0
         const ethUSDPriceNew = ethers.utils.parseUnits('3000')
 
         // Set prices
-        await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPriceNew) // eth per 1 squeeth
+        await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPriceNew) // eth per 1 squfury
         await oracle.connect(random).setPrice(ethUSDPool.address, ethUSDPriceNew)  // usdc per 1 eth
         const index = await controller.getIndex(1)
 
@@ -380,11 +380,11 @@ describe("Controller Funding tests", function () {
         const now = await getNow(provider)
 
         // Set very low index price
-        const squeethETHPriceNew = ethers.utils.parseUnits('3000').div(oracleScaleFactor)
+        const squfuryETHPriceNew = ethers.utils.parseUnits('3000').div(oracleScaleFactor)
         const ethUSDPriceNew = ethers.utils.parseUnits('0.0001')
 
         // Set prices
-        await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPriceNew) // eth per 1 squeeth
+        await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPriceNew) // eth per 1 squfury
         await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPriceNew)  // usdc per 1 eth
 
         const index = await controller.getIndex(1)  
@@ -418,22 +418,22 @@ describe("Controller Funding tests", function () {
         const day0Initial = await initialTime + secsInOneDay
 
         const normFactor = await controller.normalizationFactor()
-        await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPrice.mul(normFactor).div(one))
+        await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPrice.mul(normFactor).div(one))
         await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPrice)
 
         await provider.send("evm_setNextBlockTimestamp", [day0Initial]) 
         await provider.send("evm_mine", [])
 
         const expNormFactor0 = await controller.getExpectedNormalizationFactor()
-        const expectedWsqueethPrice0 = squeethETHPrice.mul(expNormFactor0).div(one)
+        const expectedWsqufuryPrice0 = squfuryETHPrice.mul(expNormFactor0).div(one)
         
         await controller.applyFunding()
-        await oracle.setPrice(squeethEthPool.address, expectedWsqueethPrice0)
+        await oracle.setPrice(squfuryEthPool.address, expectedWsqufuryPrice0)
 
         // norm0 => norm1 is applying funding once in 24 hr
         const normFactor0 = await controller.normalizationFactor()
 
-        // update wsqueeth / eth price to make sure denorm mark is the same
+        // update wsqufury / eth price to make sure denorm mark is the same
         const day0 = await getNow(provider)
         
         const day1 = await day0 + secsInOneDay
@@ -441,10 +441,10 @@ describe("Controller Funding tests", function () {
         await provider.send("evm_mine", []) 
 
         const expNormFactor1 = await controller.getExpectedNormalizationFactor()
-        const expectedWsqueethPrice1 = squeethETHPrice.mul(expNormFactor1).div(one)
+        const expectedWsqufuryPrice1 = squfuryETHPrice.mul(expNormFactor1).div(one)
         
         await controller.applyFunding()
-        await oracle.setPrice(squeethEthPool.address, expectedWsqueethPrice1)
+        await oracle.setPrice(squfuryEthPool.address, expectedWsqufuryPrice1)
         
         const normFactor1 = await controller.normalizationFactor()
         const day1ChangeRatio = normFactor1.mul(one).div(normFactor0)
@@ -455,19 +455,19 @@ describe("Controller Funding tests", function () {
         await provider.send("evm_mine", []) 
 
         const expNormFactor = await controller.getExpectedNormalizationFactor()
-        const expectedWsqueethPrice2 = squeethETHPrice.mul(expNormFactor).div(one)
+        const expectedWsqufuryPrice2 = squfuryETHPrice.mul(expNormFactor).div(one)
         
         await controller.applyFunding()
-        await oracle.setPrice(squeethEthPool.address, expectedWsqueethPrice2)
+        await oracle.setPrice(squfuryEthPool.address, expectedWsqufuryPrice2)
 
         const day2 = await day1 + secsInOneDay
         await provider.send("evm_setNextBlockTimestamp", [day2])
         await provider.send("evm_mine", []) 
         const expNormFactor2 = await controller.getExpectedNormalizationFactor()
-        const expectedWsqueethPrice3 = squeethETHPrice.mul(expNormFactor2).div(one)
+        const expectedWsqufuryPrice3 = squfuryETHPrice.mul(expNormFactor2).div(one)
         
         await controller.applyFunding()
-        await oracle.setPrice(squeethEthPool.address, expectedWsqueethPrice3)
+        await oracle.setPrice(squfuryEthPool.address, expectedWsqufuryPrice3)
 
         const normFactor2 = await controller.normalizationFactor()
         const day2ChangeRatio = normFactor2.mul(one).div(normFactor1)

@@ -12,161 +12,161 @@ library NettingLib {
         address indexed trader,
         uint256 quantity,
         uint256 wethAmount,
-        uint256 remainingOsqthBalance,
+        uint256 remainingOsqfuBalance,
         uint256 clearingPrice
     );
-    event TransferOsqthToMarketMakers(
-        address indexed trader, uint256 bidId, uint256 quantity, uint256 remainingOsqthBalance
+    event TransferOsqfuToMarketMakers(
+        address indexed trader, uint256 bidId, uint256 quantity, uint256 remainingOsqfuBalance
     );
-    event TransferOsqthFromMarketMakers(
-        address indexed trader, uint256 quantity, uint256 oSqthRemaining
+    event TransferOsqfuFromMarketMakers(
+        address indexed trader, uint256 quantity, uint256 oSqfuRemaining
     );
     event TransferWethToMarketMaker(
         address indexed trader,
         uint256 bidId,
         uint256 quantity,
         uint256 wethAmount,
-        uint256 oSqthRemaining,
+        uint256 oSqfuRemaining,
         uint256 clearingPrice
     );
 
     /**
      * @notice transfer WETH from market maker to netting contract
-     * @dev this is executed during the deposit auction, MM buying OSQTH for WETH
+     * @dev this is executed during the deposit auction, MM buying OSQFU for WETH
      * @param _weth WETH address
      * @param _trader market maker address
-     * @param _quantity oSQTH quantity
-     * @param _oSqthToMint remaining amount of the total oSqthToMint
+     * @param _quantity oSQFU quantity
+     * @param _oSqfuToMint remaining amount of the total oSqfuToMint
      * @param _clearingPrice auction clearing price
      */
     function transferWethFromMarketMakers(
         address _weth,
         address _trader,
         uint256 _quantity,
-        uint256 _oSqthToMint,
+        uint256 _oSqfuToMint,
         uint256 _clearingPrice
     ) external returns (bool, uint256) {
         uint256 wethAmount;
-        uint256 remainingOsqthToMint;
-        if (_quantity >= _oSqthToMint) {
-            wethAmount = (_oSqthToMint * _clearingPrice) / 1e18;
+        uint256 remainingOsqfuToMint;
+        if (_quantity >= _oSqfuToMint) {
+            wethAmount = (_oSqfuToMint * _clearingPrice) / 1e18;
             IERC20(_weth).transferFrom(_trader, address(this), wethAmount);
 
             emit TransferWethFromMarketMakers(
-                _trader, _oSqthToMint, wethAmount, remainingOsqthToMint, _clearingPrice
+                _trader, _oSqfuToMint, wethAmount, remainingOsqfuToMint, _clearingPrice
             );
-            return (true, remainingOsqthToMint);
+            return (true, remainingOsqfuToMint);
         } else {
             wethAmount = (_quantity * _clearingPrice) / 1e18;
-            remainingOsqthToMint = _oSqthToMint - _quantity;
+            remainingOsqfuToMint = _oSqfuToMint - _quantity;
             IERC20(_weth).transferFrom(_trader, address(this), wethAmount);
 
             emit TransferWethFromMarketMakers(
-                _trader, _quantity, wethAmount, remainingOsqthToMint, _clearingPrice
+                _trader, _quantity, wethAmount, remainingOsqfuToMint, _clearingPrice
             );
-            return (false, remainingOsqthToMint);
+            return (false, remainingOsqfuToMint);
         }
     }
 
     /**
-     * @notice transfer oSQTH to market maker
-     * @dev this is executed during the deposit auction, MM buying OSQTH for WETH
-     * @param _oSqth oSQTH address
+     * @notice transfer oSQFU to market maker
+     * @dev this is executed during the deposit auction, MM buying OSQFU for WETH
+     * @param _oSqfu oSQFU address
      * @param _trader market maker address
      * @param _bidId MM's bid ID
-     * @param _oSqthBalance remaining netting contracts's oSQTH balance
-     * @param _quantity oSQTH quantity in market maker order
+     * @param _oSqfuBalance remaining netting contracts's oSQFU balance
+     * @param _quantity oSQFU quantity in market maker order
      */
-    function transferOsqthToMarketMakers(
-        address _oSqth,
+    function transferOsqfuToMarketMakers(
+        address _oSqfu,
         address _trader,
         uint256 _bidId,
-        uint256 _oSqthBalance,
+        uint256 _oSqfuBalance,
         uint256 _quantity
     ) external returns (bool, uint256) {
-        uint256 remainingOsqthBalance;
-        if (_quantity < _oSqthBalance) {
-            IERC20(_oSqth).transfer(_trader, _quantity);
+        uint256 remainingOsqfuBalance;
+        if (_quantity < _oSqfuBalance) {
+            IERC20(_oSqfu).transfer(_trader, _quantity);
 
-            remainingOsqthBalance = _oSqthBalance - _quantity;
+            remainingOsqfuBalance = _oSqfuBalance - _quantity;
 
-            emit TransferOsqthToMarketMakers(_trader, _bidId, _quantity, remainingOsqthBalance);
+            emit TransferOsqfuToMarketMakers(_trader, _bidId, _quantity, remainingOsqfuBalance);
 
-            return (false, remainingOsqthBalance);
+            return (false, remainingOsqfuBalance);
         } else {
-            IERC20(_oSqth).transfer(_trader, _oSqthBalance);
+            IERC20(_oSqfu).transfer(_trader, _oSqfuBalance);
 
-            emit TransferOsqthToMarketMakers(_trader, _bidId, _oSqthBalance, remainingOsqthBalance);
+            emit TransferOsqfuToMarketMakers(_trader, _bidId, _oSqfuBalance, remainingOsqfuBalance);
 
-            return (true, remainingOsqthBalance);
+            return (true, remainingOsqfuBalance);
         }
     }
 
     /**
-     * @notice transfer oSQTH from market maker
-     * @dev this is executed during the withdraw auction, MM selling OSQTH for WETH
-     * @param _oSqth oSQTH address
+     * @notice transfer oSQFU from market maker
+     * @dev this is executed during the withdraw auction, MM selling OSQFU for WETH
+     * @param _oSqfu oSQFU address
      * @param _trader market maker address
-     * @param _remainingOsqthToPull remaining amount of oSQTH from the total oSQTH amount to transfer from order array
-     * @param _quantity oSQTH quantity in market maker order
+     * @param _remainingOsqfuToPull remaining amount of oSQFU from the total oSQFU amount to transfer from order array
+     * @param _quantity oSQFU quantity in market maker order
      */
-    function transferOsqthFromMarketMakers(
-        address _oSqth,
+    function transferOsqfuFromMarketMakers(
+        address _oSqfu,
         address _trader,
-        uint256 _remainingOsqthToPull,
+        uint256 _remainingOsqfuToPull,
         uint256 _quantity
     ) internal returns (uint256) {
-        uint256 oSqthRemaining;
-        if (_quantity < _remainingOsqthToPull) {
-            IERC20(_oSqth).transferFrom(_trader, address(this), _quantity);
+        uint256 oSqfuRemaining;
+        if (_quantity < _remainingOsqfuToPull) {
+            IERC20(_oSqfu).transferFrom(_trader, address(this), _quantity);
 
-            oSqthRemaining = _remainingOsqthToPull - _quantity;
+            oSqfuRemaining = _remainingOsqfuToPull - _quantity;
 
-            emit TransferOsqthFromMarketMakers(_trader, _quantity, oSqthRemaining);
+            emit TransferOsqfuFromMarketMakers(_trader, _quantity, oSqfuRemaining);
         } else {
-            IERC20(_oSqth).transferFrom(_trader, address(this), _remainingOsqthToPull);
+            IERC20(_oSqfu).transferFrom(_trader, address(this), _remainingOsqfuToPull);
 
-            emit TransferOsqthFromMarketMakers(_trader, _remainingOsqthToPull, oSqthRemaining);
+            emit TransferOsqfuFromMarketMakers(_trader, _remainingOsqfuToPull, oSqfuRemaining);
         }
 
-        return oSqthRemaining;
+        return oSqfuRemaining;
     }
 
     /**
      * @notice transfer WETH to market maker
-     * @dev this is executed during the withdraw auction, MM selling OSQTH for WETH
+     * @dev this is executed during the withdraw auction, MM selling OSQFU for WETH
      * @param _weth WETH address
      * @param _trader market maker address
      * @param _bidId market maker bid ID
-     * @param _remainingOsqthToPull total oSQTH to get from orders array
-     * @param _quantity market maker's oSQTH order quantity
+     * @param _remainingOsqfuToPull total oSQFU to get from orders array
+     * @param _quantity market maker's oSQFU order quantity
      * @param _clearingPrice auction clearing price
      */
     function transferWethToMarketMaker(
         address _weth,
         address _trader,
         uint256 _bidId,
-        uint256 _remainingOsqthToPull,
+        uint256 _remainingOsqfuToPull,
         uint256 _quantity,
         uint256 _clearingPrice
     ) external returns (uint256) {
-        uint256 oSqthQuantity;
+        uint256 oSqfuQuantity;
 
-        if (_quantity < _remainingOsqthToPull) {
-            oSqthQuantity = _quantity;
+        if (_quantity < _remainingOsqfuToPull) {
+            oSqfuQuantity = _quantity;
         } else {
-            oSqthQuantity = _remainingOsqthToPull;
+            oSqfuQuantity = _remainingOsqfuToPull;
         }
 
-        uint256 wethAmount = (oSqthQuantity * _clearingPrice) / 1e18;
-        _remainingOsqthToPull -= oSqthQuantity;
+        uint256 wethAmount = (oSqfuQuantity * _clearingPrice) / 1e18;
+        _remainingOsqfuToPull -= oSqfuQuantity;
         IERC20(_weth).transfer(_trader, wethAmount);
 
         emit TransferWethToMarketMaker(
-            _trader, _bidId, _quantity, wethAmount, _remainingOsqthToPull, _clearingPrice
+            _trader, _bidId, _quantity, wethAmount, _remainingOsqfuToPull, _clearingPrice
         );
 
-        return _remainingOsqthToPull;
+        return _remainingOsqfuToPull;
     }
 
     /**
@@ -174,8 +174,8 @@ library NettingLib {
      * @param _oracle oracle address
      * @param _crab crab token address
      * @param _ethUsdcPool ETH/USDC Uni v3 pool address
-     * @param _ethSqueethPool ETH/oSQTH Uni v3 pool address
-     * @param _oSqth oSQTH address
+     * @param _ethSquFuryPool ETH/oSQFU Uni v3 pool address
+     * @param _oSqfu oSQFU address
      * @param _usdc USDC address
      * @param _weth WETH address
      * @param _zenBull ZenBull strategy address
@@ -185,20 +185,20 @@ library NettingLib {
         address _oracle,
         address _crab,
         address _ethUsdcPool,
-        address _ethSqueethPool,
-        address _oSqth,
+        address _ethSquFuryPool,
+        address _oSqfu,
         address _usdc,
         address _weth,
         address _zenBull,
         uint32 _auctionTwapPeriod
     ) external view returns (uint256, uint256) {
-        uint256 squeethEthPrice =
-            IOracle(_oracle).getTwap(_ethSqueethPool, _oSqth, _weth, _auctionTwapPeriod, false);
+        uint256 squfuryEthPrice =
+            IOracle(_oracle).getTwap(_ethSquFuryPool, _oSqfu, _weth, _auctionTwapPeriod, false);
         uint256 _ethUsdcPrice =
             IOracle(_oracle).getTwap(_ethUsdcPool, _weth, _usdc, _auctionTwapPeriod, false);
         (uint256 crabCollateral, uint256 crabDebt) =
             IZenBullStrategy(_zenBull).getCrabVaultDetails();
-        uint256 _crabFairPriceInEth = (crabCollateral - (crabDebt * squeethEthPrice / 1e18)) * 1e18
+        uint256 _crabFairPriceInEth = (crabCollateral - (crabDebt * squfuryEthPrice / 1e18)) * 1e18
             / IERC20(_crab).totalSupply();
 
         return (_crabFairPriceInEth, _ethUsdcPrice);
@@ -233,22 +233,22 @@ library NettingLib {
     }
 
     /**
-     * @notice calculate oSQTH to mint and amount of eth to deposit into Crab v2 based on amount of crab token
+     * @notice calculate oSQFU to mint and amount of eth to deposit into Crab v2 based on amount of crab token
      * @param _crab crab strategy address
      * @param _zenBull ZenBull strategy address
      * @param _crabAmount amount of crab token
      */
-    function calcOsqthToMintAndEthIntoCrab(address _crab, address _zenBull, uint256 _crabAmount)
+    function calcOsqfuToMintAndEthIntoCrab(address _crab, address _zenBull, uint256 _crabAmount)
         external
         view
         returns (uint256, uint256)
     {
         uint256 crabTotalSupply = IERC20(_crab).totalSupply();
         (uint256 crabEth, uint256 crabDebt) = IZenBullStrategy(_zenBull).getCrabVaultDetails();
-        uint256 _oSqthToMint = _crabAmount * crabDebt / crabTotalSupply;
+        uint256 _oSqfuToMint = _crabAmount * crabDebt / crabTotalSupply;
         uint256 ethIntoCrab = _crabAmount * crabEth / crabTotalSupply;
 
-        return (_oSqthToMint, ethIntoCrab);
+        return (_oSqfuToMint, ethIntoCrab);
     }
 
     /**
@@ -279,12 +279,12 @@ library NettingLib {
     }
 
     /**
-     * @notice calculate amount of oSQTH to get based on amount of ZenBull to Withdraw
+     * @notice calculate amount of oSQFU to get based on amount of ZenBull to Withdraw
      * @param _zenBull ZenBull strategy address
      * @param _crab crab strategy address
      * @param _withdrawsToProcess amount of ZenBull token to withdraw
      */
-    function calcOsqthAmount(address _zenBull, address _crab, uint256 _withdrawsToProcess)
+    function calcOsqfuAmount(address _zenBull, address _crab, uint256 _withdrawsToProcess)
         external
         view
         returns (uint256)

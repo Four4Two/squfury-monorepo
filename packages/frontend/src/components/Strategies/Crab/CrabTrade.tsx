@@ -16,7 +16,7 @@ import { useAtom, useAtomValue } from 'jotai'
 import { addressAtom, connectedWalletAtom } from 'src/state/wallet/atoms'
 import { useTransactionStatus, useWalletBalance } from 'src/state/wallet/hooks'
 import { BIG_ZERO } from '../../../constants'
-import { readyAtom } from 'src/state/squeethPool/atoms'
+import { readyAtom } from 'src/state/squfuryPool/atoms'
 import {
   crabStrategySlippageAtom,
   currentCrabPositionValueInETHAtom,

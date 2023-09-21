@@ -6,7 +6,7 @@ import { makeStyles, createStyles } from '@material-ui/core/styles'
 import formatDistanceToNowStrict from 'date-fns/formatDistanceToNowStrict'
 
 import { formatNumber } from '@utils/formatter'
-import { SQUEETH_BASE_URL } from '@constants/index'
+import { SQUFURY_BASE_URL } from '@constants/index'
 import useAmplitude from '@hooks/useAmplitude'
 import { SITE_EVENTS } from '@utils/amplitude'
 
@@ -61,7 +61,7 @@ const SharePnl: React.FC<SharePnlProps> = ({ isPnlLoading, strategy, pnl, firstD
   const twitterText = isCrab
     ? `I've earned ${pnlText} on my USDC in the past ${timeframe} with the @opyn_'s Crab Strategy!`
     : `I've earned ${pnlText} on my ETH in the past ${timeframe} with the @opyn_'s Zen Bull Strategy!`
-  const pageUrl = `${SQUEETH_BASE_URL}/share-pnl/${strategy}/${firstDepositTimestamp}/${pnlFormatted}`
+  const pageUrl = `${SQUFURY_BASE_URL}/share-pnl/${strategy}/${firstDepositTimestamp}/${pnlFormatted}`
 
   const postText = encodeURIComponent(`${text} ${strategyEmoji}`)
   const tweetText = encodeURIComponent(`${twitterText} ${strategyEmoji}`)

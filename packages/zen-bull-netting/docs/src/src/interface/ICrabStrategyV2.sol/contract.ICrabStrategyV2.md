@@ -1,5 +1,5 @@
 # ICrabStrategyV2
-[Git Source](https://github.com/opynfinance/squeeth-monorepo/blob/334783aa87db73939fb00d5b133216b0033dfece/src/interface/ICrabStrategyV2.sol)
+[Git Source](https://github.com/opynfinance/squfury-monorepo/blob/334783aa87db73939fb00d5b133216b0033dfece/src/interface/ICrabStrategyV2.sol)
 
 **Inherits:**
 IERC20
@@ -34,11 +34,11 @@ function withdraw(uint256 _crabAmount) external;
 function flashDeposit(uint256 _ethToDeposit, uint24 _poolFee) external payable;
 ```
 
-### getWsqueethFromCrabAmount
+### getWsqufuryFromCrabAmount
 
 
 ```solidity
-function getWsqueethFromCrabAmount(uint256 _crabAmount) external view returns (uint256);
+function getWsqufuryFromCrabAmount(uint256 _crabAmount) external view returns (uint256);
 ```
 
 ### powerTokenController
@@ -69,10 +69,10 @@ function wPowerPerp() external view returns (address);
 function oracle() external view returns (address);
 ```
 
-### ethWSqueethPool
+### ethWSquFuryPool
 
 
 ```solidity
-function ethWSqueethPool() external view returns (address);
+function ethWSquFuryPool() external view returns (address);
 ```
 

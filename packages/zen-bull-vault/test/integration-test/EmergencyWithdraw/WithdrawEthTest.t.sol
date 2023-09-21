@@ -12,7 +12,7 @@ import { Quoter } from "v3-periphery/lens/Quoter.sol";
 import { EmergencyWithdraw } from "../../../src/EmergencyWithdraw.sol";
 import { ZenBullStrategy } from "../../../src/ZenBullStrategy.sol";
 import { UniOracle } from "../../../src/UniOracle.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol";
 
 contract WithdrawEthTest is Test {
     using StrategyMath for uint256;
@@ -143,7 +143,7 @@ contract WithdrawEthTest is Test {
 
     function _emergencyWithdrawEthFromCrab(address _user, uint256 _zenBullAmount) internal {
         uint256 emergencyRedeemedBull = emergencyWithdraw.redeemedZenBullAmountForCrabWithdrawal();
-        uint256 maxWethForOsqth;
+        uint256 maxWethForOsqfu;
         uint256 ethToWithdrawFromCrab;
         {
             uint256 bullShare =
@@ -154,14 +154,14 @@ contract WithdrawEthTest is Test {
             uint256 wPowerPerpToRedeem =
                 crabToRedeem.wmul(wPowerPerpInCrab).wdiv(IERC20(CRAB).totalSupply());
 
-            maxWethForOsqth =
+            maxWethForOsqfu =
                 Quoter(QUOTER).quoteExactOutputSingle(WETH, WPOWERPERP, 3000, wPowerPerpToRedeem, 0);
             ethToWithdrawFromCrab = crabToRedeem.wdiv(IERC20(CRAB).totalSupply()).wmul(ethInCrab);
         }
 
         vm.startPrank(_user);
         IERC20(ZEN_BULL).approve(address(emergencyWithdraw), type(uint256).max);
-        emergencyWithdraw.emergencyWithdrawEthFromCrab(_zenBullAmount, maxWethForOsqth);
+        emergencyWithdraw.emergencyWithdrawEthFromCrab(_zenBullAmount, maxWethForOsqfu);
         vm.stopPrank();
     }
 }

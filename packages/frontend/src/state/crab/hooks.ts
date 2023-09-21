@@ -52,7 +52,7 @@ import {
   checkPriceHedge,
   checkPriceHedgeV2,
   getCollateralFromCrabAmount,
-  getWsqueethFromCrabAmount,
+  getWsqufuryFromCrabAmount,
   getCurrentProfitableMovePercent,
   getCurrentProfitableMovePercentV2,
   getTotalCrabSupply,
@@ -61,7 +61,7 @@ import { useGetCollatRatioAndLiqPrice, useGetVault } from '../controller/hooks'
 import db from '@utils/firestore'
 import { useTokenBalance } from '@hooks/contracts/useTokenBalance'
 import BigNumber from 'bignumber.js'
-import { useGetBuyQuote, useGetSellQuote, useGetWSqueethPositionValueInETH } from '../squeethPool/hooks'
+import { useGetBuyQuote, useGetSellQuote, useGetWSquFuryPositionValueInETH } from '../squfuryPool/hooks'
 import { fromTokenAmount, getUSDCPoolFee, toTokenAmount } from '@utils/calculations'
 import { useHandleTransaction } from '../wallet/hooks'
 import { addressAtom, networkIdAtom } from '../wallet/atoms'
@@ -90,7 +90,7 @@ import * as Fathom from 'fathom-client'
 import { Networks } from '../../types/index'
 import { useUniswapQuoter } from '@hooks/useUniswapQuoter'
 import { getEthPriceAtHedge } from '@utils/pricer'
-import { squeethInitialPriceAtom } from '../squeethPool/atoms'
+import { squfuryInitialPriceAtom } from '../squfuryPool/atoms'
 import { CRAB_EVENTS } from '@utils/amplitude'
 import useAmplitude from '@hooks/useAmplitude'
 import usePopup, { GenericErrorPopupConfig } from '@hooks/usePopup'
@@ -132,7 +132,7 @@ export const useSetStrategyData = () => {
     checkTimeHedge(contract).then((h) => setIsTimeHedgeAvailable(h[0]))
     if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
       // Check price hedge only if firebase is available
-      const doc = await db.doc('squeeth-monitoring/crab').get()
+      const doc = await db.doc('squfury-monitoring/crab').get()
       checkPriceHedge(doc?.data()?.lastAuctionTrigger || 0, contract).then(setIsPriceHedgeAvailable)
     }
   }, [contract, getCollatRatioAndLiqPrice, getVault])
@@ -209,11 +209,11 @@ export const useCalculateEthWillingToPay = () => {
       }
       if (!vault) return emptyState
 
-      const squeethDebt = await getWsqueethFromCrabAmount(amount, contract)
-      console.log('Debt', squeethDebt?.toString(), amount.toString())
-      if (!squeethDebt) return emptyState
+      const squfuryDebt = await getWsqufuryFromCrabAmount(amount, contract)
+      console.log('Debt', squfuryDebt?.toString(), amount.toString())
+      if (!squfuryDebt) return emptyState
 
-      const ethWillingToPayQuote = await getBuyQuote(squeethDebt, new BigNumber(slippage))
+      const ethWillingToPayQuote = await getBuyQuote(squfuryDebt, new BigNumber(slippage))
       return ethWillingToPayQuote
     },
     [contract, getBuyQuote, vault?.id],
@@ -227,7 +227,7 @@ export const useCalculateEthWillingToPayV2 = () => {
 
   const contract = useAtomValue(crabStrategyContractAtomV2)
   const getBuyQuote = useGetBuyQuote()
-  const getWSqueethPositionValueInETH = useGetWSqueethPositionValueInETH()
+  const getWSquFuryPositionValueInETH = useGetWSquFuryPositionValueInETH()
 
   const calculateEthWillingToPay = useCallback(
     async (amount: BigNumber, slippage: number) => {
@@ -235,21 +235,21 @@ export const useCalculateEthWillingToPayV2 = () => {
         amountIn: new BigNumber(0),
         maximumAmountIn: new BigNumber(0),
         priceImpact: '0',
-        squeethDebt: new BigNumber(0),
+        squfuryDebt: new BigNumber(0),
         ethToGet: new BigNumber(0),
         poolFee: '0',
       }
       if (!vault) return emptyState
 
-      const squeethDebt = await getWsqueethFromCrabAmount(amount, contract)
+      const squfuryDebt = await getWsqufuryFromCrabAmount(amount, contract)
       const collat = await getCollateralFromCrabAmount(amount, contract, vault)
-      console.log('Debt', squeethDebt?.toString(), amount.toString())
-      if (!squeethDebt) return emptyState
+      console.log('Debt', squfuryDebt?.toString(), amount.toString())
+      if (!squfuryDebt) return emptyState
 
-      const ethWillingToPayQuote = await getBuyQuote(squeethDebt, new BigNumber(slippage))
+      const ethWillingToPayQuote = await getBuyQuote(squfuryDebt, new BigNumber(slippage))
       return {
         ...ethWillingToPayQuote,
-        squeethDebt,
+        squfuryDebt,
         ethToGet: collat?.minus(ethWillingToPayQuote.maximumAmountIn) || BIG_ZERO,
       }
     },
@@ -271,7 +271,7 @@ export const useCurrentCrabPositionValue = () => {
   const vault = useAtomValue(crabStrategyVaultAtom)
   const ethPrice = useETHPrice()
   const setStrategyData = useSetStrategyData()
-  const getWSqueethPositionValueInETH = useGetWSqueethPositionValueInETH()
+  const getWSquFuryPositionValueInETH = useGetWSquFuryPositionValueInETH()
 
   useEffect(() => {
     setStrategyData()
@@ -284,18 +284,18 @@ export const useCurrentCrabPositionValue = () => {
   useAppEffect(() => {
     ;(async () => {
       setIsCrabPositionValueLoading(true)
-      const [collateral, squeethDebt] = await Promise.all([
+      const [collateral, squfuryDebt] = await Promise.all([
         getCollateralFromCrabAmount(userShares, contract, vault),
-        getWsqueethFromCrabAmount(userShares, contract),
+        getWsqufuryFromCrabAmount(userShares, contract),
       ])
 
-      if (!squeethDebt || !collateral) {
+      if (!squfuryDebt || !collateral) {
         setCurrentCrabPositionValue(BIG_ZERO)
         setCurrentCrabPositionValueInETH(BIG_ZERO)
         return
       }
 
-      const ethDebt = getWSqueethPositionValueInETH(squeethDebt)
+      const ethDebt = getWSquFuryPositionValueInETH(squfuryDebt)
 
       const crabPositionValueInETH = collateral.minus(ethDebt)
       const crabPositionValueInUSD = crabPositionValueInETH.times(ethPrice)
@@ -311,7 +311,7 @@ export const useCurrentCrabPositionValue = () => {
     contract,
     setCurrentEthLoading,
     setIsCrabPositionValueLoading,
-    getWSqueethPositionValueInETH,
+    getWSquFuryPositionValueInETH,
     ethPrice,
     vault,
   ])
@@ -341,9 +341,9 @@ export const useCurrentCrabPositionValueV2 = () => {
   const vault = useAtomValue(crabStrategyVaultAtomV2)
   const ethPrice = useOnChainETHPrice()
   const setStrategyData = useSetStrategyData()
-  const getWSqueethPositionValueInETH = useGetWSqueethPositionValueInETH()
+  const getWSquFuryPositionValueInETH = useGetWSquFuryPositionValueInETH()
   const normFactor = useAtomValue(normFactorAtom)
-  const squeethInitialPrice = useAtomValue(squeethInitialPriceAtom)
+  const squfuryInitialPrice = useAtomValue(squfuryInitialPriceAtom)
   const setCrabUsdValue = useSetAtom(crabUSDValueAtom)
   const fetchQueuedData = useQueuedCrabPositionAndStatus()
 
@@ -361,20 +361,20 @@ export const useCurrentCrabPositionValueV2 = () => {
         setIsCrabPositionValueLoading(true)
       }
       fetchQueuedData()
-      const [collateral, squeethDebt, collateralOne, squeethDebtOne, collatMigrated, debtMigrated] = await Promise.all([
+      const [collateral, squfuryDebt, collateralOne, squfuryDebtOne, collatMigrated, debtMigrated] = await Promise.all([
         getCollateralFromCrabAmount(userShares, contract, vault),
-        getWsqueethFromCrabAmount(userShares, contract),
+        getWsqufuryFromCrabAmount(userShares, contract),
         getCollateralFromCrabAmount(BIG_ONE, contract, vault),
-        getWsqueethFromCrabAmount(BIG_ONE, contract),
+        getWsqufuryFromCrabAmount(BIG_ONE, contract),
         getCollateralFromCrabAmount(toTokenAmount(crabQueuedShares, 18), contract, vault),
-        getWsqueethFromCrabAmount(toTokenAmount(crabQueuedShares, 18), contract),
+        getWsqufuryFromCrabAmount(toTokenAmount(crabQueuedShares, 18), contract),
       ])
 
       if (
-        !squeethDebt ||
+        !squfuryDebt ||
         !collateral ||
         !normFactor ||
-        ((collateral.isZero() || squeethDebt.isZero() || squeethInitialPrice.isZero()) && userShares.gt(0))
+        ((collateral.isZero() || squfuryDebt.isZero() || squfuryInitialPrice.isZero()) && userShares.gt(0))
       ) {
         setCurrentCrabPositionValue(BIG_ZERO)
         setCurrentCrabPositionValueInETH(BIG_ZERO)
@@ -382,9 +382,9 @@ export const useCurrentCrabPositionValueV2 = () => {
         return
       }
 
-      const ethDebt = getWSqueethPositionValueInETH(squeethDebt)
-      if (collateralOne && squeethDebtOne) {
-        const ethDebtOne = getWSqueethPositionValueInETH(squeethDebtOne)
+      const ethDebt = getWSquFuryPositionValueInETH(squfuryDebt)
+      if (collateralOne && squfuryDebtOne) {
+        const ethDebtOne = getWSquFuryPositionValueInETH(squfuryDebtOne)
         setCrabUsdValue(collateralOne.minus(ethDebtOne).times(ethPrice))
       }
 
@@ -395,7 +395,7 @@ export const useCurrentCrabPositionValueV2 = () => {
       const crabPositionValueInUSD = crabPositionValueInETH.times(ethPrice)
 
       if (debtMigrated && collatMigrated && !collatMigrated?.isZero() && !debtMigrated?.isZero()) {
-        const ethDebtOne = getWSqueethPositionValueInETH(debtMigrated)
+        const ethDebtOne = getWSquFuryPositionValueInETH(debtMigrated)
         setCrabQueuedInEth(collatMigrated.minus(ethDebtOne))
         setCrabQueuedInUsd(collatMigrated.minus(ethDebtOne).times(ethPrice))
       }
@@ -417,14 +417,14 @@ export const useCurrentCrabPositionValueV2 = () => {
     contract,
     setCurrentEthLoading,
     setIsCrabPositionValueLoading,
-    getWSqueethPositionValueInETH,
+    getWSquFuryPositionValueInETH,
     setCurrentCrabPositionValue,
     setCurrentCrabPositionValueInETH,
     setUserMigratedSharesETH,
     ethPrice,
     vault,
     balLoading,
-    squeethInitialPrice,
+    squfuryInitialPrice,
     setCrabUsdValue,
     crabQueuedShares,
   ])
@@ -459,8 +459,8 @@ export const useCalculateETHtoBorrowFromUniswap = () => {
       while (start.lte(end)) {
         const middle = start.plus(end).div(2)
         const ethBorrow = ethDeposit.times(middle)
-        const initialWSqueethDebt = ethBorrow.plus(ethDeposit).times(vault.shortAmount).div(vault.collateralAmount)
-        const quote = await getSellQuote(initialWSqueethDebt, new BigNumber(slippage))
+        const initialWSquFuryDebt = ethBorrow.plus(ethDeposit).times(vault.shortAmount).div(vault.collateralAmount)
+        const quote = await getSellQuote(initialWSquFuryDebt, new BigNumber(slippage))
         const borrowRatio = quote.minimumAmountOut.div(ethBorrow).minus(1)
         if (prevState.minimumAmountOut.eq(quote.minimumAmountOut)) {
           break
@@ -505,7 +505,7 @@ export const useCalculateETHtoBorrowFromUniswapV2 = () => {
         priceImpact: '0',
         poolFee: '0',
         ethBorrow: new BigNumber(0),
-        initialWSqueethDebt: new BigNumber(0),
+        initialWSquFuryDebt: new BigNumber(0),
       }
       if (!vault || ethDeposit.eq(0)) return emptyState
 
@@ -517,13 +517,13 @@ export const useCalculateETHtoBorrowFromUniswapV2 = () => {
       while (start.lte(end)) {
         const middle = start.plus(end).div(2)
         const ethBorrow = ethDeposit.times(middle)
-        const initialWSqueethDebt = ethBorrow.plus(ethDeposit).times(vault.shortAmount).div(vault.collateralAmount)
-        const quote = await getSellQuote(initialWSqueethDebt, new BigNumber(slippage))
+        const initialWSquFuryDebt = ethBorrow.plus(ethDeposit).times(vault.shortAmount).div(vault.collateralAmount)
+        const quote = await getSellQuote(initialWSquFuryDebt, new BigNumber(slippage))
         const borrowRatio = quote.minimumAmountOut.div(ethBorrow).minus(1)
         if (prevState.minimumAmountOut.eq(quote.minimumAmountOut)) {
           break
         }
-        prevState = { ...quote, ethBorrow, initialWSqueethDebt }
+        prevState = { ...quote, ethBorrow, initialWSquFuryDebt }
         if (borrowRatio.gt(0) && borrowRatio.lte(deviation)) {
           break
         } else {

@@ -23,14 +23,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 
 import ethLogo from '../../public/images/ethereum-eth.svg'
-import squeethLogo from '../../public/images/Squeeth.svg'
+import squfuryLogo from '../../public/images/SquFury.svg'
 import { AddButton, RemoveButton } from '@components/Button'
 import CollatRange from '@components/CollatRange'
 import NumberInput from '@components/Input/NumberInput'
 import Nav from '@components/Nav'
 import TradeInfoItem from '@components/TradeOld/TradeInfoItem'
 import { Tooltips } from '@constants/enums'
-import { BIG_ZERO, MIN_COLLATERAL_AMOUNT, OSQUEETH_DECIMALS, SQUEETH_BASE_URL } from '../../src/constants'
+import { BIG_ZERO, MIN_COLLATERAL_AMOUNT, OSQUFURY_DECIMALS, SQUFURY_BASE_URL } from '../../src/constants'
 import { PositionType } from '../../src/types'
 import { useRestrictUser } from '@context/restrict-user'
 import { useVaultLiquidations } from '@hooks/contracts/useLiquidations'
@@ -243,8 +243,8 @@ const useStyles = makeStyles((theme) =>
 enum VaultAction {
   ADD_COLLATERAL,
   REMOVE_COLLATERAL,
-  MINT_SQUEETH,
-  BURN_SQUEETH,
+  MINT_SQUFURY,
+  BURN_SQUFURY,
   APPROVE_UNI_POSITION,
   DEPOSIT_UNI_POSITION,
   WITHDRAW_UNI_POSITION,
@@ -254,7 +254,7 @@ enum VaultError {
   MIN_COLLATERAL = 'Minimum vault collateral is 6.9 ETH',
   MIN_COLLAT_PERCENT = 'Minimum collateral ratio is 150%',
   INSUFFICIENT_ETH_BALANCE = 'Insufficient ETH Balance',
-  INSUFFICIENT_OSQTH_BALANCE = 'Insufficient oSQTH Balance',
+  INSUFFICIENT_OSQFU_BALANCE = 'Insufficient oSQFU Balance',
 }
 
 const SelectLP: React.FC<{ lpToken: number; setLpToken: (t: number) => void; disabled?: boolean }> = ({
@@ -262,12 +262,12 @@ const SelectLP: React.FC<{ lpToken: number; setLpToken: (t: number) => void; dis
   setLpToken,
   disabled,
 }) => {
-  const { squeethPool } = useAtomValue(addressesAtom)
+  const { squfuryPool } = useAtomValue(addressesAtom)
   const address = useAtomValue(addressAtom)
 
   const { data } = useQuery<positions, positionsVariables>(ACTIVE_POSITIONS_QUERY, {
     variables: {
-      poolAddress: squeethPool,
+      poolAddress: squfuryPool,
       owner: address || '',
     },
     fetchPolicy: 'no-cache',
@@ -318,15 +318,15 @@ const Component: React.FC = () => {
   const { data: balance } = useWalletBalance()
   const { vid } = router.query
   const { liquidations } = useVaultLiquidations(Number(vid))
-  const { oSqueeth, nftManager, controller } = useAtomValue(addressesAtom)
+  const { oSquFury, nftManager, controller } = useAtomValue(addressesAtom)
   const positionType = useAtomValue(positionTypeAtom)
-  const { squeethAmount } = useComputeSwaps()
+  const { squfuryAmount } = useComputeSwaps()
   const mintedDebt = useMintedDebt()
   const shortDebt = useShortDebt()
 
-  const lpedSqueeth = useLpDebt()
+  const lpedSquFury = useLpDebt()
   const { getApproved, approve } = useERC721(nftManager)
-  const { value: oSqueethBal } = useTokenBalance(oSqueeth, 15, OSQUEETH_DECIMALS)
+  const { value: oSquFuryBal } = useTokenBalance(oSquFury, 15, OSQUFURY_DECIMALS)
 
   const [minCollateral, setMinCollateral] = useState<string | undefined>(undefined)
   const [collateral, setCollateral] = useState('0')
@@ -442,7 +442,7 @@ const Component: React.FC = () => {
 
     setNewLiqPrice(lp)
     setCollatPercent(cp)
-    setAction(shortAmountBN.isPositive() ? VaultAction.MINT_SQUEETH : VaultAction.BURN_SQUEETH)
+    setAction(shortAmountBN.isPositive() ? VaultAction.MINT_SQUFURY : VaultAction.BURN_SQUFURY)
   }
 
   const updateDebtForCollatPercent = async (percent: number) => {
@@ -457,7 +457,7 @@ const Component: React.FC = () => {
     const debt = vault.collateralAmount.plus(lpNftCollat).times(100).div(percent)
     const _shortAmt = await getShortAmountFromDebt(debt)
     setShortAmount(_shortAmt.minus(vault.shortAmount).toString())
-    setAction(percent < existingCollatPercent ? VaultAction.MINT_SQUEETH : VaultAction.BURN_SQUEETH)
+    setAction(percent < existingCollatPercent ? VaultAction.MINT_SQUFURY : VaultAction.BURN_SQUFURY)
     const { liquidationPrice: lp } = await getCollatRatioAndLiqPrice(vault.collateralAmount, _shortAmt, currentLpNftId)
 
     setNewLiqPrice(lp)
@@ -595,7 +595,7 @@ const Component: React.FC = () => {
   }, [action])
 
   const isDebtAction = useMemo(() => {
-    return action === VaultAction.MINT_SQUEETH || action === VaultAction.BURN_SQUEETH
+    return action === VaultAction.MINT_SQUFURY || action === VaultAction.BURN_SQUFURY
   }, [action])
 
   const isLPNFTAction = useMemo(() => {
@@ -620,8 +620,8 @@ const Component: React.FC = () => {
       )
         adjustCollatError = VaultError.MIN_COLLATERAL
     } else {
-      if (action === VaultAction.BURN_SQUEETH && shortAmountBN.abs().gt(oSqueethBal))
-        adjustAmountError = VaultError.INSUFFICIENT_OSQTH_BALANCE
+      if (action === VaultAction.BURN_SQUFURY && shortAmountBN.abs().gt(oSquFuryBal))
+        adjustAmountError = VaultError.INSUFFICIENT_OSQFU_BALANCE
       else if (collatPercent < 150 && !shortAmountBN.abs().isEqualTo(vault.shortAmount))
         adjustAmountError = VaultError.MIN_COLLAT_PERCENT
     }
@@ -698,10 +698,10 @@ const Component: React.FC = () => {
               </div>
               <div className={classes.liqItem}>
                 <Typography color="textSecondary" variant="body2">
-                  Total squeeth liquidated:
+                  Total squfury liquidated:
                 </Typography>
                 <Typography variant="body2" color="textPrimary" style={{ marginLeft: '8px' }}>
-                  {totalLiquidated.toFixed(6)} oSQTH
+                  {totalLiquidated.toFixed(6)} oSQFU
                 </Typography>
               </div>
               <div className={classes.liqItem}>
@@ -719,7 +719,7 @@ const Component: React.FC = () => {
             <div className={classes.overview}>
               <div className={classes.debtItem}>
                 <Typography className={classes.overviewTitle}>
-                  <span>Total Debt (oSQTH)</span>
+                  <span>Total Debt (oSQFU)</span>
                   <Tooltip title={Tooltips.TotalDebt}>
                     <InfoIcon className={classes.infoIcon} />
                   </Tooltip>
@@ -730,7 +730,7 @@ const Component: React.FC = () => {
               </div>
               <div className={classes.debtItem}>
                 <Typography className={classes.overviewTitle}>
-                  <span>Short Debt (oSQTH)</span>
+                  <span>Short Debt (oSQFU)</span>
                   <Tooltip title={Tooltips.ShortDebt}>
                     <InfoIcon className={classes.infoIcon} />
                   </Tooltip>
@@ -741,7 +741,7 @@ const Component: React.FC = () => {
               </div>
               <div className={classes.debtItem}>
                 <Typography className={classes.overviewTitle}>
-                  <span>Minted Debt (oSQTH)</span>
+                  <span>Minted Debt (oSQFU)</span>
                   <Tooltip title={Tooltips.MintedDebt}>
                     <InfoIcon className={classes.infoIcon} />
                   </Tooltip>
@@ -753,13 +753,13 @@ const Component: React.FC = () => {
               </div>
               <div className={classes.debtItem}>
                 <Typography className={classes.overviewTitle}>
-                  <span>LPed Debt (oSQTH)</span>
+                  <span>LPed Debt (oSQFU)</span>
                   <Tooltip title={Tooltips.LPDebt}>
                     <InfoIcon className={classes.infoIcon} />
                   </Tooltip>
                 </Typography>
                 <Typography className={classes.overviewValue} id="vault-lped-debt-bal">
-                  {lpedSqueeth?.gt(0) ? lpedSqueeth.toFixed(6) : 0}
+                  {lpedSquFury?.gt(0) ? lpedSquFury.toFixed(6) : 0}
                 </Typography>
               </div>
             </div>
@@ -768,7 +768,7 @@ const Component: React.FC = () => {
           <div className={classes.overview}>
             {/* <div className={classes.overviewItem}>
               <Typography className={classes.overviewValue}>{vault?.shortAmount.toFixed(6)}</Typography>
-              <Typography className={classes.overviewTitle}>Total Debt (oSQTH)</Typography>
+              <Typography className={classes.overviewTitle}>Total Debt (oSQFU)</Typography>
             </div> */}
             <div className={classes.overviewItem}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -942,7 +942,7 @@ const Component: React.FC = () => {
                 <div className={classes.managerItem}>
                   <div className={classes.managerItemHeader}>
                     <div style={{ width: '40px', height: '40px' }}>
-                      <Image src={squeethLogo} alt="logo" width={40} height={40} />
+                      <Image src={squfuryLogo} alt="logo" width={40} height={40} />
                     </div>
                     <Typography className={classes.managerItemTitle} variant="h6">
                       Adjust Debt
@@ -960,8 +960,8 @@ const Component: React.FC = () => {
                         onClick={() =>
                           shortAmountBN.isPositive()
                             ? updateShort(maxToMint.toString())
-                            : vault?.shortAmount.isGreaterThan(oSqueethBal)
-                              ? updateShort(oSqueethBal.negated().toString())
+                            : vault?.shortAmount.isGreaterThan(oSquFuryBal)
+                              ? updateShort(oSquFuryBal.negated().toString())
                               : updateShort(vault?.shortAmount ? vault?.shortAmount.negated().toString() : '0')
                         }
                         variant="text"
@@ -971,26 +971,26 @@ const Component: React.FC = () => {
                     </div>
                     <NumberInput
                       id="debt-amount-input"
-                      min={oSqueethBal.negated().toString()}
+                      min={oSquFuryBal.negated().toString()}
                       step={0.1}
                       placeholder="Amount"
                       onChange={(v) => updateShort(v)}
                       value={shortAmount}
-                      unit="oSQTH"
+                      unit="oSQFU"
                       hint={
                         !!adjustAmountError ? (
                           adjustAmountError
                         ) : (
                           <span>
                             Balance{' '}
-                            <span id="vault-debt-input-osqth-balance">
-                              {oSqueethBal?.isGreaterThan(0) &&
+                            <span id="vault-debt-input-osqfu-balance">
+                              {oSquFuryBal?.isGreaterThan(0) &&
                                 positionType === PositionType.LONG &&
-                                oSqueethBal.minus(squeethAmount).isGreaterThan(0)
-                                ? oSqueethBal.minus(squeethAmount).toFixed(6)
-                                : oSqueethBal.toFixed(6)}
+                                oSquFuryBal.minus(squfuryAmount).isGreaterThan(0)
+                                ? oSquFuryBal.minus(squfuryAmount).toFixed(6)
+                                : oSquFuryBal.toFixed(6)}
                             </span>{' '}
-                            oSQTH
+                            oSQFU
                           </span>
                         )
                       }
@@ -1039,9 +1039,9 @@ const Component: React.FC = () => {
                       onClick={() => burn(shortAmountBN)}
                       className={classes.actionBtn}
                       size="small"
-                      disabled={action !== VaultAction.BURN_SQUEETH || txLoading || !!adjustAmountError || (isRestricted && !isWithdrawAllowed)}
+                      disabled={action !== VaultAction.BURN_SQUFURY || txLoading || !!adjustAmountError || (isRestricted && !isWithdrawAllowed)}
                     >
-                      {action === VaultAction.BURN_SQUEETH && txLoading ? (
+                      {action === VaultAction.BURN_SQUFURY && txLoading ? (
                         <CircularProgress color="primary" size="1rem" />
                       ) : (
                         'Burn'
@@ -1052,9 +1052,9 @@ const Component: React.FC = () => {
                       onClick={() => mint(shortAmountBN)}
                       className={classes.actionBtn}
                       size="small"
-                      disabled={action !== VaultAction.MINT_SQUEETH || txLoading || !!adjustAmountError || isRestricted}
+                      disabled={action !== VaultAction.MINT_SQUFURY || txLoading || !!adjustAmountError || isRestricted}
                     >
-                      {action === VaultAction.MINT_SQUEETH && txLoading ? (
+                      {action === VaultAction.MINT_SQUFURY && txLoading ? (
                         <CircularProgress color="primary" size="1rem" />
                       ) : (
                         'Mint'

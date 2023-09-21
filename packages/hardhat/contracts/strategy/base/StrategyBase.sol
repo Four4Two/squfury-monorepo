@@ -74,40 +74,40 @@ contract StrategyBase is ERC20 {
 
     /**
      * @notice mint WPowerPerp and deposit collateral
-    * @dev this function will not send WPowerPerp to msg.sender if _keepWSqueeth == true
+    * @dev this function will not send WPowerPerp to msg.sender if _keepWSquFury == true
      * @param _to receiver address
      * @param _wAmount amount of WPowerPerp to mint
      * @param _collateral amount of collateral to deposit
-     * @param _keepWsqueeth keep minted wSqueeth in this contract if it is set to true
+     * @param _keepWsqufury keep minted wSquFury in this contract if it is set to true
      */
     function _mintWPowerPerp(
         address _to,
         uint256 _wAmount,
         uint256 _collateral,
-        bool _keepWsqueeth
+        bool _keepWsqufury
     ) internal {
         powerTokenController.mintWPowerPerpAmount{value: _collateral}(vaultId, _wAmount, 0);
 
-        if (!_keepWsqueeth) {
+        if (!_keepWsqufury) {
             IWPowerPerp(wPowerPerp).transfer(_to, _wAmount);
         }
     }
 
     /**
      * @notice burn WPowerPerp and withdraw collateral
-     * @dev this function will not take WPowerPerp from msg.sender if _isOwnedWSqueeth == true
+     * @dev this function will not take WPowerPerp from msg.sender if _isOwnedWSquFury == true
      * @param _from WPowerPerp holder address
      * @param _amount amount of wPowerPerp to burn
      * @param _collateralToWithdraw amount of collateral to withdraw
-     * @param _isOwnedWSqueeth transfer WPowerPerp from holder if it is set to false
+     * @param _isOwnedWSquFury transfer WPowerPerp from holder if it is set to false
      */
     function _burnWPowerPerp(
         address _from,
         uint256 _amount,
         uint256 _collateralToWithdraw,
-        bool _isOwnedWSqueeth
+        bool _isOwnedWSquFury
     ) internal {
-        if (!_isOwnedWSqueeth) {
+        if (!_isOwnedWSquFury) {
             IWPowerPerp(wPowerPerp).transferFrom(_from, address(this), _amount);
         }
 

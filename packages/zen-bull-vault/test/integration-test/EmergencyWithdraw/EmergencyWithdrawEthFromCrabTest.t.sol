@@ -10,7 +10,7 @@ import { Quoter } from "v3-periphery/lens/Quoter.sol";
 import { EmergencyWithdraw } from "../../../src/EmergencyWithdraw.sol";
 import { ZenBullStrategy } from "../../../src/ZenBullStrategy.sol";
 import { UniOracle } from "../../../src/UniOracle.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol";
 
 contract EmergencyWithdrawEthFromCrabTest is Test {
     using StrategyMath for uint256;
@@ -80,7 +80,7 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
         uint256 user1EthBalanceBefore = address(user1).balance;
         uint256 user1RecoveryTokenBalanceBefore = IERC20(emergencyWithdraw).balanceOf(user1);
 
-        uint256 maxWethForOsqth;
+        uint256 maxWethForOsqfu;
         uint256 ethToWithdrawFromCrab;
         {
             uint256 bullShare = user1BullBalanceBefore.wdiv(
@@ -92,14 +92,14 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
             uint256 wPowerPerpToRedeem =
                 crabToRedeem.wmul(wPowerPerpInCrab).wdiv(IERC20(CRAB).totalSupply());
 
-            maxWethForOsqth =
+            maxWethForOsqfu =
                 Quoter(QUOTER).quoteExactOutputSingle(WETH, WPOWERPERP, 3000, wPowerPerpToRedeem, 0);
             ethToWithdrawFromCrab = crabToRedeem.wdiv(IERC20(CRAB).totalSupply()).wmul(ethInCrab);
         }
 
         vm.startPrank(user1);
         IERC20(ZEN_BULL).approve(address(emergencyWithdraw), type(uint256).max);
-        emergencyWithdraw.emergencyWithdrawEthFromCrab(user1BullBalanceBefore, maxWethForOsqth);
+        emergencyWithdraw.emergencyWithdrawEthFromCrab(user1BullBalanceBefore, maxWethForOsqfu);
         vm.stopPrank();
 
         uint256 bullSupplyAfter = emergencyWithdraw.redeemedZenBullAmountForCrabWithdrawal();
@@ -113,7 +113,7 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
             user1RecoveryTokenBalanceAfter - user1RecoveryTokenBalanceBefore, user1BullBalanceBefore
         );
         assertEq(
-            ethToWithdrawFromCrab.sub(maxWethForOsqth),
+            ethToWithdrawFromCrab.sub(maxWethForOsqfu),
             user1EthBalanceAfter.sub(user1EthBalanceBefore)
         );
     }
@@ -126,7 +126,7 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
             uint256 user1EthBalanceBefore = address(user1).balance;
             uint256 user1RecoveryTokenBalanceBefore = IERC20(emergencyWithdraw).balanceOf(user1);
 
-            uint256 maxWethForOsqth;
+            uint256 maxWethForOsqfu;
             uint256 ethToWithdrawFromCrab;
             {
                 uint256 bullShare = user1BullBalanceBefore.wdiv(
@@ -138,7 +138,7 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
                 uint256 wPowerPerpToRedeem =
                     crabToRedeem.wmul(wPowerPerpInCrab).wdiv(IERC20(CRAB).totalSupply());
 
-                maxWethForOsqth = Quoter(QUOTER).quoteExactOutputSingle(
+                maxWethForOsqfu = Quoter(QUOTER).quoteExactOutputSingle(
                     WETH, WPOWERPERP, 3000, wPowerPerpToRedeem, 0
                 );
                 ethToWithdrawFromCrab =
@@ -147,7 +147,7 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
 
             vm.startPrank(user1);
             IERC20(ZEN_BULL).approve(address(emergencyWithdraw), type(uint256).max);
-            emergencyWithdraw.emergencyWithdrawEthFromCrab(user1BullBalanceBefore, maxWethForOsqth);
+            emergencyWithdraw.emergencyWithdrawEthFromCrab(user1BullBalanceBefore, maxWethForOsqfu);
             vm.stopPrank();
 
             uint256 bullSupplyAfter = emergencyWithdraw.redeemedZenBullAmountForCrabWithdrawal();
@@ -162,7 +162,7 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
                 user1BullBalanceBefore
             );
             assertEq(
-                ethToWithdrawFromCrab.sub(maxWethForOsqth),
+                ethToWithdrawFromCrab.sub(maxWethForOsqfu),
                 user1EthBalanceAfter.sub(user1EthBalanceBefore)
             );
         }
@@ -172,7 +172,7 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
         uint256 user2EthBalanceBefore = address(user2).balance;
         uint256 user2RecoveryTokenBalanceBefore = IERC20(emergencyWithdraw).balanceOf(user2);
 
-        uint256 maxWethForOsqth;
+        uint256 maxWethForOsqfu;
         uint256 ethToWithdrawFromCrab;
         {
             uint256 bullShare = user2BullBalanceBefore.wdiv(
@@ -184,14 +184,14 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
             uint256 wPowerPerpToRedeem =
                 crabToRedeem.wmul(wPowerPerpInCrab).wdiv(IERC20(CRAB).totalSupply());
 
-            maxWethForOsqth =
+            maxWethForOsqfu =
                 Quoter(QUOTER).quoteExactOutputSingle(WETH, WPOWERPERP, 3000, wPowerPerpToRedeem, 0);
             ethToWithdrawFromCrab = crabToRedeem.wdiv(IERC20(CRAB).totalSupply()).wmul(ethInCrab);
         }
 
         vm.startPrank(user2);
         IERC20(ZEN_BULL).approve(address(emergencyWithdraw), type(uint256).max);
-        emergencyWithdraw.emergencyWithdrawEthFromCrab(user2BullBalanceBefore, maxWethForOsqth);
+        emergencyWithdraw.emergencyWithdrawEthFromCrab(user2BullBalanceBefore, maxWethForOsqfu);
         vm.stopPrank();
 
         uint256 bullSupplyAfter = emergencyWithdraw.redeemedZenBullAmountForCrabWithdrawal();
@@ -205,7 +205,7 @@ contract EmergencyWithdrawEthFromCrabTest is Test {
             user2RecoveryTokenBalanceAfter - user2RecoveryTokenBalanceBefore, user2BullBalanceBefore
         );
         assertEq(
-            ethToWithdrawFromCrab.sub(maxWethForOsqth),
+            ethToWithdrawFromCrab.sub(maxWethForOsqfu),
             user2EthBalanceAfter.sub(user2EthBalanceBefore)
         );
     }

@@ -32,7 +32,7 @@ function loadOrCreateTx(id: string): CrabStrategyTx {
 
 export function handleDeposit(event: Deposit): void {
   const strategyTx = loadOrCreateTx(event.transaction.hash.toHex())
-  strategyTx.wSqueethAmount = event.params.wSqueethAmount
+  strategyTx.wSquFuryAmount = event.params.wSquFuryAmount
   strategyTx.lpAmount = event.params.lpAmount
   strategyTx.ethAmount = event.transaction.value
   strategyTx.owner = event.transaction.from
@@ -43,7 +43,7 @@ export function handleDeposit(event: Deposit): void {
 
 export function handleWithdraw(event: Withdraw): void {
   const strategyTx = loadOrCreateTx(event.transaction.hash.toHex())
-  strategyTx.wSqueethAmount = event.params.wSqueethAmount
+  strategyTx.wSquFuryAmount = event.params.wSquFuryAmount
   strategyTx.lpAmount = event.params.crabAmount
   strategyTx.ethAmount = event.params.ethWithdrawn
   strategyTx.owner = event.transaction.from
@@ -54,7 +54,7 @@ export function handleWithdraw(event: Withdraw): void {
 
 export function handleFlashDeposit(event: FlashDeposit): void {
   const strategyTx = loadOrCreateTx(event.transaction.hash.toHex())
-  strategyTx.wSqueethAmount = event.params.tradedAmountOut
+  strategyTx.wSquFuryAmount = event.params.tradedAmountOut
   strategyTx.ethAmount = (strategyTx.ethAmount !== null ? strategyTx.ethAmount : BigInt.fromString('0')).plus(event.transaction.value)
   strategyTx.owner = event.transaction.from
   strategyTx.timestamp = event.block.timestamp
@@ -64,7 +64,7 @@ export function handleFlashDeposit(event: FlashDeposit): void {
 
 export function handleFlashWithdraw(event: FlashWithdraw): void {
   const strategyTx = loadOrCreateTx(event.transaction.hash.toHex())
-  strategyTx.wSqueethAmount = event.params.wSqueethAmount
+  strategyTx.wSquFuryAmount = event.params.wSquFuryAmount
   strategyTx.lpAmount = event.params.crabAmount
   strategyTx.owner = event.transaction.from
   strategyTx.timestamp = event.block.timestamp
@@ -75,10 +75,10 @@ export function handleFlashWithdraw(event: FlashWithdraw): void {
 export function handleHedgeOnUniswap(event: HedgeOnUniswap): void {
   const strategyTx = loadOrCreateTx(event.transaction.hash.toHex())
   strategyTx.type = 'HEDGE_ON_UNISWAP'
-  strategyTx.wSqueethHedgeTargetAmount = event.params.wSqueethHedgeTargetAmount
+  strategyTx.wSquFuryHedgeTargetAmount = event.params.wSquFuryHedgeTargetAmount
   strategyTx.ethHedgeTargetAmount = event.params.ethHedgetargetAmount
   strategyTx.auctionPrice = event.params.auctionPrice
-  strategyTx.isSellingSqueeth = event.params.auctionType
+  strategyTx.isSellingSquFury = event.params.auctionType
   strategyTx.owner = event.params.hedger
   strategyTx.timestamp = event.block.timestamp
   strategyTx.save()
@@ -87,10 +87,10 @@ export function handleHedgeOnUniswap(event: HedgeOnUniswap): void {
 export function handleHedge(event: Hedge): void {
   const strategyTx = loadOrCreateTx(event.transaction.hash.toHex())
   strategyTx.type = 'HEDGE'
-  strategyTx.wSqueethHedgeTargetAmount = event.params.wSqueethHedgeTargetAmount
+  strategyTx.wSquFuryHedgeTargetAmount = event.params.wSquFuryHedgeTargetAmount
   strategyTx.ethHedgeTargetAmount = event.params.ethHedgetargetAmount
   strategyTx.auctionPrice = event.params.auctionPrice
-  strategyTx.isSellingSqueeth = event.params.auctionType
+  strategyTx.isSellingSquFury = event.params.auctionType
   strategyTx.hedgerPrice = event.params.hedgerPrice
   strategyTx.owner = event.params.hedger
   strategyTx.timestamp = event.block.timestamp
@@ -135,8 +135,8 @@ export function handleTransfer(event: Transfer): void {
 export function handleExecuteSellAuction(event: ExecuteSellAuction): void {
   const auction = new CrabAuction(event.transaction.hash.toHex())
   auction.ethAmount = event.params.ethBought
-  auction.squeethAmount = event.params.wSqueethSold
-  auction.isSellingSqueeth = true
+  auction.squfuryAmount = event.params.wSquFurySold
+  auction.isSellingSquFury = true
   auction.isHedgingOnUniswap = event.params.isHedgingOnUniswap
   auction.timestamp = event.block.timestamp
   auction.owner = event.transaction.from
@@ -146,8 +146,8 @@ export function handleExecuteSellAuction(event: ExecuteSellAuction): void {
 export function handleExecuteBuyAuction(event: ExecuteBuyAuction): void {
   const auction = new CrabAuction(event.transaction.hash.toHex())
   auction.ethAmount = event.params.ethSold
-  auction.squeethAmount = event.params.wSqueethBought
-  auction.isSellingSqueeth = false
+  auction.squfuryAmount = event.params.wSquFuryBought
+  auction.isSellingSquFury = false
   auction.isHedgingOnUniswap = event.params.isHedgingOnUniswap
   auction.timestamp = event.block.timestamp
   auction.owner = event.transaction.from

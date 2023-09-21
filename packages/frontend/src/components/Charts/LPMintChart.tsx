@@ -99,7 +99,7 @@ const chartOptions = {
   },
 }
 
-const LongSqueethPayoff: React.FC<{ ethPrice: number }> = ({ ethPrice }) => {
+const LongSquFuryPayoff: React.FC<{ ethPrice: number }> = ({ ethPrice }) => {
   const [labels, setLabels] = useState<Array<string>>([])
   const [values, setValues] = useState<Array<string>>([])
   const [levValues, setLevValues] = useState<Array<string | null>>([])
@@ -150,4 +150,4 @@ const LongSqueethPayoff: React.FC<{ ethPrice: number }> = ({ ethPrice }) => {
   )
 }
 
-export default memo(LongSqueethPayoff)
+export default memo(LongSquFuryPayoff)

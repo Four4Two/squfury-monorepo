@@ -4,7 +4,7 @@ import { BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { Controller, INonfungiblePositionManager, MockErc20, ShortPowerPerp, WETH9, WPowerPerp, IUniswapV3Pool, ISwapRouter } from "../../typechain";
-import { deployUniswapV3, deploySqueethCoreContracts, deployWETHAndDai, addSqueethLiquidity, addWethDaiLiquidity } from '../setup'
+import { deployUniswapV3, deploySquFuryCoreContracts, deployWETHAndDai, addSquFuryLiquidity, addWethDaiLiquidity } from '../setup'
 import { isSimilar, getNow, one, oracleScaleFactor } from "../utils";
 
 BigNumberJs.set({EXPONENTIAL_AT: 30})
@@ -14,8 +14,8 @@ describe("Testing system stability during extreme market conditions", function (
 
   let dai: MockErc20
   let weth: WETH9
-  let wsqueeth: WPowerPerp
-  let shortSqueeth: ShortPowerPerp
+  let wsqufury: WPowerPerp
+  let shortSquFury: ShortPowerPerp
   let positionManager: INonfungiblePositionManager
   let controller: Controller
   
@@ -25,7 +25,7 @@ describe("Testing system stability during extreme market conditions", function (
   
   const startingEthPrice = 3000
   
-  const scaledStartingSqueethPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
+  const scaledStartingSquFuryPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
   
   let liquidityProvider: SignerWithAddress
   let seller: SignerWithAddress
@@ -57,19 +57,19 @@ describe("Testing system stability during extreme market conditions", function (
     weth = wethToken
 
     const uniDeployments = await deployUniswapV3(weth)
-    const coreDeployments = await deploySqueethCoreContracts(
+    const coreDeployments = await deploySquFuryCoreContracts(
       weth,
       dai, 
       uniDeployments.positionManager, 
       uniDeployments.uniswapFactory,
-      scaledStartingSqueethPrice,
+      scaledStartingSquFuryPrice,
       startingEthPrice
     )
 
     positionManager = (uniDeployments.positionManager) as INonfungiblePositionManager
 
-    wsqueeth = coreDeployments.wsqueeth
-    shortSqueeth = coreDeployments.shortSqueeth
+    wsqufury = coreDeployments.wsqufury
+    shortSquFury = coreDeployments.shortSquFury
     controller = coreDeployments.controller
     
     wethPool = coreDeployments.ethDaiPool as IUniswapV3Pool
@@ -77,12 +77,12 @@ describe("Testing system stability during extreme market conditions", function (
   })
 
   this.beforeAll('Add liquidity to both pools', async() => {
-    await addSqueethLiquidity(
-      scaledStartingSqueethPrice, 
+    await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice, 
       '5',
       '30', 
       liquidityProvider.address, 
-      wsqueeth, 
+      wsqufury, 
       weth, 
       positionManager, 
       controller
@@ -103,7 +103,7 @@ describe("Testing system stability during extreme market conditions", function (
   })
 
   this.beforeAll('Prepare vault with collateral ratio = 2.', async() => {
-    vault0Id = await shortSqueeth.nextId()
+    vault0Id = await shortSquFury.nextId()
 
     await controller.connect(seller).mintPowerPerpAmount(0, mintAmount, 0, {value: depositAmount})
   })
@@ -121,7 +121,7 @@ describe("Testing system stability during extreme market conditions", function (
       // calculate max weth with 1.5x buffer
       const maxDai = new BigNumberJs(poolDaiBalance.toString()).times(Math.SQRT2 - 1).times(2).integerValue().toString()
 
-      // how much squeeth to buy to make the price 2x
+      // how much squfury to buy to make the price 2x
       const newPoolWethBalance = new BigNumberJs(poolWethBalance.toString()).div(Math.SQRT2).integerValue().toString()
       const wethToBuy = poolWethBalance.sub(newPoolWethBalance)
       
@@ -195,7 +195,7 @@ describe("Testing system stability during extreme market conditions", function (
       // calculate max weth with 1.5x buffer
       const maxWeth = new BigNumberJs(poolWethBalance.toString()).times(Math.SQRT2 - 1).times(2).integerValue().toString()
 
-      // how much squeeth to buy to make the price 2x
+      // how much squfury to buy to make the price 2x
       const newPoolDaiBalance = new BigNumberJs(poolDaiBalance.toString()).div(Math.SQRT2).integerValue().toString()
       const daiToBuy = poolDaiBalance.sub(newPoolDaiBalance)
       
@@ -230,7 +230,7 @@ describe("Testing system stability during extreme market conditions", function (
       // calculate max weth with 1.5x buffer
       const maxWeth = new BigNumberJs(poolWethBalance.toString()).times(Math.SQRT2 - 1).times(2).integerValue().toString()
 
-      // how much squeeth to buy to make the price 2x
+      // how much squfury to buy to make the price 2x
       const newPoolDaiBalance = new BigNumberJs(poolDaiBalance.toString()).div(Math.SQRT2).integerValue().toString()
       const daiToBuy = poolDaiBalance.sub(newPoolDaiBalance)
       
@@ -264,7 +264,7 @@ describe("Testing system stability during extreme market conditions", function (
         const isSafeVault = await controller.isVaultSafe(vault0Id)
         expect(isSafeVault).to.be.true
       })
-      it('should revert if trying to mint more squeeth', async() => {
+      it('should revert if trying to mint more squfury', async() => {
         // attack only put in the old min collateral
         const attackMintAmount = mintAmount.mul(101).div(100)
         
@@ -286,7 +286,7 @@ describe("Testing system stability during extreme market conditions", function (
         expect(isSimilar(newIndexPrice.toString(), expectedIndex.toString(), 2)).to.be.true
       })
       
-      it('will be able to mint more squeeth', async() => {
+      it('will be able to mint more squfury', async() => {
         // attack only put in the old min collateral
         const attackMintSuperHighAmount = mintAmount.mul(120).div(100)
         await expect(controller.connect(attacker).mintPowerPerpAmount(0, attackMintSuperHighAmount, 0, {value: minCollateral})).to.be.revertedWith('C24')

@@ -16,7 +16,7 @@ import { UniswapIframe } from '../Modal/UniswapIframe'
 import { networkIdAtom } from 'src/state/wallet/atoms'
 import { useETHPrice } from '@hooks/useETHPrice'
 import { activePositionsAtom, closedPositionsAtom, isWethToken0Atom } from 'src/state/positions/atoms'
-import { useGetWSqueethPositionValue } from 'src/state/squeethPool/hooks'
+import { useGetWSquFuryPositionValue } from 'src/state/squfuryPool/hooks'
 import { useLPPositionsQuery } from 'src/state/positions/hooks'
 
 const useStyles = makeStyles((theme) =>
@@ -83,7 +83,7 @@ const calculatePnL = (
   withdrawToken0: string | undefined,
   withdrawToken1: string | undefined,
   ethPrice: BigNumber,
-  squeethPrice: BigNumber,
+  squfuryPrice: BigNumber,
   currValue: BigNumber | undefined,
   isWethToken0: boolean,
 ): BigNumber => {
@@ -97,11 +97,11 @@ const calculatePnL = (
   const withToken1 = new BigNumber(withdrawToken1 || 0)
 
   const ethDepValue = (isWethToken0 ? depToken0 : depToken1).times(ethPrice)
-  const squeethDepValue = (isWethToken0 ? depToken1 : depToken0).times(squeethPrice)
+  const squfuryDepValue = (isWethToken0 ? depToken1 : depToken0).times(squfuryPrice)
   const ethWithdrawValue = (isWethToken0 ? withToken0 : withToken1).times(ethPrice)
-  const squeethWithdrawValue = (isWethToken0 ? withToken1 : withToken0).times(squeethPrice)
+  const squfuryWithdrawValue = (isWethToken0 ? withToken1 : withToken0).times(squfuryPrice)
 
-  const originalValue = ethDepValue.plus(squeethDepValue).minus(ethWithdrawValue).minus(squeethWithdrawValue)
+  const originalValue = ethDepValue.plus(squfuryDepValue).minus(ethWithdrawValue).minus(squfuryWithdrawValue)
   return currValue.minus(originalValue)
 }
 
@@ -113,7 +113,7 @@ export const LPTable: React.FC<LPTableProps> = ({ isLPage, pool }) => {
 
   const [activeTab, setActiveTab] = useState(0)
   const ethPrice = useETHPrice()
-  const getWSqueethPositionValue = useGetWSqueethPositionValue()
+  const getWSquFuryPositionValue = useGetWSquFuryPositionValue()
   const networkId = useAtomValue(networkIdAtom)
   const isWethToken0 = useAtomValue(isWethToken0Atom)
 
@@ -186,7 +186,7 @@ export const LPTable: React.FC<LPTableProps> = ({ isLPage, pool }) => {
                       <a
                         href={
                           networkId === 3
-                            ? `https://squeeth-uniswap.netlify.app/#/pool/${p.id}`
+                            ? `https://squfury-uniswap.netlify.app/#/pool/${p.id}`
                             : `https://app.uniswap.org/#/pool/${p.id}`
                         }
                         target="_blank"
@@ -259,7 +259,7 @@ export const LPTable: React.FC<LPTableProps> = ({ isLPage, pool }) => {
                     <p>No Existing LP Positions</p>
 
                     <div>
-                      <p>1. Mint or buy squeeth on the right.</p>
+                      <p>1. Mint or buy squfury on the right.</p>
                       <a
                         href={UniswapIFrameOpen[networkId]}
                         target={'_blank'}
@@ -267,7 +267,7 @@ export const LPTable: React.FC<LPTableProps> = ({ isLPage, pool }) => {
                         style={{ textDecoration: 'underline' }}
                       >
                         {' '}
-                        <p>2. Deposit Squeeth and ETH into Uniswap V3 Pool 🦄</p>{' '}
+                        <p>2. Deposit SquFury and ETH into Uniswap V3 Pool 🦄</p>{' '}
                       </a>
                     </div>
                   </TableCell>
@@ -281,7 +281,7 @@ export const LPTable: React.FC<LPTableProps> = ({ isLPage, pool }) => {
                       <a
                         href={
                           networkId === 3
-                            ? `https://squeeth-uniswap.netlify.app/#/pool/${p.id}`
+                            ? `https://squfury-uniswap.netlify.app/#/pool/${p.id}`
                             : `https://app.uniswap.org/#/pool/${p.id}`
                         }
                         target="_blank"
@@ -329,7 +329,7 @@ export const LPTable: React.FC<LPTableProps> = ({ isLPage, pool }) => {
                           p.withdrawnToken0,
                           p.withdrawnToken1,
                           ethPrice,
-                          getWSqueethPositionValue(1),
+                          getWSquFuryPositionValue(1),
                           p.dollarValue,
                           isWethToken0,
                         )?.toFixed(3)}
@@ -351,7 +351,7 @@ export const LPTable: React.FC<LPTableProps> = ({ isLPage, pool }) => {
               <TableRow>
                 <TableCell colSpan={7}>
                   <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <UniswapIframe text={'Deposit Squeeth and ETH into Uniswap V3 Pool 🦄'} />
+                    <UniswapIframe text={'Deposit SquFury and ETH into Uniswap V3 Pool 🦄'} />
                   </div>
                 </TableCell>
               </TableRow>

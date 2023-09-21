@@ -1,7 +1,7 @@
 import { Box } from '@material-ui/core'
 import React, { useState, useCallback } from 'react'
 import { useAtomValue } from 'jotai'
-import { SqueethTabsNew, SqueethTabNew } from '@components/Tabs'
+import { SquFuryTabsNew, SquFuryTabNew } from '@components/Tabs'
 
 import Deposit from './Deposit'
 import Withdraw from './Withdraw'
@@ -70,16 +70,16 @@ const CrabTradeV2: React.FC<{ refetchCrabTokenBalance: (cb?: (newBalance: BigNum
 
     return (
       <>
-        <SqueethTabsNew
+        <SquFuryTabsNew
           value={depositOption}
           onChange={(event, val) => setDepositOption(val)}
           aria-label="crab-trade-tab"
           centered
           variant="fullWidth"
         >
-          <SqueethTabNew id="crab-deposit-tab" label="Deposit" />
-          <SqueethTabNew id="crab-withdraw-tab" label="Withdraw" />
-        </SqueethTabsNew>
+          <SquFuryTabNew id="crab-deposit-tab" label="Deposit" />
+          <SquFuryTabNew id="crab-withdraw-tab" label="Withdraw" />
+        </SquFuryTabsNew>
 
         <Box marginTop="32px">
           {depositOption === 0 ? <Deposit onTxnConfirm={onTxnConfirm} /> : <Withdraw onTxnConfirm={onTxnConfirm} />}

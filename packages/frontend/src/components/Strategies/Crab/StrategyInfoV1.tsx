@@ -1,4 +1,4 @@
-import ShortSqueethPayoff from '@components/Charts/ShortSqueethPayoff'
+import ShortSquFuryPayoff from '@components/Charts/ShortSquFuryPayoff'
 import { Typography, Radio, RadioGroup, FormControl, FormControlLabel, FormLabel } from '@material-ui/core'
 import { createStyles, makeStyles } from '@material-ui/core/styles'
 import React from 'react'
@@ -109,7 +109,7 @@ export const StrategyInfo: React.FC = () => {
       {/* <Typography variant="h5" color="primary" className={classes.title}>
         Payoff
       </Typography>
-      <ShortSqueethPayoff ethPrice={ethPrice.toNumber()} collatRatio={2} /> */}
+      <ShortSquFuryPayoff ethPrice={ethPrice.toNumber()} collatRatio={2} /> */}
       <Typography variant="h5" color="primary" className={classes.title}>
         Steps
       </Typography>
@@ -127,7 +127,7 @@ export const StrategyInfo: React.FC = () => {
         {(profitableMovePercent * 100).toFixed(2)}% in either direction each day. The implied premium at which you
         deposit at impacts your profitability. Depositing at a high premium increases likelihood of profitability.
         <br /> <br />
-        If the Squeeth premium to ETH increases, the strategy will incur a loss because it will be more expensive to
+        If the SquFury premium to ETH increases, the strategy will incur a loss because it will be more expensive to
         close the position. Crab aims to be profitable in USD terms.
         <a
           className={classes.link}

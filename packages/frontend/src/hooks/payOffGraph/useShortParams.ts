@@ -2,14 +2,14 @@ import { useAtomValue } from 'jotai'
 import { indexAtom, markAtom } from 'src/state/controller/atoms'
 
 export default function useShortParams(ethPrice: number, collatRatio: number) {
-  const squeethIndex = ethPrice ** 2
+  const squfuryIndex = ethPrice ** 2
   const mark = useAtomValue(markAtom)
   const index = useAtomValue(indexAtom)
   const markRatio = Number(mark.div(index).toString())
-  const squeethMark = squeethIndex * markRatio
+  const squfuryMark = squfuryIndex * markRatio
   const dailyNormFactor = Math.exp((-1 * Math.log(markRatio)) / 17.5)
   const initialCollat = collatRatio * ethPrice
-  const depositValue = initialCollat * ethPrice - squeethMark
+  const depositValue = initialCollat * ethPrice - squfuryMark
 
   const cuNF0 = dailyNormFactor ** 0
   const cuNF1 = dailyNormFactor ** 1
@@ -38,9 +38,9 @@ export default function useShortParams(ethPrice: number, collatRatio: number) {
   }
 
   return {
-    squeethIndex,
+    squfuryIndex,
     markRatio,
-    squeethMark,
+    squfuryMark,
     initialCollat,
     depositValue,
     cuNF0,

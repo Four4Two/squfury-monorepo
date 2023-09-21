@@ -64,7 +64,7 @@ library ControllerHelperUtil {
 
     /**
      * @notice get exact amount0 and amount1 that will be LPed on Uni v3 pool, based on initial _collateralToLp and _wPowerPerpAmount
-     * @param _wPowerPerpPool wPowerPerp Uni v3 pool (oSQTH/ETH pool)
+     * @param _wPowerPerpPool wPowerPerp Uni v3 pool (oSQFU/ETH pool)
      * @param _collateralToLp amount of ETH collateral to LP
      * @param _wPowerPerpAmount amount of wPowerPerp to LP
      * @param _lowerTick LP position lower tick

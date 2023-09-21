@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client'
-import { userBullTxes, userBullTxesVariables } from '../queries/squeeth/__generated__/userBullTxes'
-import USER_BULL_TX_QUERY from '../queries/squeeth/userBullQuery'
+import { userBullTxes, userBullTxesVariables } from '../queries/squfury/__generated__/userBullTxes'
+import USER_BULL_TX_QUERY from '../queries/squfury/userBullQuery'
 import { toTokenAmount } from '@utils/calculations'
 import { WETH_DECIMALS } from '../constants'
-import { squeethClient } from '@utils/apollo-client'
+import { squfuryClient } from '@utils/apollo-client'
 import { CrabStrategyV2TxType } from '../types/index'
 import { networkIdAtom } from 'src/state/wallet/atoms'
 import { useAtomValue } from 'jotai'
@@ -24,7 +24,7 @@ export const useUserBullTxHistory = (user: string, isDescending?: boolean) => {
     USER_BULL_TX_QUERY,
     {
       fetchPolicy: 'cache-and-network',
-      client: squeethClient[networkId],
+      client: squfuryClient[networkId],
       variables: {
         ownerId: user ?? '',
         orderDirection: isDescending ? 'desc' : 'asc',

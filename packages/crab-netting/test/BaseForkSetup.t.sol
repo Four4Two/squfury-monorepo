@@ -16,10 +16,10 @@ contract BaseForkSetup is Test {
     ICrabStrategyV2 crab;
     ERC20 usdc;
     IWETH weth;
-    ERC20 sqth;
+    ERC20 sqfu;
     CrabNetting netting;
     ISwapRouter swapRouter;
-    IController sqthController;
+    IController sqfuController;
     IQuoter quoter;
     IOracle oracle;
     uint256 activeFork;
@@ -46,11 +46,11 @@ contract BaseForkSetup is Test {
         crab = ICrabStrategyV2(0x3B960E47784150F5a63777201ee2B15253D713e8);
         weth = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
         usdc = ERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
-        sqth = ERC20(0xf1B99e3E573A1a9C5E6B2Ce818b617F0E664E86B);
+        sqfu = ERC20(0xf1B99e3E573A1a9C5E6B2Ce818b617F0E664E86B);
         swapRouter = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
         quoter = IQuoter(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
         oracle = IOracle(0x65D66c76447ccB45dAf1e8044e918fA786A483A1);
-        sqthController = IController(0x64187ae08781B09368e6253F9E94951243A493D5);
+        sqfuController = IController(0x64187ae08781B09368e6253F9E94951243A493D5);
 
         netting = new CrabNetting(address(crab), address(swapRouter));
         vm.prank(address(netting));

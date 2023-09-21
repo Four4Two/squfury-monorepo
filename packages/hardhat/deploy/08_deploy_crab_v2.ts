@@ -13,12 +13,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const controller = await ethers.getContract("Controller", deployer);
   const oracle = await ethers.getContract("Oracle", deployer);
   const weth = await getWETH(ethers, deployer, network.name)
-  const wsqueeth = await ethers.getContract("WPowerPerp", deployer);
+  const wsqufury = await ethers.getContract("WPowerPerp", deployer);
   const crabV1 = getCrab(network.name);
 
   const { uniswapFactory, } = await getUniswapDeployments(ethers, deployer, network.name)
 
-  const squeethPoolAddr = await getPoolAddress(wsqueeth, weth, uniswapFactory)
+  const squfuryPoolAddr = await getPoolAddress(wsqufury, weth, uniswapFactory)
 
   const exec = await getExec(deployer, network.name)
   const euler = await getEuler(deployer, network.name)
@@ -65,7 +65,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       oracle.address,
       weth.address,
       uniswapFactory.address,
-      squeethPoolAddr,
+      squfuryPoolAddr,
       timelock.address,
       migration.address,
       3600,
@@ -86,7 +86,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       oracle.address,
       weth.address,
       uniswapFactory.address,
-      squeethPoolAddr,
+      squfuryPoolAddr,
       deployer,
       deployer,
       3600,
@@ -98,7 +98,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       log: true,
       args: v2args,
       skipIfAlreadyDeployed: true,
-      gasLimit: 10000000
+      gasLimit: 8000000
     });
     createArgumentFile('CrabStrategyV2', network.name, v2args)
     console.log(`Successfully deploy CrabStrategyV2`)

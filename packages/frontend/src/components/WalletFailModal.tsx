@@ -16,7 +16,7 @@ export default function WalletFailModal() {
         .
         <br />
         For more information see the{' '}
-        <Link href="https://opyn.gitbook.io/squeeth/resources/squeeth-faq" target="_blank">
+        <Link href="https://opyn.gitbook.io/squfury/resources/squfury-faq" target="_blank">
           Updated Terms FAQ
         </Link>
         .

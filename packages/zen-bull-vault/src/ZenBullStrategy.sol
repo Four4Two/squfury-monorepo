@@ -3,17 +3,17 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 // interface
-import { IController } from "squeeth-monorepo/interfaces/IController.sol";
+import { IController } from "squfury-monorepo/interfaces/IController.sol";
 import { ICrabStrategyV2 } from "./interface/ICrabStrategyV2.sol";
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
-import { IWETH9 } from "squeeth-monorepo/interfaces/IWETH9.sol";
+import { IWETH9 } from "squfury-monorepo/interfaces/IWETH9.sol";
 // contract
 import { ERC20 } from "openzeppelin/token/ERC20/ERC20.sol";
 import { LeverageZen } from "./LeverageZen.sol";
 // lib
 import { Address } from "openzeppelin/utils/Address.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol";
-import { VaultLib } from "squeeth-monorepo/libs/VaultLib.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol";
+import { VaultLib } from "squfury-monorepo/libs/VaultLib.sol";
 
 /**
  * Error codes

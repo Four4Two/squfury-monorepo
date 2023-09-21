@@ -78,7 +78,7 @@ interface UniswapIframeProps {
 
 export const UniswapIframe: React.FC<UniswapIframeProps> = ({ text, closePosition }) => {
   const classes = useStyles()
-  const { oSqueeth } = useAtomValue(addressesAtom)
+  const { oSquFury } = useAtomValue(addressesAtom)
 
   const networkId = useAtomValue(networkIdAtom)
   const [isCopied, setCopied] = useCopyClipboard()
@@ -115,12 +115,12 @@ export const UniswapIframe: React.FC<UniswapIframeProps> = ({ text, closePositio
         aria-describedby="alert-dialog-description"
       >
         <DialogTitle className={classes.dialogTitle} id="alert-dialog-title">
-          <p>Deposit Squeeth and ETH into Uniswap V3 Pool 🦄</p>
+          <p>Deposit SquFury and ETH into Uniswap V3 Pool 🦄</p>
           <Button
             variant="outlined"
             color="primary"
             onClick={() => {
-              setCopied(oSqueeth)
+              setCopied(oSquFury)
             }}
           >
             {' '}
@@ -128,7 +128,7 @@ export const UniswapIframe: React.FC<UniswapIframeProps> = ({ text, closePositio
               <>Copied</>
             ) : (
               <>
-                oSQTH: {oSqueeth?.substring(0, 6)}...{oSqueeth?.substring(oSqueeth.length - 4)}
+                oSQFU: {oSquFury?.substring(0, 6)}...{oSquFury?.substring(oSquFury.length - 4)}
               </>
             )}
           </Button>

@@ -6,7 +6,7 @@ interface ILeverageZen {
         uint256 _crabAmount,
         uint256 _bullShare,
         uint256 _ethInCrab,
-        uint256 _squeethInCrab,
+        uint256 _squfuryInCrab,
         uint256 _totalCrabSupply
     ) external view returns (uint256, uint256);
 

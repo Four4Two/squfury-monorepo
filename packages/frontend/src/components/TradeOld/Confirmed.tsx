@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme) =>
     confMsg: {
       marginTop: theme.spacing(1),
     },
-    squeethCat: {
+    squfuryCat: {
       marginTop: theme.spacing(6),
       marginBottom: theme.spacing(6),
     },
@@ -80,10 +80,10 @@ const Confirmed: React.FC<ConfirmedProps> = ({ confirmationMessage, txnHash, con
         </a>
       </div>
       {confirmType === ConfirmType.CRAB ? (
-        <div className={classes.squeethCat}>
+        <div className={classes.squfuryCat}>
           <Image
             src="https://media.giphy.com/media/ukLCGEh7kXDJ5wNWT7/giphy.gif"
-            alt="squeeth crab cat"
+            alt="squfury crab cat"
             width={120}
             height={120}
             className={classes.img}
@@ -93,16 +93,16 @@ const Confirmed: React.FC<ConfirmedProps> = ({ confirmationMessage, txnHash, con
           </Typography>
         </div>
       ) : (
-        <div className={classes.squeethCat}>
+        <div className={classes.squfuryCat}>
           <Image
             src="https://media.giphy.com/media/eYU60NpFPCONDEItBa/giphy.gif"
-            alt="squeeth cat"
+            alt="squfury cat"
             width={120}
             height={120}
             className={classes.img}
           />
           <Typography variant="body1" component="div">
-            Stay Squeethy!
+            Stay SquFuryy!
           </Typography>
         </div>
       )}

@@ -33,14 +33,14 @@ import {
   useFlashWithdrawV2USDC,
   useQueueWithdrawCrab,
 } from '@state/crab/hooks'
-import { readyAtom } from '@state/squeethPool/atoms'
+import { readyAtom } from '@state/squfuryPool/atoms'
 import { useUserCrabV2TxHistory } from '@hooks/useUserCrabV2TxHistory'
 import {
   dailyHistoricalFundingAtom,
   impliedVolAtom,
   indexAtom,
   normFactorAtom,
-  osqthRefVolAtom,
+  osqfuRefVolAtom,
 } from '@state/controller/atoms'
 import { addressesAtom } from '@state/positions/atoms'
 import { userMigratedSharesETHAtom } from '@state/crabMigration/atom'
@@ -100,7 +100,7 @@ const CrabWithdraw: React.FC<{ onTxnConfirm: (txn: CrabTransactionConfirmation) 
   const [usdcAmountOutFromWithdraw, setUSDCAmountOutFromWithdraw, resetUSDCAmountOutFromWithdraw] = useStateWithReset(
     new BigNumber(0),
   )
-  const [squeethAmountOutFromWithdraw, setSqueethAmountOutFromWithdraw, resetSqueethAmountOutFromWithdraw] =
+  const [squfuryAmountOutFromWithdraw, setSquFuryAmountOutFromWithdraw, resetSquFuryAmountOutFromWithdraw] =
     useStateWithReset(new BigNumber(0))
   const [useUsdc, setUseUsdc] = useState(true)
   const [queueOptionAvailable, setQueueOptionAvailable] = useState(false)
@@ -119,7 +119,7 @@ const CrabWithdraw: React.FC<{ onTxnConfirm: (txn: CrabTransactionConfirmation) 
   const [slippage, setSlippage] = useAtom(crabStrategySlippageAtomV2)
   const network = useAtomValue(networkIdAtom)
   const supportedNetwork = useAtomValue(supportedNetworkAtom)
-  const osqthRefVol = useAtomValue(osqthRefVolAtom)
+  const osqfuRefVol = useAtomValue(osqfuRefVolAtom)
   const selectWallet = useSelectWallet()
 
   const currentEthValue = migratedCurrentEthValue.gt(0) ? migratedCurrentEthValue : currentEthActualValue
@@ -200,11 +200,11 @@ const CrabWithdraw: React.FC<{ onTxnConfirm: (txn: CrabTransactionConfirmation) 
   const withdrawPriceImpactWarning = useAppMemo(() => {
     if (useQueue) return false
 
-    const squeethPrice = ethAmountInFromWithdraw.div(squeethAmountOutFromWithdraw).times(1 - UNI_POOL_FEES / 1000_000)
+    const squfuryPrice = ethAmountInFromWithdraw.div(squfuryAmountOutFromWithdraw).times(1 - UNI_POOL_FEES / 1000_000)
     const scalingFactor = new BigNumber(INDEX_SCALE)
     const fundingPeriod = new BigNumber(FUNDING_PERIOD).div(YEAR)
     const executionVol = new BigNumber(
-      Math.log(scalingFactor.times(squeethPrice).div(normFactor.times(ethIndexPrice)).toNumber()),
+      Math.log(scalingFactor.times(squfuryPrice).div(normFactor.times(ethIndexPrice)).toNumber()),
     )
       .div(fundingPeriod)
       .sqrt()
@@ -214,20 +214,20 @@ const CrabWithdraw: React.FC<{ onTxnConfirm: (txn: CrabTransactionConfirmation) 
       .abs()
       .gt(BigNumber.max(new BigNumber(impliedVol).times(VOL_PERCENT_SCALAR), VOL_PERCENT_FIXED))
     return showPriceImpactWarning
-  }, [impliedVol, ethAmountInFromWithdraw, squeethAmountOutFromWithdraw, useQueue, ethIndexPrice, normFactor])
+  }, [impliedVol, ethAmountInFromWithdraw, squfuryAmountOutFromWithdraw, useQueue, ethIndexPrice, normFactor])
 
   const withdrawFundingWarning = useAppMemo(() => {
     const impliedVolDiff = new BigNumber(VOL_PERCENT_SCALAR)
     const impliedVolDiffLowVol = new BigNumber(VOL_PERCENT_FIXED)
 
     const threshold = BigNumber.max(
-      new BigNumber(osqthRefVol / 100).times(new BigNumber(1).plus(impliedVolDiff)),
-      new BigNumber(osqthRefVol / 100).plus(impliedVolDiffLowVol),
+      new BigNumber(osqfuRefVol / 100).times(new BigNumber(1).plus(impliedVolDiff)),
+      new BigNumber(osqfuRefVol / 100).plus(impliedVolDiffLowVol),
     )
 
     const fundingWarning = new BigNumber(impliedVol).gt(threshold) ? true : false
     return fundingWarning
-  }, [impliedVol, osqthRefVol])
+  }, [impliedVol, osqfuRefVol])
 
   const withdrawError = useAppMemo(() => {
     let withdrawError: string | undefined
@@ -264,7 +264,7 @@ const CrabWithdraw: React.FC<{ onTxnConfirm: (txn: CrabTransactionConfirmation) 
       resetWithdrawPriceImpact()
       resetUniswapFee()
       resetEthAmountInFromWithdraw()
-      resetSqueethAmountOutFromWithdraw()
+      resetSquFuryAmountOutFromWithdraw()
       resetUSDCAmountOutFromWithdraw()
       return
     }
@@ -272,7 +272,7 @@ const CrabWithdraw: React.FC<{ onTxnConfirm: (txn: CrabTransactionConfirmation) 
     if (!useUsdc) {
       calculateEthWillingToPay(withdrawCrabAmount, slippage).then((q) => {
         setEthAmountInFromWithdraw(q.amountIn)
-        setSqueethAmountOutFromWithdraw(q.squeethDebt)
+        setSquFuryAmountOutFromWithdraw(q.squfuryDebt)
 
         let quotePriceImpact = q.priceImpact
         if (q.poolFee) {
@@ -292,7 +292,7 @@ const CrabWithdraw: React.FC<{ onTxnConfirm: (txn: CrabTransactionConfirmation) 
         setUniswapFee(q.poolFee)
         setWithdrawPriceImpact(quotePriceImpact)
         setEthAmountInFromWithdraw(q.amountIn)
-        setSqueethAmountOutFromWithdraw(q.squeethDebt)
+        setSquFuryAmountOutFromWithdraw(q.squfuryDebt)
       })
     }
   }, [ready, withdrawCrabAmount.toString(), slippage, network, useUsdc, usdc, weth])
@@ -578,7 +578,7 @@ const CrabWithdraw: React.FC<{ onTxnConfirm: (txn: CrabTransactionConfirmation) 
             <div className={classes.infoIcon}>
               <Tooltip
                 title={
-                  'Squeeth is currently more expensive than usual. The strategy buys back squeeth to withdraw. You can still withdraw, but you will pay more.'
+                  'SquFury is currently more expensive than usual. The strategy buys back squfury to withdraw. You can still withdraw, but you will pay more.'
                 }
               >
                 <InfoIcon fontSize="medium" />

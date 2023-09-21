@@ -4,9 +4,9 @@ import TradePage from '../pages/trade'
 
 const trade = new TradePage()
 
-// need to change close long component to manually sell osqth, add these two lines:
+// need to change close long component to manually sell osqfu, add these two lines:
 // const mintedDebt = useMintedDebt()
-// const longSqthBal = mintedDebt
+// const longSqfuBal = mintedDebt
 
 describe('Trade on trade page', () => {
   context('Before tests', () => {
@@ -26,7 +26,7 @@ describe('Trade on trade page', () => {
   context('can create short position in 2 sep txs', () => {
     it('can mint first on LP page', () => {
       cy.get('#lp-prev-step-btn').click({ force: true }).click({ force: true })
-      cy.get('#mint-sqth-to-lp-btn').click({ force: true })
+      cy.get('#mint-sqfu-to-lp-btn').click({ force: true })
       cy.get('#lp-page-mint-eth-input').clear().type('8.', { force: true, delay: 200 }).should('have.value', '8.0')
       cy.get('#mint-to-lp-btn').click({ force: true })
       trade.confirmMetamaskTransaction()
@@ -39,9 +39,9 @@ describe('Trade on trade page', () => {
         cy.get('#close-btn').click({ force: true })
       })
       it('can create short position with manual selling with custom input', () => {
-        cy.get('#close-long-osqth-input').clear().type('0.1', { force: true, delay: 200 }).should('have.value', '0.1')
+        cy.get('#close-long-osqfu-input').clear().type('0.1', { force: true, delay: 200 }).should('have.value', '0.1')
         cy.get('#close-long-submit-tx-btn').then((btn) => {
-          if (btn.text().includes('Approve oSQTH')) {
+          if (btn.text().includes('Approve oSQFU')) {
             cy.get('#close-long-submit-tx-btn').click({ force: true })
             trade.confirmMetamaskPermissionToSpend()
             trade.waitForTransactionSuccess()

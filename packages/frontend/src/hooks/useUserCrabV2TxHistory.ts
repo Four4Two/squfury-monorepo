@@ -1,19 +1,19 @@
 import { useQuery } from '@apollo/client'
-import { userCrabV2Txes, userCrabV2TxesVariables } from '../queries/squeeth/__generated__/userCrabV2Txes'
-import USER_CRAB_V2_TX_QUERY from '../queries/squeeth/userCrabV2TxQuery'
+import { userCrabV2Txes, userCrabV2TxesVariables } from '../queries/squfury/__generated__/userCrabV2Txes'
+import USER_CRAB_V2_TX_QUERY from '../queries/squfury/userCrabV2TxQuery'
 import { toTokenAmount } from '@utils/calculations'
 import {
   WETH_DECIMALS,
-  OSQUEETH_DECIMALS,
+  OSQUFURY_DECIMALS,
   V2_MIGRATION_ETH_AMOUNT,
   V2_MIGRATION_SUPPLY,
-  V2_MIGRATION_OSQTH_AMOUNT,
-  V2_MIGRATION_OSQTH_PRICE,
+  V2_MIGRATION_OSQFU_AMOUNT,
+  V2_MIGRATION_OSQFU_PRICE,
   V2_MIGRATION_ETH_PRICE,
   USDC_DECIMALS,
   BIG_ONE,
 } from '../constants'
-import { squeethClient } from '@utils/apollo-client'
+import { squfuryClient } from '@utils/apollo-client'
 import { CrabStrategyV2TxType } from '../types/index'
 import { networkIdAtom } from 'src/state/wallet/atoms'
 import { useAtomValue } from 'jotai'
@@ -40,7 +40,7 @@ export const useUserCrabV2TxHistory = (user: string, isDescending?: boolean) => 
     USER_CRAB_V2_TX_QUERY,
     {
       fetchPolicy: 'cache-and-network',
-      client: squeethClient[networkId],
+      client: squfuryClient[networkId],
       variables: {
         ownerId: user ?? '',
         orderDirection: isDescending ? 'desc' : 'asc',
@@ -82,10 +82,10 @@ export const useUserCrabV2TxHistory = (user: string, isDescending?: boolean) => 
 
       if (tx.type === CrabStrategyV2TxType.DEPOSIT_V1) {
         const ethMigrated = new BigNumber(V2_MIGRATION_ETH_AMOUNT)
-        const oSqthMigrated = new BigNumber(V2_MIGRATION_OSQTH_AMOUNT)
+        const oSqfuMigrated = new BigNumber(V2_MIGRATION_OSQFU_AMOUNT)
 
         ethAmount = ethMigrated
-          .minus(oSqthMigrated.times(V2_MIGRATION_OSQTH_PRICE))
+          .minus(oSqfuMigrated.times(V2_MIGRATION_OSQFU_PRICE))
           .times(toTokenAmount(tx.lpAmount, WETH_DECIMALS))
           .div(V2_MIGRATION_SUPPLY)
 
@@ -116,13 +116,13 @@ export const useUserCrabV2TxHistory = (user: string, isDescending?: boolean) => 
       }
 
       const lpAmount = toTokenAmount(tx.lpAmount, WETH_DECIMALS)
-      const oSqueethAmount = toTokenAmount(tx.wSqueethAmount, OSQUEETH_DECIMALS)
+      const oSquFuryAmount = toTokenAmount(tx.wSquFuryAmount, OSQUFURY_DECIMALS)
 
       return {
         ...tx,
         ethAmount,
         lpAmount,
-        oSqueethAmount,
+        oSquFuryAmount,
         ethUsdValue,
         txTitle: getTxTitle(tx.type),
       }

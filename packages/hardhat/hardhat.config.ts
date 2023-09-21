@@ -14,12 +14,12 @@ import * as dotenv from 'dotenv'
 
 // Import Tasks
 import "./tasks/default";
-import './tasks/addSqueethLiquidity'
+import './tasks/addSquFuryLiquidity'
 import './tasks/addWethLiquidity'
-import './tasks/buySqueeth'
+import './tasks/buySquFury'
 import './tasks/buyWeth'
 import './tasks/sellWeth'
-import './tasks/sellSqueeth'
+import './tasks/sellSquFury'
 import './tasks/increaseSlot'
 
 // Load env variables
@@ -120,6 +120,12 @@ const config: HardhatUserConfig = {
     matic: {
       url: "https://rpc-mainnet.maticvigil.com/",
       gasPrice: 1000000000,
+      accounts,
+    },
+    highbury: {
+      url: "https://highbury.furya.io/",
+      gasPrice: 3000000000,
+      gas: 8000000,
       accounts,
     },
     rinkebyArbitrum: {

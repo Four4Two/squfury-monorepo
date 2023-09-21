@@ -185,7 +185,7 @@ const SettingMenu = () => {
                     style={{ textDecoration: isOver && currentlyOver === 'tos' ? 'underline' : 'none' }}
                     onClick={() => track(SITE_EVENTS.CLICK_TERMS_OF_SERVICE)}
                   >
-                    Squeeth User Terms of Service
+                    SquFury User Terms of Service
                   </a>
                 </Link>
               </Typography>

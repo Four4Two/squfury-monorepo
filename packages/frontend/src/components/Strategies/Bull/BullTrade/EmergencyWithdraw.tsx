@@ -95,8 +95,8 @@ const EmergencyWithdraw: React.FC<{
   const [quoteLoading, setQuoteLoading] = useState(false)
   const [quote, setQuote] = useState({
     maxEthForWPowerPerp: BIG_ZERO,
-    ethInForOsqth: BIG_ZERO,
-    osqthOut: BIG_ZERO,
+    ethInForOsqfu: BIG_ZERO,
+    osqfuOut: BIG_ZERO,
     wPowerPerpPoolFee: 0,
     priceImpact: 0,
   })
@@ -235,11 +235,11 @@ const EmergencyWithdraw: React.FC<{
   }, [ethToWithdrawInputBN, bullPositionValueInEth])
 
   const showPriceImpactWarning = useAppMemo(() => {
-    const squeethPriceFromTrade = quote.ethInForOsqth.div(quote.osqthOut).times(1 - UNI_POOL_FEES / 1000_000)
+    const squfuryPriceFromTrade = quote.ethInForOsqfu.div(quote.osqfuOut).times(1 - UNI_POOL_FEES / 1000_000)
     const scalingFactor = new BigNumber(INDEX_SCALE)
     const fundingPeriod = new BigNumber(FUNDING_PERIOD).div(YEAR)
     const executionVol = new BigNumber(
-      Math.log(scalingFactor.times(squeethPriceFromTrade).div(normFactor.times(ethIndexPrice)).toNumber()),
+      Math.log(scalingFactor.times(squfuryPriceFromTrade).div(normFactor.times(ethIndexPrice)).toNumber()),
     )
       .div(fundingPeriod)
       .sqrt()
@@ -250,7 +250,7 @@ const EmergencyWithdraw: React.FC<{
       .gt(BigNumber.max(new BigNumber(impliedVol).times(VOL_PERCENT_SCALAR), VOL_PERCENT_FIXED))
 
     return showWarning
-  }, [quote.ethInForOsqth, quote.osqthOut, normFactor, ethIndexPrice, impliedVol])
+  }, [quote.ethInForOsqfu, quote.osqfuOut, normFactor, ethIndexPrice, impliedVol])
 
   const { isRestricted, isWithdrawAllowed } = useRestrictUser()
   const selectWallet = useSelectWallet()

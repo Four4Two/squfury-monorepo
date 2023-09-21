@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { useQuery, NetworkStatus } from '@apollo/client'
 import { BIG_ZERO } from '@constants/index'
 
-import VAULT_HISTORY_QUERY, { VAULT_HISTORY_SUBSCRIPTION } from '../queries/squeeth/vaultHistoryQuery'
+import VAULT_HISTORY_QUERY, { VAULT_HISTORY_SUBSCRIPTION } from '../queries/squfury/vaultHistoryQuery'
 import {
   VaultHistory,
   VaultHistoryVariables,
   VaultHistory_vaultHistories,
-} from '../queries/squeeth/__generated__/VaultHistory'
-import { squeethClient } from '@utils/apollo-client'
+} from '../queries/squfury/__generated__/VaultHistory'
+import { squfuryClient } from '@utils/apollo-client'
 import { Action } from '@constants/index'
 import { toTokenAmount } from '@utils/calculations'
 import { addressAtom, networkIdAtom } from 'src/state/wallet/atoms'
@@ -29,7 +29,7 @@ export const useVaultHistoryQuery = (vaultId: number, poll = false) => {
     VaultHistory,
     VaultHistoryVariables
   >(VAULT_HISTORY_QUERY, {
-    client: squeethClient[networkId],
+    client: squfuryClient[networkId],
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
     variables: {
@@ -79,68 +79,68 @@ export const useVaultHistoryQuery = (vaultId: number, poll = false) => {
 export const useVaultHistory = (vaultId: number) => {
   const { vaultHistory } = useVaultHistoryQuery(vaultId)
 
-  //accumulated four actions, mintedSqueeth doesn't take minted squeeth sold into account
+  //accumulated four actions, mintedSquFury doesn't take minted squfury sold into account
   //only consider first valid vault
-  //mintedSqueeth + openShortSqueeth = shortAmount in the vault
-  const { mintedSqueeth, burnedSqueeth, openShortSqueeth, closeShortSqueeth } = useAppMemo(
+  //mintedSquFury + openShortSquFury = shortAmount in the vault
+  const { mintedSquFury, burnedSquFury, openShortSquFury, closeShortSquFury } = useAppMemo(
     () =>
       vaultHistory?.reduce(
         (acc, s) => {
           if (s.action === Action.MINT) {
-            acc.mintedSqueeth = acc.mintedSqueeth.plus(s.oSqthAmount)
+            acc.mintedSquFury = acc.mintedSquFury.plus(s.oSqfuAmount)
           } else if (s.action === Action.BURN) {
-            acc.mintedSqueeth = acc.mintedSqueeth.minus(s.oSqthAmount)
-            acc.burnedSqueeth = acc.burnedSqueeth.plus(s.oSqthAmount)
+            acc.mintedSquFury = acc.mintedSquFury.minus(s.oSqfuAmount)
+            acc.burnedSquFury = acc.burnedSquFury.plus(s.oSqfuAmount)
           } else if (s.action === Action.OPEN_SHORT) {
-            acc.openShortSqueeth = acc.openShortSqueeth.plus(s.oSqthAmount)
+            acc.openShortSquFury = acc.openShortSquFury.plus(s.oSqfuAmount)
           } else if (s.action === Action.CLOSE_SHORT) {
-            acc.closeShortSqueeth = acc.closeShortSqueeth.plus(s.oSqthAmount)
+            acc.closeShortSquFury = acc.closeShortSquFury.plus(s.oSqfuAmount)
             // users fully close short position
             if (
-              acc.closeShortSqueeth.isEqualTo(acc.openShortSqueeth.plus(acc.mintedSqueeth)) &&
-              !acc.closeShortSqueeth.isEqualTo(0)
+              acc.closeShortSquFury.isEqualTo(acc.openShortSquFury.plus(acc.mintedSquFury)) &&
+              !acc.closeShortSquFury.isEqualTo(0)
             ) {
-              acc.mintedSqueeth = BIG_ZERO
-              acc.burnedSqueeth = BIG_ZERO
-              acc.openShortSqueeth = BIG_ZERO
-              acc.closeShortSqueeth = BIG_ZERO
+              acc.mintedSquFury = BIG_ZERO
+              acc.burnedSquFury = BIG_ZERO
+              acc.openShortSquFury = BIG_ZERO
+              acc.closeShortSquFury = BIG_ZERO
             } else {
-              acc.openShortSqueeth = acc.openShortSqueeth.minus(s.oSqthAmount)
+              acc.openShortSquFury = acc.openShortSquFury.minus(s.oSqfuAmount)
             }
           }
-          //if user burn all their osqueeth, reset all values
-          if (acc.mintedSqueeth.isLessThanOrEqualTo(0)) {
-            acc.mintedSqueeth = BIG_ZERO
-            acc.burnedSqueeth = BIG_ZERO
+          //if user burn all their osqufury, reset all values
+          if (acc.mintedSquFury.isLessThanOrEqualTo(0)) {
+            acc.mintedSquFury = BIG_ZERO
+            acc.burnedSquFury = BIG_ZERO
           }
           //if user close all their short position with OPEN_SHORT/CLOSE_SHORT, reset all values
-          if (acc.openShortSqueeth.isLessThanOrEqualTo(0)) {
-            acc.openShortSqueeth = BIG_ZERO
-            acc.closeShortSqueeth = BIG_ZERO
+          if (acc.openShortSquFury.isLessThanOrEqualTo(0)) {
+            acc.openShortSquFury = BIG_ZERO
+            acc.closeShortSquFury = BIG_ZERO
           }
 
           return acc
         },
         {
-          mintedSqueeth: BIG_ZERO,
-          burnedSqueeth: BIG_ZERO,
-          openShortSqueeth: BIG_ZERO,
-          closeShortSqueeth: BIG_ZERO,
+          mintedSquFury: BIG_ZERO,
+          burnedSquFury: BIG_ZERO,
+          openShortSquFury: BIG_ZERO,
+          closeShortSquFury: BIG_ZERO,
         },
       ) || {
-        mintedSqueeth: BIG_ZERO,
-        burnedSqueeth: BIG_ZERO,
-        openShortSqueeth: BIG_ZERO,
-        closeShortSqueeth: BIG_ZERO,
+        mintedSquFury: BIG_ZERO,
+        burnedSquFury: BIG_ZERO,
+        openShortSquFury: BIG_ZERO,
+        closeShortSquFury: BIG_ZERO,
       },
     [vaultHistory],
   )
-  // console.log(vaultHistory, toTokenAmount(mintedSqueeth, 18).toString(), toTokenAmount(openShortSqueeth, 18).toString())
+  // console.log(vaultHistory, toTokenAmount(mintedSquFury, 18).toString(), toTokenAmount(openShortSquFury, 18).toString())
   return {
-    mintedSqueeth: toTokenAmount(mintedSqueeth, 18),
-    burnedSqueeth: toTokenAmount(burnedSqueeth, 18),
-    openShortSqueeth: toTokenAmount(openShortSqueeth, 18),
-    closeShortSqueeth: toTokenAmount(closeShortSqueeth, 18),
+    mintedSquFury: toTokenAmount(mintedSquFury, 18),
+    burnedSquFury: toTokenAmount(burnedSquFury, 18),
+    openShortSquFury: toTokenAmount(openShortSquFury, 18),
+    closeShortSquFury: toTokenAmount(closeShortSquFury, 18),
     vaultHistory,
   }
 }

@@ -4,7 +4,7 @@ import { createStyles, makeStyles } from '@material-ui/core/styles'
 import { useAtomValue } from 'jotai'
 import Link from 'next/link'
 
-import { squeethLiquidityAtom, wethLiquidityAtom } from '@state/positions/atoms'
+import { squfuryLiquidityAtom, wethLiquidityAtom } from '@state/positions/atoms'
 import { useLPPositionsQuery } from '@state/positions/hooks'
 import Metric from '@components/Metric'
 import { formatNumber } from '@utils/formatter'
@@ -26,7 +26,7 @@ const useStyles = makeStyles((theme) =>
 
 const LPPosition: React.FC = () => {
   const classes = useStyles()
-  const squeethLiquidity = useAtomValue(squeethLiquidityAtom)
+  const squfuryLiquidity = useAtomValue(squfuryLiquidityAtom)
   const wethLiquidity = useAtomValue(wethLiquidityAtom)
   const { loading } = useLPPositionsQuery()
 
@@ -34,7 +34,7 @@ const LPPosition: React.FC = () => {
     return <div>{'Fetching LP position...'}</div>
   }
 
-  if (squeethLiquidity.isZero() && wethLiquidity.isZero()) {
+  if (squfuryLiquidity.isZero() && wethLiquidity.isZero()) {
     return null
   }
 
@@ -50,7 +50,7 @@ const LPPosition: React.FC = () => {
       </Box>
 
       <Box display="flex" gridGap="12px" marginTop="16px" flexWrap="wrap">
-        <Metric gridGap="6px" label="oSQTH Liquidity" value={formatNumber(squeethLiquidity.toNumber(), 4) + ' oSQTH'} />
+        <Metric gridGap="6px" label="oSQFU Liquidity" value={formatNumber(squfuryLiquidity.toNumber(), 4) + ' oSQFU'} />
         <Metric gridGap="6px" label="WETH Liquidity" value={formatNumber(wethLiquidity.toNumber(), 4) + ' WETH'} />
       </Box>
     </>

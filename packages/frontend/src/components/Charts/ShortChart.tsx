@@ -6,9 +6,9 @@ import React, { memo, useState } from 'react'
 import { collatRatioAtom, useGetVaultPNLWithRebalance } from 'src/state/ethPriceCharts/atoms'
 
 import { Links, Vaults } from '../../constants'
-import { SqueethTab, SqueethTabs } from '../Tabs'
+import { SquFuryTab, SquFuryTabs } from '../Tabs'
 import FundingChart from './FundingChart'
-import ShortSqueethPayoff from './ShortSqueethPayoff'
+import ShortSquFuryPayoff from './ShortSquFuryPayoff'
 
 const useStyles = makeStyles((theme) =>
   createStyles({
@@ -82,17 +82,17 @@ function ShortChart({
   return (
     <div>
       <div className={classes.navDiv}>
-        <SqueethTabs
+        <SquFuryTabs
           style={{ background: 'transparent' }}
           className={classes.chartNav}
           value={chartType}
           onChange={(evt, val) => setChartType(val)}
           aria-label="Sub nav tabs"
         >
-          <SqueethTab label="Payoff" />
-          <SqueethTab label="Premium" />
-          <SqueethTab label="Risks" />
-        </SqueethTabs>
+          <SquFuryTab label="Payoff" />
+          <SquFuryTab label="Premium" />
+          <SquFuryTab label="Risks" />
+        </SquFuryTabs>
       </div>
       {seriesRebalance && seriesRebalance.length === 0 && (
         <Alert severity="info"> Loading historical data, this could take a while</Alert>
@@ -100,22 +100,22 @@ function ShortChart({
       {chartType === 0 ? (
         <div className={classes.payoffContainer}>
           <div className={classes.shortPayoff}>
-            <ShortSqueethPayoff ethPrice={ethPrice.toNumber()} collatRatio={collatRatio} />
+            <ShortSquFuryPayoff ethPrice={ethPrice.toNumber()} collatRatio={collatRatio} />
           </div>
 
           <div className={classes.shortDescription}>
             <Typography className={classes.cardTitle} variant="h6">
-              What is short squeeth?
+              What is short squfury?
             </Typography>
             <Typography variant="body2" className={classes.cardDetail}>
-              Short squeeth (ETH&sup2;) is an ETH collateralized short ETH&sup2; position. Your returns will be a
-              combination of being short oSQTH and long ETH collateral. You earn a funding rate for taking on this
-              position. You enter the position by putting down collateral, minting, and selling squeeth. You provide ETH
-              collateral to mint squeeth, and your collateralization ratio determines your exposure. If you become
+              Short squfury (ETH&sup2;) is an ETH collateralized short ETH&sup2; position. Your returns will be a
+              combination of being short oSQFU and long ETH collateral. You earn a funding rate for taking on this
+              position. You enter the position by putting down collateral, minting, and selling squfury. You provide ETH
+              collateral to mint squfury, and your collateralization ratio determines your exposure. If you become
               undercollateralized, you could be liquidated.{' '}
               <a
                 className={classes.header}
-                href="https://opyn.gitbook.io/squeeth-faq/squeeth/beginner-squeeth-faq"
+                href="https://opyn.gitbook.io/squfury-faq/squfury/beginner-squfury-faq"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -138,11 +138,11 @@ function ShortChart({
             position performs best when ETH price does not move much. If ETH price moves considerably, it is likely
             unprofitable.
             <br /> <br />
-            Squeeth smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts
+            SquFury smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts
             are experimental technology and we encourage caution only risking funds you can afford to lose.
             <a
               className={classes.header}
-              href="https://opyn.gitbook.io/squeeth-faq/squeeth/risks"
+              href="https://opyn.gitbook.io/squfury-faq/squfury/risks"
               target="_blank"
               rel="noreferrer"
             >

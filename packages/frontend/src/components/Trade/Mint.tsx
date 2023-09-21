@@ -8,7 +8,7 @@ import Link from 'next/link'
 import {
   BIG_ZERO,
   MIN_COLLATERAL_AMOUNT,
-  OSQUEETH_DECIMALS,
+  OSQUFURY_DECIMALS,
   Tooltips,
   DEFAULT_COLLATERAL_RATIO,
 } from '@constants/index'
@@ -27,11 +27,11 @@ import { useVaultData } from '@hooks/useVaultData'
 import useAppEffect from '@hooks/useAppEffect'
 import { useETHPrice } from '@hooks/useETHPrice'
 import ethLogo from 'public/images/eth-logo.svg'
-import osqthLogo from 'public/images/osqth-logo.svg'
+import osqfuLogo from 'public/images/osqfu-logo.svg'
 import Alert from '@components/Alert'
 import Checkbox from '@components/Checkbox'
 import useAppCallback from '@hooks/useAppCallback'
-import { useOSQTHPrice } from '@hooks/useOSQTHPrice'
+import { useOSQFUPrice } from '@hooks/useOSQFUPrice'
 import Metric, { MetricLabel } from '@components/Metric'
 import { formatNumber, formatCurrency } from '@utils/formatter'
 import RestrictionInfo from '@components/RestrictionInfo'
@@ -56,10 +56,10 @@ interface MintProps {
   showManageLink?: boolean
 }
 
-const MintSqueeth: React.FC<MintProps> = ({ onMint, showManageLink }) => {
+const MintSquFury: React.FC<MintProps> = ({ onMint, showManageLink }) => {
   const classes = useStyles()
-  const { oSqueeth } = useAtomValue(addressesAtom)
-  const { value: oSqueethBal } = useTokenBalance(oSqueeth, 15, OSQUEETH_DECIMALS)
+  const { oSquFury } = useAtomValue(addressesAtom)
+  const { value: oSquFuryBal } = useTokenBalance(oSquFury, 15, OSQUFURY_DECIMALS)
   const { data } = useWalletBalance()
   const connected = useAtomValue(connectedWalletAtom)
   const supportedNetwork = useAtomValue(supportedNetworkAtom)
@@ -70,7 +70,7 @@ const MintSqueeth: React.FC<MintProps> = ({ onMint, showManageLink }) => {
   const { validVault: vault, vaultId } = useFirstValidVault()
   const { existingCollat, existingCollatPercent } = useVaultData(vault)
   const ethPrice = useETHPrice()
-  const { data: osqthPrice } = useOSQTHPrice()
+  const { data: osqfuPrice } = useOSQFUPrice()
   const { isRestricted, isWithdrawAllowed } = useRestrictUser()
   const selectWallet = useSelectWallet()
 
@@ -237,10 +237,10 @@ const MintSqueeth: React.FC<MintProps> = ({ onMint, showManageLink }) => {
           id="lp-page-mint-trade-details"
           label="Mint"
           value={mintAmount.toFixed(6)}
-          symbol="oSQTH"
-          logo={osqthLogo}
-          balance={oSqueethBal}
-          usdPrice={osqthPrice}
+          symbol="oSQFU"
+          logo={osqfuLogo}
+          balance={oSquFuryBal}
+          usdPrice={osqfuPrice}
           showMaxAction={false}
           readOnly
         />
@@ -315,4 +315,4 @@ const MintSqueeth: React.FC<MintProps> = ({ onMint, showManageLink }) => {
   )
 }
 
-export default MintSqueeth
+export default MintSquFury

@@ -3,7 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 // interface
-import { IController } from "squeeth-monorepo/interfaces/IController.sol";
+import { IController } from "squfury-monorepo/interfaces/IController.sol";
 import { IZenBullStrategy } from "./interface/IZenBullStrategy.sol";
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { IEulerEToken } from "./interface/IEulerEToken.sol";
@@ -14,7 +14,7 @@ import { UniFlash } from "./UniFlash.sol";
 import { UniOracle } from "./UniOracle.sol";
 import { EIP712 } from "openzeppelin/drafts/EIP712.sol";
 // lib
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol";
 import { ECDSA } from "openzeppelin/cryptography/ECDSA.sol";
 import { Address } from "openzeppelin/utils/Address.sol";
 

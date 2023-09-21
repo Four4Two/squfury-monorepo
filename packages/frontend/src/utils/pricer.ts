@@ -10,24 +10,24 @@ const updateDB = process.env.NEXT_PUBLIC_UPDATE_DB === 'true'
 
 const omdbBaseUrl = process.env.NEXT_PUBLIC_OMDB_BASE_URL as string
 
-export function getFairSqueethMarkBefore(price: number, timeElapsedInDay: number, vol: number, power = 2) {
+export function getFairSquFuryMarkBefore(price: number, timeElapsedInDay: number, vol: number, power = 2) {
   const vDaily = vol / Math.sqrt(365)
   const priceSquare = price ** 2
   return Math.E ** (((power ** 2 - power) / 2) * (timeElapsedInDay * vDaily ** 2)) * priceSquare
 }
 
-export function getFairSqueethMarkAfter(price: number, timeElapsedInDay: number, vol: number, power = 2) {
-  return 2 * (getFairSqueethMarkBefore(price, timeElapsedInDay, vol, power) - price ** 2 / 2)
+export function getFairSquFuryMarkAfter(price: number, timeElapsedInDay: number, vol: number, power = 2) {
+  return 2 * (getFairSquFuryMarkBefore(price, timeElapsedInDay, vol, power) - price ** 2 / 2)
 }
 
 // mock ask
-export function getFairSqueethAsk(price: number, timeElapsedInDay: number, vol: number, power = 2) {
-  return getFairSqueethMarkAfter(price, timeElapsedInDay, power, vol)
+export function getFairSquFuryAsk(price: number, timeElapsedInDay: number, vol: number, power = 2) {
+  return getFairSquFuryMarkAfter(price, timeElapsedInDay, power, vol)
 }
 
 // mock bid
-export function getFairSqueethBid(price: number, timeElapsedInDay: number, vol: number, power = 2) {
-  return getFairSqueethMarkAfter(price, timeElapsedInDay, vol, power)
+export function getFairSquFuryBid(price: number, timeElapsedInDay: number, vol: number, power = 2) {
+  return getFairSquFuryMarkAfter(price, timeElapsedInDay, vol, power)
 }
 
 export async function getETHPNLCompounding(ethPrices: { time: number; value: number }[]): Promise<
@@ -58,7 +58,7 @@ export async function getETHPNLCompounding(ethPrices: { time: number; value: num
   return charts
 }
 
-export async function getSqueethPNLCompounding(
+export async function getSquFuryPNLCompounding(
   ethPrices: { time: number; value: number }[],
   volMultiplier = 1.2,
   _collatRatio = 1.5,
@@ -72,8 +72,8 @@ export async function getSqueethPNLCompounding(
 > {
   if (ethPrices.length === 0) return []
   const volsMap = await getVolMap()
-  let cumulativeSqueethLongReturn = 0
-  let cumulativeSqueethCrabReturn = 1
+  let cumulativeSquFuryLongReturn = 0
+  let cumulativeSquFuryCrabReturn = 1
   const charts: {
     time: number
     longPNL: number
@@ -92,15 +92,15 @@ export async function getSqueethPNLCompounding(
     let fundingCost = i === 0 ? 0 : (vol / Math.sqrt(fundingPeriodMultiplier)) ** 2
     //short: -2r - r^2 + f + CR*r, CR=2 equals crab strategy pnl, 2r cancels out
     //long: 2r +r^2 -f
-    cumulativeSqueethLongReturn += 2 * Math.log(price / preEthPrice) + Math.log(price / preEthPrice) ** 2 - fundingCost
+    cumulativeSquFuryLongReturn += 2 * Math.log(price / preEthPrice) + Math.log(price / preEthPrice) ** 2 - fundingCost
     // crab return
     const crabVolMultiplier = 0.9
     vol = annaulVol * crabVolMultiplier
     fundingCost = i === 0 ? 0 : (vol / Math.sqrt(fundingPeriodMultiplier)) ** 2
     const simR = price / preEthPrice - 1
-    cumulativeSqueethCrabReturn *= 1 + -(simR ** 2) + fundingCost
-    const longPNL = Math.round((Math.exp(cumulativeSqueethLongReturn) - 1) * 10000) / 100
-    const shortPNL = Math.round(Math.log(cumulativeSqueethCrabReturn) * 10000) / 100
+    cumulativeSquFuryCrabReturn *= 1 + -(simR ** 2) + fundingCost
+    const longPNL = Math.round((Math.exp(cumulativeSquFuryLongReturn) - 1) * 10000) / 100
+    const shortPNL = Math.round(Math.log(cumulativeSquFuryCrabReturn) * 10000) / 100
 
     charts.push({ shortPNL, longPNL, time })
   }
@@ -108,13 +108,13 @@ export async function getSqueethPNLCompounding(
   return charts
 }
 
-export function useETHSqueethPNLCompounding(
+export function useETHSquFuryPNLCompounding(
   ethPrices: { time: number; value: number }[],
   volMultiplier = 1.2,
   days = 365,
 ) {
   const timestamps = ethPrices.map(({ time }) => time)
-  const [squeethChartData, setSqueethChartData] = useState<
+  const [squfuryChartData, setSquFuryChartData] = useState<
     { shortPNL: number; longPNL: number; time: number; isLive: boolean }[] | undefined
   >(undefined)
   const [ethChartData, setETHChartData] = useState<{ shortPNL: number; longPNL: number; time: number }[] | undefined>(
@@ -126,8 +126,8 @@ export function useETHSqueethPNLCompounding(
   useAppEffect(
     () => {
       ;(async () => {
-        let cumulativeSqueethLongReturn = 0
-        let cumulativeSqueethCrabReturn = 1
+        let cumulativeSquFuryLongReturn = 0
+        let cumulativeSquFuryCrabReturn = 1
         const volsMap = await getVolMap()
         const liveVolsMap = await getLiveVolMap()
 
@@ -178,34 +178,34 @@ export function useETHSqueethPNLCompounding(
             let vol = annualVol * volMultiplier
             const preEthPrice = ethPrices[index > 0 ? index - 1 : 0].value
             let fundingCost = index === 0 ? 0 : (vol / Math.sqrt(fundingPeriodMultiplier)) ** 2
-            cumulativeSqueethLongReturn +=
+            cumulativeSquFuryLongReturn +=
               2 * Math.log(price / preEthPrice) + Math.log(price / preEthPrice) ** 2 - fundingCost
             // crab return
             const crabVolMultiplier = 0.9
             vol = annualVol * crabVolMultiplier
             fundingCost = index === 0 ? 0 : (vol / Math.sqrt(fundingPeriodMultiplier)) ** 2
             const simR = price / preEthPrice - 1
-            cumulativeSqueethCrabReturn *= 1 + -(simR ** 2) + fundingCost
-            const longPNL = Math.round((Math.exp(cumulativeSqueethLongReturn) - 1) * 10000) / 100
-            const shortPNL = Math.round(Math.log(cumulativeSqueethCrabReturn) * 10000) / 100
+            cumulativeSquFuryCrabReturn *= 1 + -(simR ** 2) + fundingCost
+            const longPNL = Math.round((Math.exp(cumulativeSquFuryLongReturn) - 1) * 10000) / 100
+            const shortPNL = Math.round(Math.log(cumulativeSquFuryCrabReturn) * 10000) / 100
 
             return { shortPNL, longPNL, time, isLive }
           })
-          setSqueethChartData(charts)
+          setSquFuryChartData(charts)
         }
       })()
     },
     [timestamps, days, ethPrices, volMultiplier],
     true,
   )
-  return { ethPNL: ethChartData, squeethPNL: squeethChartData }
+  return { ethPNL: ethChartData, squfuryPNL: squfuryChartData }
 }
 
 /**
  * Convert eth price historical chart to long & short PNL (including funding)
  * @param ethPrices
  */
-export async function getSqueethChartWithFunding(
+export async function getSquFuryChartWithFunding(
   ethPrices: { time: number; value: number }[],
   volMultiplier: number,
   collatRatio = 1.5,
@@ -215,7 +215,7 @@ export async function getSqueethChartWithFunding(
     longPNL: number
     shortPNL: number
     positionSize: number
-    fundingPerSqueeth: number
+    fundingPerSquFury: number
     timeElapsed: number
     mark: number
   }[]
@@ -223,7 +223,7 @@ export async function getSqueethChartWithFunding(
 }> {
   if (ethPrices.length === 0) return { series: [], accFunding: 0 }
 
-  // let price = squeethPrices[0].value
+  // let price = squfuryPrices[0].value
   let positionSize = 1
   let lastTime = ethPrices[0].time
   let accFunding = 0
@@ -237,7 +237,7 @@ export async function getSqueethChartWithFunding(
     shortPNL: number
     positionSize: number
     mark: number
-    fundingPerSqueeth: number
+    fundingPerSquFury: number
     timeElapsed: number
   }[] = []
 
@@ -246,28 +246,28 @@ export async function getSqueethChartWithFunding(
   for (const { value: price, time } of ethPrices) {
     const vol = (await getVolForTimestampOrDefault(volsMap, time, price)) * volMultiplier
 
-    const cost = getFairSqueethAsk(startPrice, 0, vol) / scale
-    const premium = getFairSqueethBid(startPrice, 0, vol) / scale
+    const cost = getFairSquFuryAsk(startPrice, 0, vol) / scale
+    const premium = getFairSquFuryBid(startPrice, 0, vol) / scale
 
     const timeElapsed = (time - lastTime) / 86400 // time since last action, in day
     lastTime = time
 
-    const markBefore = getFairSqueethMarkBefore(price, timeElapsed, vol)
+    const markBefore = getFairSquFuryMarkBefore(price, timeElapsed, vol)
 
-    const fundingPerSqueeth = getFunding(price, markBefore)
+    const fundingPerSquFury = getFunding(price, markBefore)
 
-    const markAfter = getFairSqueethMarkAfter(price, timeElapsed, vol)
+    const markAfter = getFairSquFuryMarkAfter(price, timeElapsed, vol)
 
     // reduce position size over time, as a funding charge
-    const fundingRatio = 1 - fundingPerSqueeth / markAfter
+    const fundingRatio = 1 - fundingPerSquFury / markAfter
     positionSize = positionSize * fundingRatio
 
     const longPNL = (markAfter * positionSize) / scale - cost
     const shortPNL = premium - (markAfter * positionSize) / scale + collatRatio * (price - startPrice)
 
-    charts.push({ shortPNL, longPNL, mark: markAfter, positionSize, time, fundingPerSqueeth, timeElapsed })
+    charts.push({ shortPNL, longPNL, mark: markAfter, positionSize, time, fundingPerSquFury, timeElapsed })
 
-    accFunding = accFunding + fundingPerSqueeth
+    accFunding = accFunding + fundingPerSquFury
   }
 
   return { series: charts, accFunding }
@@ -315,14 +315,14 @@ export async function getVolForTimestampOrDefault(
  * Get vol map object from firestore
  */
 export async function getVolMap(): Promise<{ [key: string]: number }> {
-  const document = db.doc('squeeth-vol/historical-vol')
+  const document = db.doc('squfury-vol/historical-vol')
   const doc = await document.get()
   const data = doc.get('daily-vol')
   return data
 }
 
 export async function getLiveVolMap(): Promise<{ [key: string]: number }> {
-  const document = db.doc('squeeth-vol/slive-vol')
+  const document = db.doc('squfury-vol/slive-vol')
   const doc = await document.get()
   let data = doc.get('live-vol')
   if (!data) {
@@ -337,7 +337,7 @@ export async function getLiveVolMap(): Promise<{ [key: string]: number }> {
 export async function updateTimestampVolDB(timestamp: number, vol: number): Promise<void> {
   const utcDate = new Date(timestamp * 1000).toISOString().split('T')[0]
 
-  const document = db.doc('squeeth-vol/historical-vol')
+  const document = db.doc('squfury-vol/historical-vol')
   const doc = await document.get()
   const data = doc.get('daily-vol')
 
@@ -356,7 +356,7 @@ export async function updateTimestampVolDB(timestamp: number, vol: number): Prom
 export async function updateTimestampLiveVolDB(timestamp: number, vol: number): Promise<void> {
   const utcDate = new Date(timestamp * 1000).toISOString().split('T')[0]
 
-  const document = db.doc('squeeth-vol/slive-vol')
+  const document = db.doc('squfury-vol/slive-vol')
   const doc = await document.get()
   const data = doc.get('live-vol')
 
@@ -452,7 +452,7 @@ function getEthPrices(startPrice: number, step: number, length: number) {
     })
 }
 
-export function getSqueethLongPayOffGraph(ethPrice: number) {
+export function getSquFuryLongPayOffGraph(ethPrice: number) {
   const unitPerTrade = 2 / (2 * ethPrice) // Took from the sheet
   const indexAtTrade = ethPrice ** 2 // Squeeeeeeth
 
@@ -515,12 +515,12 @@ export function getSqueethLongPayOffGraph(ethPrice: number) {
 
 export function getBuyAndLPPayOffGraph(ethPrice: number) {
   const priceStep = 200
-  const squeethDeposit = 1
-  const squeethMultiplier = 1.1
-  const squeethPrice = squeethMultiplier * ethPrice
-  const ethDeposit = squeethDeposit * squeethPrice
-  const k = squeethDeposit * ethDeposit
-  const dollarToBuy = ethDeposit * ethPrice + squeethDeposit * squeethPrice * ethPrice
+  const squfuryDeposit = 1
+  const squfuryMultiplier = 1.1
+  const squfuryPrice = squfuryMultiplier * ethPrice
+  const ethDeposit = squfuryDeposit * squfuryPrice
+  const k = squfuryDeposit * ethDeposit
+  const dollarToBuy = ethDeposit * ethPrice + squfuryDeposit * squfuryPrice * ethPrice
   const eth1p5Lev = (dollarToBuy * 1.5) / ethPrice
 
   const getEthPrices = () => {
@@ -538,10 +538,10 @@ export function getBuyAndLPPayOffGraph(ethPrice: number) {
   const ethPercents = ethPrices.map((p) => (100 * (p / ethPrice - 1)).toFixed(2))
 
   const lpPayout = ethPrices.map((_ethPrice) => {
-    const _squeethPrice = _ethPrice * squeethMultiplier
-    const _squeethBalance = Math.sqrt(k / _ethPrice)
-    const _ethBalance = k / _squeethBalance
-    const _dollarLp = _squeethBalance * _ethPrice * _squeethPrice + _ethBalance * _ethPrice
+    const _squfuryPrice = _ethPrice * squfuryMultiplier
+    const _squfuryBalance = Math.sqrt(k / _ethPrice)
+    const _ethBalance = k / _squfuryBalance
+    const _dollarLp = _squfuryBalance * _ethPrice * _squfuryPrice + _ethBalance * _ethPrice
     const _uniswapReturn = _dollarLp - dollarToBuy
     return ((_uniswapReturn * 100) / dollarToBuy).toFixed(2)
   })
@@ -555,16 +555,16 @@ export function getBuyAndLPPayOffGraph(ethPrice: number) {
 }
 
 export function getMintAndLpPayoffGraph(ethPrice: number) {
-  const squeethDeposit = 1 // Number taken from sheet :|
-  const squeethMultiplier = 1.031
+  const squfuryDeposit = 1 // Number taken from sheet :|
+  const squfuryMultiplier = 1.031
   const scalingFactor = 10000
-  const squeethPrice = (ethPrice * squeethMultiplier) / scalingFactor
-  const ethDeposit = squeethDeposit * squeethPrice
-  const k = squeethDeposit * ethDeposit
-  const dollarToMint = (squeethDeposit * ethPrice * 2 * ethPrice) / scalingFactor + ethDeposit * ethPrice
+  const squfuryPrice = (ethPrice * squfuryMultiplier) / scalingFactor
+  const ethDeposit = squfuryDeposit * squfuryPrice
+  const k = squfuryDeposit * ethDeposit
+  const dollarToMint = (squfuryDeposit * ethPrice * 2 * ethPrice) / scalingFactor + ethDeposit * ethPrice
   const eth1Lev = (dollarToMint * 1) / ethPrice
   const nf = 1
-  const ethCollatInVault = (squeethDeposit * ethPrice * 2) / scalingFactor
+  const ethCollatInVault = (squfuryDeposit * ethPrice * 2) / scalingFactor
 
   const ethPrices = getEthPrices(500, 250, 25)
   const ethPercents = ethPrices.map((p) => (100 * (p / ethPrice - 1)).toFixed(2))
@@ -575,11 +575,11 @@ export function getMintAndLpPayoffGraph(ethPrice: number) {
   })
 
   const lpPayout = ethPrices.map((_ethPrice) => {
-    const _squeethPrice = (_ethPrice * squeethMultiplier * nf) / scalingFactor
-    const _squeethBalance = Math.sqrt(k / _squeethPrice)
-    const _ethBalance = k / _squeethBalance
+    const _squfuryPrice = (_ethPrice * squfuryMultiplier * nf) / scalingFactor
+    const _squfuryBalance = Math.sqrt(k / _squfuryPrice)
+    const _ethBalance = k / _squfuryBalance
     const _valueMintAndLp =
-      (_squeethBalance - squeethDeposit) * _squeethPrice * _ethPrice +
+      (_squfuryBalance - squfuryDeposit) * _squfuryPrice * _ethPrice +
       _ethBalance * _ethPrice +
       ethCollatInVault * _ethPrice
     const _uniswapReturn = _valueMintAndLp - dollarToMint

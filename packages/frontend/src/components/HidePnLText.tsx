@@ -22,7 +22,7 @@ export const HidePnLText: React.FC = () => {
     <Typography variant="body2" className={classes.text}>
       {positionType !== PositionType.LONG && <span>Coming soon.</span>} Please use{' '}
       <LinkWrapper href="https://docs.google.com/spreadsheets/d/1iy5N3qy6g2xd2_BcsY_Hv0pKdyceC1h7y269KssOG8s/edit#gid=1267496112">
-        SqueethLab
+        SquFuryLab
       </LinkWrapper>
     </Typography>
   )

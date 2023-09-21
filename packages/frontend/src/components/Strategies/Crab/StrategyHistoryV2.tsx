@@ -94,7 +94,7 @@ export const CrabStrategyV2History: React.FC = () => {
           <div className={classes.statContainer} key={d.id}>
             <div className={classes.statHeader}>
               <Typography className={clsx(classes.statHeaderTitle)}>
-                {d.isBuying ? 'Bought oSQTH' : 'Sold oSQTH'}
+                {d.isBuying ? 'Bought oSQFU' : 'Sold oSQFU'}
               </Typography>
               <Typography className={classes.label}>
                 {new Date(d.timestamp * 1000).toLocaleString(undefined, {
@@ -108,7 +108,7 @@ export const CrabStrategyV2History: React.FC = () => {
 
             <div className={classes.stat}>
               <Typography className={classes.label}>Size</Typography>
-              <Typography className={classes.value}>{formatNumber(d.oSqueethAmount.toNumber(), 2)} oSQTH</Typography>
+              <Typography className={classes.value}>{formatNumber(d.oSquFuryAmount.toNumber(), 2)} oSQFU</Typography>
             </div>
             <div className={classes.stat}>
               <Typography className={classes.label}>Clearing price</Typography>

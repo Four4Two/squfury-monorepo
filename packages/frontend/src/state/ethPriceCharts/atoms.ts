@@ -9,9 +9,9 @@ import {
 } from '@utils/ethPriceCharts'
 import {
   getETHPNLCompounding,
-  getSqueethChartWithFunding,
-  getSqueethPNLCompounding,
-  useETHSqueethPNLCompounding,
+  getSquFuryChartWithFunding,
+  getSquFuryPNLCompounding,
+  useETHSquFuryPNLCompounding,
   getLongChartData,
 } from '@utils/pricer'
 import useAppMemo from '@hooks/useAppMemo'
@@ -27,12 +27,12 @@ const ethPriceChartsQueryKeys = {
   allEth90daysPrices: () => ['allEth90daysPrices'],
   allEthWithinOneDayPrices: () => ['allEthWithinOneDayPrices'],
   cusdcPricesRange: (days: number) => ['cusdcPricesRange', { days }],
-  squeethSeries: (ethPrices: any, volMultiplier: number, collatRatio: number) => [
-    'squeethSeries',
+  squfurySeries: (ethPrices: any, volMultiplier: number, collatRatio: number) => [
+    'squfurySeries',
     { ethPrices, volMultiplier, collatRatio },
   ],
-  squeethPNLSeries: (ethPrices: any, volMultiplier: number, collatRatio: number, days: number) => [
-    'squeethPNLSeries',
+  squfuryPNLSeries: (ethPrices: any, volMultiplier: number, collatRatio: number, days: number) => [
+    'squfuryPNLSeries',
     { ethPrices, volMultiplier, collatRatio, days },
   ],
   ethPNLCompounding: (ethPrices: any) => ['ethPNLCompounding', { ethPricesData: ethPrices }],
@@ -103,32 +103,32 @@ export const useEthPNLCompounding = () => {
   )
 }
 
-export const useSqueethSeries = () => {
+export const useSquFurySeries = () => {
   const ethPrices = useEthPrices()
   const volMultiplier = useAtomValue(volMultiplierAtom)
   const collatRatio = useAtomValue(collatRatioAtom)
 
   return useQuery(
-    ethPriceChartsQueryKeys.squeethSeries(ethPrices.data?.length, volMultiplier, collatRatio),
-    () => getSqueethChartWithFunding(ethPrices.data ?? [], volMultiplier, collatRatio),
+    ethPriceChartsQueryKeys.squfurySeries(ethPrices.data?.length, volMultiplier, collatRatio),
+    () => getSquFuryChartWithFunding(ethPrices.data ?? [], volMultiplier, collatRatio),
     { enabled: Boolean(ethPrices.isSuccess && ethPrices.data) },
   )
 }
 
 export const useAccFunding = () => {
-  const squeethSeries = useSqueethSeries()
-  return squeethSeries.data?.accFunding
+  const squfurySeries = useSquFurySeries()
+  return squfurySeries.data?.accFunding
 }
 
-export const useSqueethPNLSeries = () => {
+export const useSquFuryPNLSeries = () => {
   const ethPrices = useEthPrices()
   const days = useAtomValue(daysAtom)
   const volMultiplier = useAtomValue(volMultiplierAtom)
   const collatRatio = useAtomValue(collatRatioAtom)
 
   return useQuery(
-    ethPriceChartsQueryKeys.squeethPNLSeries(ethPrices?.data?.length, volMultiplier, collatRatio, days),
-    () => getSqueethPNLCompounding(ethPrices.data ?? [], volMultiplier, collatRatio, days),
+    ethPriceChartsQueryKeys.squfuryPNLSeries(ethPrices?.data?.length, volMultiplier, collatRatio, days),
+    () => getSquFuryPNLCompounding(ethPrices.data ?? [], volMultiplier, collatRatio, days),
     { enabled: Boolean(ethPrices.isSuccess && ethPrices.data && days) },
   )
 }
@@ -137,18 +137,18 @@ export const useLongSeries = () => {
   const volMultiplier = useAtomValue(volMultiplierAtom)
   const ethPrices = useEthPrices()
   const days = useAtomValue(daysAtom)
-  const ethSqueethPNLSeries = useETHSqueethPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
+  const ethSquFuryPNLSeries = useETHSquFuryPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
 
   return useAppMemo(
     () => {
       return (
-        ethSqueethPNLSeries.squeethPNL &&
-        ethSqueethPNLSeries.squeethPNL.map(({ time, longPNL }) => {
+        ethSquFuryPNLSeries.squfuryPNL &&
+        ethSquFuryPNLSeries.squfuryPNL.map(({ time, longPNL }) => {
           return { time, value: longPNL }
         })
       )
     },
-    [ethSqueethPNLSeries.squeethPNL],
+    [ethSquFuryPNLSeries.squfuryPNL],
     true,
   )
 }
@@ -157,49 +157,49 @@ export const useShortSeries = () => {
   const volMultiplier = useAtomValue(volMultiplierAtom)
   const ethPrices = useEthPrices()
   const days = useAtomValue(daysAtom)
-  const ethSqueethPNLSeries = useETHSqueethPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
+  const ethSquFuryPNLSeries = useETHSquFuryPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
 
   return useAppMemo(
     () => {
       return (
-        ethSqueethPNLSeries.squeethPNL &&
-        ethSqueethPNLSeries.squeethPNL.map(({ time, shortPNL }) => {
+        ethSquFuryPNLSeries.squfuryPNL &&
+        ethSquFuryPNLSeries.squfuryPNL.map(({ time, shortPNL }) => {
           return { time, value: shortPNL }
         })
       )
     },
-    [ethSqueethPNLSeries.squeethPNL],
+    [ethSquFuryPNLSeries.squfuryPNL],
     true,
   )
 }
 
 export const usePrevShortSeries = () => {
-  const squeethSeries = useSqueethSeries()
+  const squfurySeries = useSquFurySeries()
 
   return useAppMemo(() => {
-    return squeethSeries.data?.series.map(({ time, shortPNL }) => {
+    return squfurySeries.data?.series.map(({ time, shortPNL }) => {
       return { time, value: shortPNL }
     })
-  }, [squeethSeries.data?.series])
+  }, [squfurySeries.data?.series])
 }
 
 export const usePositionSizePercentageseries = () => {
-  const squeethSeries = useSqueethSeries()
+  const squfurySeries = useSquFurySeries()
 
   return (
-    squeethSeries.data &&
-    squeethSeries.data.series.map(({ time, positionSize }) => {
+    squfurySeries.data &&
+    squfurySeries.data.series.map(({ time, positionSize }) => {
       return { time, value: positionSize * 100 }
     })
   )
 }
 
 export const useFundingPercentageSeries = () => {
-  const squeethSeries = useSqueethSeries()
+  const squfurySeries = useSquFurySeries()
 
-  return squeethSeries.data
-    ? squeethSeries.data.series.map(({ time, fundingPerSqueeth, mark, timeElapsed: timeElapsedInDay }) => {
-        const fundingPercentageDay = fundingPerSqueeth / mark / timeElapsedInDay
+  return squfurySeries.data
+    ? squfurySeries.data.series.map(({ time, fundingPerSquFury, mark, timeElapsed: timeElapsedInDay }) => {
+        const fundingPercentageDay = fundingPerSquFury / mark / timeElapsedInDay
         return { time, value: Number((fundingPercentageDay * 100).toFixed(4)) }
       })
     : []
@@ -209,18 +209,18 @@ export const useLongEthPNL = () => {
   const volMultiplier = useAtomValue(volMultiplierAtom)
   const ethPrices = useEthPrices()
   const days = useAtomValue(daysAtom)
-  const ethSqueethPNLSeries = useETHSqueethPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
+  const ethSquFuryPNLSeries = useETHSquFuryPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
 
   return useAppMemo(
     () => {
       return (
-        ethSqueethPNLSeries.ethPNL &&
-        ethSqueethPNLSeries.ethPNL.map(({ time, longPNL }) => {
+        ethSquFuryPNLSeries.ethPNL &&
+        ethSquFuryPNLSeries.ethPNL.map(({ time, longPNL }) => {
           return { time, value: longPNL }
         })
       )
     },
-    [ethSqueethPNLSeries?.ethPNL],
+    [ethSquFuryPNLSeries?.ethPNL],
     true,
   )
 }
@@ -229,18 +229,18 @@ export const useShortEthPNL = () => {
   const volMultiplier = useAtomValue(volMultiplierAtom)
   const ethPrices = useEthPrices()
   const days = useAtomValue(daysAtom)
-  const ethSqueethPNLSeries = useETHSqueethPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
+  const ethSquFuryPNLSeries = useETHSquFuryPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
 
   return useAppMemo(
     () => {
       return (
-        ethSqueethPNLSeries.ethPNL &&
-        ethSqueethPNLSeries.ethPNL.map(({ time, shortPNL }) => {
+        ethSquFuryPNLSeries.ethPNL &&
+        ethSquFuryPNLSeries.ethPNL.map(({ time, shortPNL }) => {
           return { time, value: shortPNL }
         })
       )
     },
-    [ethSqueethPNLSeries.ethPNL],
+    [ethSquFuryPNLSeries.ethPNL],
     true,
   )
 }
@@ -250,7 +250,7 @@ export const useStartingETHPrice = () => {
   return ethPrices.data && ethPrices.data.length > 0 ? ethPrices.data[0].value : 1
 }
 
-export const useSqueethPrices = () => {
+export const useSquFuryPrices = () => {
   const ethPrices = useEthPrices()
   const startingETHPrice = useStartingETHPrice()
 
@@ -320,15 +320,15 @@ export const useEthWithinOneDayPriceMap = () => {
 
 export const useGetVaultPNLWithRebalance = () => {
   const ethPrices = useEthPrices().data
-  const squeethSeries = useSqueethSeries().data
+  const squfurySeries = useSquFurySeries().data
   const prevShortSeries = usePrevShortSeries()
   const startingETHPrice = useStartingETHPrice()
 
   return useAppCallback(
     (n: number, rebalanceInterval = 86400) => {
-      if (!squeethSeries || squeethSeries.series.length === 0) return []
+      if (!squfurySeries || squfurySeries.series.length === 0) return []
       if (!ethPrices || !prevShortSeries) return
-      if (ethPrices && squeethSeries.series.length !== ethPrices.length) return []
+      if (ethPrices && squfurySeries.series.length !== ethPrices.length) return []
 
       const delta = n - 2 // fix delta we want to hedge to. (n - 2)
       const normalizedFactor = startingETHPrice
@@ -346,7 +346,7 @@ export const useGetVaultPNLWithRebalance = () => {
 
       ethPrices.forEach(({ time, value: price }, i) => {
         if (time > nextRebalanceTime) {
-          const m = squeethSeries.series[i].positionSize
+          const m = squfurySeries.series[i].positionSize
 
           // rebalance
           const x = price / normalizedFactor
@@ -356,7 +356,7 @@ export const useGetVaultPNLWithRebalance = () => {
           const newN = m * delta + 2 * x * m
           const buyAmount = newN - longAmount
           const buyCost = buyAmount * price + Math.abs(buyAmount * price * UNISWAP_FEE)
-          //console.log(`Date ${new Date(time * 1000).toDateString()}, price ${price.toFixed(3)} Rebalance: short squeeth ${m.toFixed(4)}, desired ETH long ${newN.toFixed(4)}, buy ${buyAmount.toFixed(4)} more eth`)
+          //console.log(`Date ${new Date(time * 1000).toDateString()}, price ${price.toFixed(3)} Rebalance: short squfury ${m.toFixed(4)}, desired ETH long ${newN.toFixed(4)}, buy ${buyAmount.toFixed(4)} more eth`)
 
           totalLongCost += buyCost
           longAmount = newN
@@ -379,7 +379,7 @@ export const useGetVaultPNLWithRebalance = () => {
 
       return data
     },
-    [ethPrices, prevShortSeries, squeethSeries, startingETHPrice],
+    [ethPrices, prevShortSeries, squfurySeries, startingETHPrice],
   )
 }
 
@@ -410,21 +410,21 @@ export const useGetStableYieldPNL = () => {
     true,
   )
 }
-export const useSqueethIsLive = () => {
+export const useSquFuryIsLive = () => {
   const volMultiplier = useAtomValue(volMultiplierAtom)
   const ethPrices = useEthPrices()
   const days = useAtomValue(daysAtom)
-  const ethSqueethPNLSeries = useETHSqueethPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
+  const ethSquFuryPNLSeries = useETHSquFuryPNLCompounding(ethPrices.data ?? [], volMultiplier, days)
   return useAppMemo(
     () => {
       return (
-        ethSqueethPNLSeries.squeethPNL &&
-        ethSqueethPNLSeries.squeethPNL.map(({ isLive }) => {
+        ethSquFuryPNLSeries.squfuryPNL &&
+        ethSquFuryPNLSeries.squfuryPNL.map(({ isLive }) => {
           return isLive
         })
       )
     },
-    [ethSqueethPNLSeries.squeethPNL],
+    [ethSquFuryPNLSeries.squfuryPNL],
     true,
   )
 }

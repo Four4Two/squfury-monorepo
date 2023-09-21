@@ -2,7 +2,7 @@ import React from 'react'
 import { NextSeo } from 'next-seo'
 
 import BullStrategy from '@components/Strategies/Bull'
-import { SQUEETH_BASE_URL } from '@constants/index'
+import { SQUFURY_BASE_URL } from '@constants/index'
 
 const Page: React.FC = () => {
   return (
@@ -10,11 +10,11 @@ const Page: React.FC = () => {
       <NextSeo
         title="Opyn Zen Bull Strategy - Stack ETH"
         description="Stack ETH when ETH increases slow and steady"
-        canonical={SQUEETH_BASE_URL}
+        canonical={SQUFURY_BASE_URL}
         openGraph={{
           images: [
             {
-              url: SQUEETH_BASE_URL + '/images/previews/bull.png',
+              url: SQUFURY_BASE_URL + '/images/previews/bull.png',
               width: 1200,
               height: 630,
               alt: 'Zen Bull Strategy',

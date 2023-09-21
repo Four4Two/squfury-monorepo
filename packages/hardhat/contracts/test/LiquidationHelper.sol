@@ -195,8 +195,8 @@ contract LiquidationHelper  {
     /**
      * @notice get the expected excess, burnAmount and bounty if Uniswap position token got burned
      * @dev this function will update the vault memory in-place
-     * @return burnAmount amount of wSqueeth that should be burned
-     * @return wPowerPerpExcess amount of wSqueeth that should be send to the vault owner
+     * @return burnAmount amount of wSquFury that should be burned
+     * @return wPowerPerpExcess amount of wSquFury that should be send to the vault owner
      * @return bounty amount of bounty should be paid out to caller
      */
     function _getReduceDebtResultInVault(

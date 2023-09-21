@@ -21,7 +21,7 @@ import {
 } from '@state/crab/atoms'
 import { BIG_ZERO, CRABV2_START_DATE } from '@constants/index'
 import { useETHPrice } from '@hooks/useETHPrice'
-import { useOSQTHPrice } from '@hooks/useOSQTHPrice'
+import { useOSQFUPrice } from '@hooks/useOSQFUPrice'
 import { formatCurrency, formatNumber } from '@utils/formatter'
 import { pnlGraphOptions } from '@constants/diagram'
 import useAppMemo from '@hooks/useAppMemo'

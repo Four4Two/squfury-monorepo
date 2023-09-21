@@ -123,7 +123,7 @@ function CrabStrategyChart({ vault, longAmount }: { vault?: Vaults; longAmount: 
         { data: compoundSeries, legend: 'Compound PNL (%)' },
         { data: shortSeries, legend: 'Crab PnL (%) (incl. premium)' },
         // { data: convertPNLToPriceChart(shortEthPNL, startingETHPrice), legend: 'Short ETH' },
-        // { data: convertPNLToPriceChart(shortSeries, startingETHPrice), legend: 'Short Squeeth (incl. funding)' },
+        // { data: convertPNLToPriceChart(shortSeries, startingETHPrice), legend: 'Short SquFury (incl. funding)' },
       ]
     return [{ data: seriesRebalance, legend: 'PNL' }]
   }, [compoundSeries, getStableYieldPNL, longAmount, longEthPNL, seriesRebalance, shortEthPNL, shortSeries, vault])
@@ -163,7 +163,7 @@ function CrabStrategyChart({ vault, longAmount }: { vault?: Vaults; longAmount: 
   //       { data: shortEthPNL, legend: 'Short ETH PNL' },
   //       { data: shortSeries, legend: 'Crab (incl. funding)' },
   //       // { data: convertPNLToPriceChart(shortEthPNL, startingETHPrice), legend: 'Short ETH' },
-  //       // { data: convertPNLToPriceChart(shortSeries, startingETHPrice), legend: 'Short Squeeth (incl. funding)' },
+  //       // { data: convertPNLToPriceChart(shortSeries, startingETHPrice), legend: 'Short SquFury (incl. funding)' },
   //     ]
   //   return [{ data: seriesRebalance, legend: 'PNL' }]
   // }, [vault, shortEthPNL, seriesRebalance, getStableYieldPNL, longAmount, startingETHPrice, shortSeries, longEthPNL])
@@ -191,18 +191,18 @@ function CrabStrategyChart({ vault, longAmount }: { vault?: Vaults; longAmount: 
   return (
     <div>
       <div className={classes.navDiv}>
-        {/* <SqueethTabs
+        {/* <SquFuryTabs
           style={{ background: 'transparent' }}
           className={classes.chartNav}
           value={chartType}
           onChange={(evt, val) => setChartType(val)}
           aria-label="Sub nav tabs"
         >
-          <SqueethTab label={`Historical ${days}D PNL`} />
-          <SqueethTab label="Payoff" />
-          <SqueethTab label="Details" />
-          <SqueethTab label="Risks" />
-        </SqueethTabs> */}
+          <SquFuryTab label={`Historical ${days}D PNL`} />
+          <SquFuryTab label="Payoff" />
+          <SquFuryTab label="Details" />
+          <SquFuryTab label="Risks" />
+        </SquFuryTabs> */}
         <Hidden smDown>
           {chartType === 0 ? (
             <TextField

@@ -5,7 +5,7 @@ pragma abicoder v2;
 // interface
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { IZenBullStrategy } from "./interface/IZenBullStrategy.sol";
-import { IWETH9 } from "squeeth-monorepo/interfaces/IWETH9.sol";
+import { IWETH9 } from "squfury-monorepo/interfaces/IWETH9.sol";
 import { IEulerEToken } from "./interface/IEulerEToken.sol";
 import { IEulerDToken } from "./interface/IEulerDToken.sol";
 // contract
@@ -13,7 +13,7 @@ import { ERC20 } from "openzeppelin/token/ERC20/ERC20.sol";
 import { UniFlash } from "./UniFlash.sol";
 import { UniOracle } from "./UniOracle.sol";
 // lib
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol";
 import { Address } from "openzeppelin/utils/Address.sol";
 
 contract EmergencyWithdraw is ERC20, UniFlash {
@@ -114,7 +114,7 @@ contract EmergencyWithdraw is ERC20, UniFlash {
      * @notice withdraw ETH deposited into crab
      * @dev this will give the sender ZBEPR token as ownership for the ETH deposited in Euler pool
      * @param _zenBullAmount ZenBull amount to redeem
-     * @param _maxEthForWPowerPerp max ETH to pay for flashswapped oSQTH amount
+     * @param _maxEthForWPowerPerp max ETH to pay for flashswapped oSQFU amount
      */
     function emergencyWithdrawEthFromCrab(uint256 _zenBullAmount, uint256 _maxEthForWPowerPerp)
         external

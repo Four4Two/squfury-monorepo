@@ -4,7 +4,7 @@ import logo from 'public/images/OpynLogo.svg'
 import LandingPageBackground from 'public/images/landing/athena1-desktop.png'
 import LandingPageBackgroundDown from 'public/images/landing-page-background-down.svg'
 import LandingTitle from 'public/images/landing/landing-title.png'
-import Squeeth from 'public/images/landing/squeeth.png'
+import SquFury from 'public/images/landing/squfury.png'
 import Link from 'next/link'
 import Strategies from 'public/images/landing/strategies.png'
 import Auction from 'public/images/landing/auction.png'
@@ -177,7 +177,7 @@ const useStyles = makeStyles((theme) =>
       color: '#BDBDBD',
       textAlign: 'center',
     },
-    squeethSection: {
+    squfurySection: {
       display: 'flex',
       padding: `${vwCalculator(120)}`,
       alignItems: 'center',
@@ -291,8 +291,8 @@ const useStyles = makeStyles((theme) =>
 
 const navLinks = [
   { label: 'Strategies', link: '/strategies/crab' },
-  { label: 'Squeeth', link: '/squeeth' },
-  { label: 'Auction', link: 'https://squeethportal.xyz', analyticsEvent: SITE_EVENTS.NAV_AUCTION },
+  { label: 'SquFury', link: '/squfury' },
+  { label: 'Auction', link: 'https://squfuryportal.xyz', analyticsEvent: SITE_EVENTS.NAV_AUCTION },
   {
     label: 'FAQ',
     link: 'https://opyn.gitbook.io/opyn-strategies/strategies-faq/faq',
@@ -301,11 +301,11 @@ const navLinks = [
 ]
 
 const footerLinks = [
-  { label: 'Developers', link: 'https://opyn.gitbook.io/squeeth-1/', analyticsEvent: LANDING_EVENTS.NAV_DEVELOPERS },
+  { label: 'Developers', link: 'https://opyn.gitbook.io/squfury-1/', analyticsEvent: LANDING_EVENTS.NAV_DEVELOPERS },
   { label: 'Blog', link: 'https://medium.com/opyn', analyticsEvent: LANDING_EVENTS.NAV_BLOG },
   {
     label: 'Security',
-    link: 'https://opyn.gitbook.io/squeeth-faq/squeeth/security',
+    link: 'https://opyn.gitbook.io/squfury-faq/squfury/security',
     analyticsEvent: LANDING_EVENTS.NAV_SECURITY,
   },
 ]
@@ -366,7 +366,7 @@ function DesktopLandingPage() {
                 Investment strategies for DeFi.
               </Typography>
               <Typography variant="h2" className={classes.introSectionSubHeading}>
-                Powered by squeeth.
+                Powered by squfury.
               </Typography>
               <div style={{ marginTop: '39px' }} />
               <Link href={'/strategies/crab'} passHref>
@@ -397,7 +397,7 @@ function DesktopLandingPage() {
             <div className={classes.statSectionSubTitle}>Locked</div>
           </div>
         </div>
-        <div className={classes.squeethSection}>
+        <div className={classes.squfurySection}>
           <div className={classes.introSectionLeft}>
             <div>
               <div className={classes.contentSectionHeader}>
@@ -405,7 +405,7 @@ function DesktopLandingPage() {
                   <Image src={logo} alt="logo" width={97} height={75} />
                 </div>
                 <Typography variant="h3" className={clsx([classes.contentSectionHeaderLabel, classes.gradientText])}>
-                  SQUEETH
+                  SQUFURY
                 </Typography>
               </div>
               <div style={{ marginTop: '25px' }} />
@@ -420,16 +420,16 @@ function DesktopLandingPage() {
                 protected downside, and no liquidations.
               </Typography>
               <div style={{ marginTop: '41px' }} />
-              <Link href={'/squeeth'} passHref>
-                <Button onClick={() => track(LANDING_EVENTS.NAV_HERO_SQUEETH)} className={classes.contentSectionButton}>
-                  Trade Squeeth
+              <Link href={'/squfury'} passHref>
+                <Button onClick={() => track(LANDING_EVENTS.NAV_HERO_SQUFURY)} className={classes.contentSectionButton}>
+                  Trade SquFury
                 </Button>
               </Link>
             </div>
           </div>
           <div className={classes.imageSectionRight}>
             <div className={classes.imageSection}>
-              <Image src={Squeeth} alt="Squeeth Image" placeholder="blur" />
+              <Image src={SquFury} alt="SquFury Image" placeholder="blur" />
             </div>
           </div>
         </div>
@@ -490,17 +490,17 @@ function DesktopLandingPage() {
               </div>
               <div style={{ marginTop: '25px' }} />
               <Typography variant="h3" className={classes.contentSectionTitle}>
-                Trade squeeth in size.
+                Trade squfury in size.
               </Typography>
               <div style={{ marginTop: '41px' }} />
               <Typography variant="h3" className={classes.contentSectionSubTitle}>
                 Participate in large, regular auctions to trade
               </Typography>
               <Typography variant="h3" className={classes.contentSectionSubTitle}>
-                squeeth in size with low price impact.
+                squfury in size with low price impact.
               </Typography>
               <div style={{ marginTop: '41px' }} />
-              <Link href={'https://squeethportal.xyz'} passHref>
+              <Link href={'https://squfuryportal.xyz'} passHref>
                 <Button onClick={() => track(LANDING_EVENTS.NAV_HERO_AUCTION)} className={classes.contentSectionButton}>
                   Try Auction
                 </Button>
@@ -537,7 +537,7 @@ function DesktopLandingPage() {
             </Link>
           </div>
           <div onClick={() => track(LANDING_EVENTS.NAV_SOCIAL_GITHUB)}>
-            <Link href={'https://github.com/opynfinance/squeeth-monorepo'} passHref>
+            <Link href={'https://github.com/opynfinance/squfury-monorepo'} passHref>
               <Image className={classes.socialIcon} src={Github} alt="Opyn Github" />
             </Link>
           </div>

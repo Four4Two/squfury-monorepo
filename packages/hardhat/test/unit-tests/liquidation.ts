@@ -5,16 +5,16 @@ import { BigNumber, providers } from "ethers";
 import { Controller, MockWPowerPerp, MockShortPowerPerp, MockOracle, MockUniswapV3Pool, MockErc20, MockUniPositionManager, LiquidationHelper, ABDKMath64x64 } from "../../typechain";
 import { isSimilar, one, oracleScaleFactor } from '../utils'
 
-const squeethETHPrice = ethers.utils.parseUnits('3030').mul(one).div(oracleScaleFactor)
+const squfuryETHPrice = ethers.utils.parseUnits('3030').mul(one).div(oracleScaleFactor)
 const ethUSDPrice = ethers.utils.parseUnits('3000')
 
 
 
 describe("Controller: liquidation unit test", function () {
-  let squeeth: MockWPowerPerp;
-  let shortSqueeth: MockShortPowerPerp;
+  let squfury: MockWPowerPerp;
+  let shortSquFury: MockShortPowerPerp;
   let controller: Controller;
-  let squeethEthPool: MockUniswapV3Pool;
+  let squfuryEthPool: MockUniswapV3Pool;
   let uniPositionManager: MockUniPositionManager
   let ethUSDPool: MockUniswapV3Pool;
   let oracle: MockOracle;
@@ -38,10 +38,10 @@ describe("Controller: liquidation unit test", function () {
 
   this.beforeAll("Setup environment", async () => {
     const MockSQUContract = await ethers.getContractFactory("MockWPowerPerp");
-    squeeth = (await MockSQUContract.deploy()) as MockWPowerPerp;
+    squfury = (await MockSQUContract.deploy()) as MockWPowerPerp;
 
     const NFTContract = await ethers.getContractFactory("MockShortPowerPerp");
-    shortSqueeth = (await NFTContract.deploy()) as MockShortPowerPerp;
+    shortSquFury = (await NFTContract.deploy()) as MockShortPowerPerp;
 
     const OracleContract = await ethers.getContractFactory("MockOracle");
     oracle = (await OracleContract.deploy()) as MockOracle;
@@ -51,16 +51,16 @@ describe("Controller: liquidation unit test", function () {
     usdc = (await MockErc20Contract.deploy("USDC", "USDC", 6)) as MockErc20;
 
     const MockUniswapV3PoolContract = await ethers.getContractFactory("MockUniswapV3Pool");
-    squeethEthPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
+    squfuryEthPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
     ethUSDPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
 
     const MockPositionManager = await ethers.getContractFactory("MockUniPositionManager");
     uniPositionManager = (await MockPositionManager.deploy()) as MockUniPositionManager;
 
-    await squeethEthPool.setPoolTokens(weth.address, squeeth.address);
+    await squfuryEthPool.setPoolTokens(weth.address, squfury.address);
     await ethUSDPool.setPoolTokens(weth.address, usdc.address);
 
-    await oracle.connect(random).setPrice(squeethEthPool.address , squeethETHPrice) // eth per 1 squeeth
+    await oracle.connect(random).setPrice(squfuryEthPool.address , squfuryETHPrice) // eth per 1 squfury
     await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPrice)  // usdc per 1 eth
   });
 
@@ -76,14 +76,14 @@ describe("Controller: liquidation unit test", function () {
       const SqrtPriceExternalLibrary = (await SqrtPriceExternal.deploy());
   
       const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
-      controller = (await ControllerContract.deploy(oracle.address, shortSqueeth.address, squeeth.address, weth.address, usdc.address, ethUSDPool.address, squeethEthPool.address, uniPositionManager.address, 3000)) as Controller;
-      const squeethAddr = await controller.wPowerPerp();
+      controller = (await ControllerContract.deploy(oracle.address, shortSquFury.address, squfury.address, weth.address, usdc.address, ethUSDPool.address, squfuryEthPool.address, uniPositionManager.address, 3000)) as Controller;
+      const squfuryAddr = await controller.wPowerPerp();
       const nftAddr = await controller.shortPowerPerp();
-      expect(squeethAddr).to.be.eq(
-        squeeth.address,
-        "squeeth address mismatch"
+      expect(squfuryAddr).to.be.eq(
+        squfury.address,
+        "squfury address mismatch"
       );
-      expect(nftAddr).to.be.eq(shortSqueeth.address, "nft address mismatch");
+      expect(nftAddr).to.be.eq(shortSquFury.address, "nft address mismatch");
     });
     after('deploy liquidation helper', async() => {
       const TickMathExternal = await ethers.getContractFactory("TickMathExternal")
@@ -96,11 +96,11 @@ describe("Controller: liquidation unit test", function () {
       liquidationHelper = await LiqHelperFactory.deploy(
           controller.address,
           oracle.address,
-          squeeth.address,
+          squfury.address,
           weth.address,
           usdc.address,
           ethUSDPool.address,
-          squeethEthPool.address,
+          squfuryEthPool.address,
           uniPositionManager.address
         ) as LiquidationHelper;  
     })
@@ -114,48 +114,48 @@ describe("Controller: liquidation unit test", function () {
 
     // the new eth price that put vault underwater
     let newEthUsdPrice: BigNumber
-    // the new squeeth price that determines the liquidator bounty
-    let newSqueethEthPrice: BigNumber
+    // the new squfury price that determines the liquidator bounty
+    let newSquFuryEthPrice: BigNumber
 
     before("open vault 1", async () => {
-      vault1Id = await shortSqueeth.nextId()
+      vault1Id = await shortSquFury.nextId()
 
       const depositAmount = ethers.utils.parseUnits('45')
       const mintAmount = ethers.utils.parseUnits('100')
         
       const vaultBefore = await controller.vaults(vault1Id)
-      const squeethBalanceBefore = await squeeth.balanceOf(seller1.address)
+      const squfuryBalanceBefore = await squfury.balanceOf(seller1.address)
       
       await controller.connect(seller1).mintPowerPerpAmount(0, mintAmount, 0, {value: depositAmount})
 
-      const squeethBalanceAfter = await squeeth.balanceOf(seller1.address)
+      const squfuryBalanceAfter = await squfury.balanceOf(seller1.address)
       const vaultAfter = await controller.vaults(vault1Id)
       const normFactor = await controller.normalizationFactor()
 
       expect(vaultBefore.shortAmount.add(mintAmount.mul(one).div(normFactor)).eq(vaultAfter.shortAmount)).to.be.true
-      expect(squeethBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squeethBalanceAfter)).to.be.true
+      expect(squfuryBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squfuryBalanceAfter)).to.be.true
     });
 
     before("open vault 2", async () => {
-      vault2Id = await shortSqueeth.nextId()
+      vault2Id = await shortSquFury.nextId()
 
       const depositAmount = ethers.utils.parseUnits('0.9')
       const mintAmount = ethers.utils.parseUnits('2')
         
       const vaultBefore = await controller.vaults(vault2Id)
-      const squeethBalanceBefore = await squeeth.balanceOf(seller1.address)
+      const squfuryBalanceBefore = await squfury.balanceOf(seller1.address)
       
       await controller.connect(seller1).mintPowerPerpAmount(0, mintAmount, 0, {value: depositAmount})
 
-      const squeethBalanceAfter = await squeeth.balanceOf(seller1.address)
+      const squfuryBalanceAfter = await squfury.balanceOf(seller1.address)
       const vaultAfter = await controller.vaults(vault2Id)
       const normFactor = await controller.normalizationFactor()
       expect(await controller.isVaultSafe(vault2Id)).to.be.true
       expect(vaultBefore.shortAmount.add(mintAmount.mul(one).div(normFactor)).eq(vaultAfter.shortAmount)).to.be.true
-      expect(squeethBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squeethBalanceAfter)).to.be.true
+      expect(squfuryBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squfuryBalanceAfter)).to.be.true
 
-      // give all wsqueeth to liquidator
-      await squeeth.connect(seller1).transfer(liquidator.address, squeethBalanceAfter)
+      // give all wsqufury to liquidator
+      await squfury.connect(seller1).transfer(liquidator.address, squfuryBalanceAfter)
     });
 
     it("Should revert liquidating a a vault with id 0", async () => {
@@ -173,7 +173,7 @@ describe("Controller: liquidation unit test", function () {
     })
 
     it("Should revert liquidating a a vault with id greater than max vaults", async () => {
-      const vaultId = await shortSqueeth.nextId()
+      const vaultId = await shortSquFury.nextId()
       const result = await liquidationHelper.checkLiquidation(vaultId);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount, collateralToReceive] = result;
 
@@ -190,8 +190,8 @@ describe("Controller: liquidation unit test", function () {
     it("Should revert liquidating a safe vault", async () => {
       const vaultBefore = await controller.vaults(vault1Id)
 
-      // liquidator mint wSqueeth
-      await squeeth.connect(liquidator).mint(liquidator.address, vaultBefore.shortAmount)
+      // liquidator mint wSquFury
+      await squfury.connect(liquidator).mint(liquidator.address, vaultBefore.shortAmount)
 
       const result = await liquidationHelper.checkLiquidation(vault1Id);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount, collateralToReceive] = result;
@@ -208,9 +208,9 @@ describe("Controller: liquidation unit test", function () {
 
     it('set eth price to make the vault underwater', async() => {
       newEthUsdPrice = BigNumber.from(4000).mul(one)
-      newSqueethEthPrice = BigNumber.from(4040).mul(one).div(oracleScaleFactor)
+      newSquFuryEthPrice = BigNumber.from(4040).mul(one).div(oracleScaleFactor)
       await oracle.connect(random).setPrice(ethUSDPool.address, newEthUsdPrice)
-      await oracle.connect(random).setPrice(squeethEthPool.address, newSqueethEthPrice)
+      await oracle.connect(random).setPrice(squfuryEthPool.address, newSquFuryEthPrice)
 
     })
     it("should revert if the vault become a dust vault after liquidation", async () => {
@@ -218,7 +218,7 @@ describe("Controller: liquidation unit test", function () {
       const debtToRepay = vaultBefore.shortAmount.sub(1) // not burning all the the short
 
       const debtShouldRepay = vaultBefore.shortAmount
-      let collateralToSell : BigNumber = newSqueethEthPrice.mul(debtShouldRepay).div(one)
+      let collateralToSell : BigNumber = newSquFuryEthPrice.mul(debtShouldRepay).div(one)
       collateralToSell = collateralToSell.add(collateralToSell.div(10))
 
       const result = await liquidationHelper.checkLiquidation(vault2Id);
@@ -235,7 +235,7 @@ describe("Controller: liquidation unit test", function () {
       const vaultBefore = await controller.vaults(vault2Id)
       const debtToRepay = vaultBefore.shortAmount
             
-      let collateralToSell : BigNumber = newSqueethEthPrice.mul(debtToRepay).div(one)
+      let collateralToSell : BigNumber = newSquFuryEthPrice.mul(debtToRepay).div(one)
       collateralToSell = collateralToSell.add(collateralToSell.div(10))
 
       const result = await liquidationHelper.checkLiquidation(vault2Id);
@@ -256,7 +256,7 @@ describe("Controller: liquidation unit test", function () {
     it("Liquidate unsafe vault (vault 1)", async () => {
       const vaultBefore = await controller.vaults(vault1Id)
       const liquidatorBalanceBefore = await provider.getBalance(liquidator.address)
-      const squeethLiquidatorBalanceBefore = await squeeth.balanceOf(liquidator.address)
+      const squfuryLiquidatorBalanceBefore = await squfury.balanceOf(liquidator.address)
 
       const isVaultSafeBefore = await controller.isVaultSafe(vault1Id)
       expect(isVaultSafeBefore).to.be.false
@@ -271,13 +271,13 @@ describe("Controller: liquidation unit test", function () {
       const tx = await controller.connect(liquidator).liquidate(vault1Id, maxDebtToRepay);
       const receipt = await tx.wait();
       
-      let collateralToSell : BigNumber = newSqueethEthPrice.mul(debtToRepay).div(one)
+      let collateralToSell : BigNumber = newSquFuryEthPrice.mul(debtToRepay).div(one)
       collateralToSell = collateralToSell.add(collateralToSell.div(10))
 
       const vaultAfter = await controller.vaults(vault1Id)
       const liquidatorBalanceAfter = await provider.getBalance(liquidator.address)
       const liquidateEventCollateralToSell : BigNumber = (receipt.events?.find(event => event.event === 'Liquidate'))?.args?.collateralPaid;
-      const squeethLiquidatorBalanceAfter = await squeeth.balanceOf(liquidator.address)
+      const squfuryLiquidatorBalanceAfter = await squfury.balanceOf(liquidator.address)
 
       expect(isUnsafe).to.be.true
       expect(isLiquidatableAfterReducingDebt).to.be.true
@@ -288,19 +288,19 @@ describe("Controller: liquidation unit test", function () {
       expect(liquidateEventCollateralToSell.eq(collateralToSell)).to.be.true
       expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(debtToRepay)).to.be.true
       expect(vaultBefore.collateralAmount.sub(vaultAfter.collateralAmount).eq(collateralToSell)).to.be.true
-      expect(squeethLiquidatorBalanceBefore.sub(squeethLiquidatorBalanceAfter).eq(debtToRepay)).to.be.true
+      expect(squfuryLiquidatorBalanceBefore.sub(squfuryLiquidatorBalanceAfter).eq(debtToRepay)).to.be.true
     })
   })
 
   describe("Liquidation: un-profitable scenario", async () => {
     let vaultId: BigNumber;
-    const newSqueethETHPrice = ethers.utils.parseUnits('9090').mul(one).div(oracleScaleFactor)
+    const newSquFuryETHPrice = ethers.utils.parseUnits('9090').mul(one).div(oracleScaleFactor)
     const newEthUSDPrice = ethers.utils.parseUnits('9000')
     
     before("open vault", async () => {
       const oldEthPrice = BigNumber.from('3000').mul(one)
       await oracle.connect(random).setPrice(ethUSDPool.address, oldEthPrice)
-      vaultId = await shortSqueeth.nextId()
+      vaultId = await shortSquFury.nextId()
       const depositAmount = ethers.utils.parseUnits('45')
       const mintAmount = ethers.utils.parseUnits('100')
       await controller.connect(seller1).mintPowerPerpAmount(0, mintAmount, 0, {value: depositAmount})
@@ -309,7 +309,7 @@ describe("Controller: liquidation unit test", function () {
     before("set price to a number where vault will become insolvent", async () => {
       // change oracle price to make vault liquidatable
       await oracle.connect(random).setPrice(ethUSDPool.address, newEthUSDPrice)
-      await oracle.connect(random).setPrice(squeethEthPool.address, newSqueethETHPrice)
+      await oracle.connect(random).setPrice(squfuryEthPool.address, newSquFuryETHPrice)
       
     })
 
@@ -318,7 +318,7 @@ describe("Controller: liquidation unit test", function () {
       // liquidator specify amount that would take all collateral, but not clearing all the debt
       const debtToRepay = vault.shortAmount.sub(1)
 
-      let collateralToSell : BigNumber = newSqueethETHPrice.mul(debtToRepay).div(one)
+      let collateralToSell : BigNumber = newSquFuryETHPrice.mul(debtToRepay).div(one)
       collateralToSell = collateralToSell.add(collateralToSell.div(10))
 
       const result = await liquidationHelper.checkLiquidation(vaultId);
@@ -336,7 +336,7 @@ describe("Controller: liquidation unit test", function () {
     it("can fully liquidate a underwater vault, even it's not profitable", async () => {
       const vaultBefore = await controller.vaults(vaultId)
       const liquidatorBalanceBefore = await provider.getBalance(liquidator.address)
-      const squeethLiquidatorBalanceBefore = await squeeth.balanceOf(liquidator.address)
+      const squfuryLiquidatorBalanceBefore = await squfury.balanceOf(liquidator.address)
 
       const result = await liquidationHelper.checkLiquidation(vaultId);
       const [isUnsafe, isLiquidatableAfterReducingDebt, maxWPowerPerpAmount, collateralToReceive] = result;
@@ -346,7 +346,7 @@ describe("Controller: liquidation unit test", function () {
       const tx = await controller.connect(liquidator).liquidate(vaultId, debtToRepay);
       const receipt = await tx.wait();
       
-      let collateralToSell : BigNumber = newSqueethETHPrice.mul(debtToRepay).div(one)
+      let collateralToSell : BigNumber = newSquFuryETHPrice.mul(debtToRepay).div(one)
       collateralToSell = collateralToSell.add(collateralToSell.div(10))
 
       // paying this amount will reduce total eth 
@@ -361,13 +361,13 @@ describe("Controller: liquidation unit test", function () {
       const vaultAfter = await controller.vaults(vaultId)
       const liquidatorBalanceAfter = await provider.getBalance(liquidator.address)
       const actualAmountPaidForLiquidator : BigNumber = (receipt.events?.find(event => event.event === 'Liquidate'))?.args?.collateralPaid;
-      const squeethLiquidatorBalanceAfter = await squeeth.balanceOf(liquidator.address)
+      const squfuryLiquidatorBalanceAfter = await squfury.balanceOf(liquidator.address)
 
       expect(vaultAfter.collateralAmount.isZero()).to.be.true
       expect(isSimilar(liquidatorBalanceAfter.sub(liquidatorBalanceBefore).toString(), actualAmountPaidForLiquidator.toString())).to.be.true
       expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(debtToRepay)).to.be.true
       expect(vaultBefore.collateralAmount.eq(actualAmountPaidForLiquidator)).to.be.true
-      expect(squeethLiquidatorBalanceBefore.sub(squeethLiquidatorBalanceAfter).eq(debtToRepay)).to.be.true
+      expect(squfuryLiquidatorBalanceBefore.sub(squfuryLiquidatorBalanceAfter).eq(debtToRepay)).to.be.true
     })
   })
 });

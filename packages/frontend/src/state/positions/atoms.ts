@@ -9,12 +9,12 @@ import {
   ORACLE,
   QUOTER,
   SHORT_HELPER,
-  SQUEETH_UNI_POOL,
+  SQUFURY_UNI_POOL,
   SWAP_ROUTER,
   SWAP_ROUTER_02,
   VAULT_MANAGER,
   WETH,
-  OSQUEETH,
+  OSQUFURY,
   ZERO_ADDR,
   CRAB_STRATEGY,
   CRAB_MIGRATION,
@@ -52,11 +52,11 @@ export const addressesAtom = atom((get) => {
     zero: ZERO_ADDR.toLowerCase(),
     controller: CONTROLLER[networkId].toLowerCase(),
     vaultManager: VAULT_MANAGER[networkId].toLowerCase(),
-    oSqueeth: OSQUEETH[networkId].toLowerCase(),
+    oSquFury: OSQUFURY[networkId].toLowerCase(),
     weth: WETH[networkId].toLowerCase(),
     swapRouter: SWAP_ROUTER[networkId].toLowerCase(),
     swapRouter2: SWAP_ROUTER_02[networkId].toLowerCase(),
-    squeethPool: SQUEETH_UNI_POOL[networkId].toLowerCase(),
+    squfuryPool: SQUFURY_UNI_POOL[networkId].toLowerCase(),
     quoter: QUOTER[networkId].toLowerCase(),
     shortHelper: SHORT_HELPER[networkId].toLowerCase(),
     oracle: ORACLE[networkId].toLowerCase(),
@@ -81,7 +81,7 @@ export const addressesAtom = atom((get) => {
 
 export const isWethToken0Atom = atom((get) => {
   const addresses = get(addressesAtom)
-  return parseInt(addresses.weth, 16) < parseInt(addresses.oSqueeth, 16)
+  return parseInt(addresses.weth, 16) < parseInt(addresses.oSquFury, 16)
 })
 
 export const managerAtom = atom((get) => {
@@ -91,16 +91,16 @@ export const managerAtom = atom((get) => {
 })
 export const activePositionsAtom = atom<any[]>([])
 export const closedPositionsAtom = atom<any[]>([])
-export const squeethLiquidityAtom = atom(BIG_ZERO)
+export const squfuryLiquidityAtom = atom(BIG_ZERO)
 export const wethLiquidityAtom = atom(BIG_ZERO)
-export const depositedSqueethAtom = atom(BIG_ZERO)
+export const depositedSquFuryAtom = atom(BIG_ZERO)
 export const depositedWethAtom = atom(BIG_ZERO)
-export const withdrawnSqueethAtom = atom(BIG_ZERO)
+export const withdrawnSquFuryAtom = atom(BIG_ZERO)
 export const withdrawnWethAtom = atom(BIG_ZERO)
 export const isLPAtom = atom((get) => {
-  const squeethLiquidity = get(squeethLiquidityAtom)
+  const squfuryLiquidity = get(squfuryLiquidityAtom)
   const wethLiquidity = get(wethLiquidityAtom)
-  return squeethLiquidity.gt(0) || wethLiquidity.gt(0)
+  return squfuryLiquidity.gt(0) || wethLiquidity.gt(0)
 })
 
 export const vaultAtom = atom<Vault | null>(null)

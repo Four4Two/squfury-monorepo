@@ -52,7 +52,7 @@ function log1_0001(num: number) { // eslint-disable-line
   return Math.log2(num) / Math.log2(1.0001)
 }
 
-export function getSqrtPriceAndTickBySqueethPrice(price1e18: string|BigNumberish, wethIsToken0: boolean) {
+export function getSqrtPriceAndTickBySquFuryPrice(price1e18: string|BigNumberish, wethIsToken0: boolean) {
   const humanReadablePrice = new BigNumber(price1e18.toString()).div(1e18)
   const newToken0Price = wethIsToken0 
     ? new BigNumber(1).div(humanReadablePrice).toString()

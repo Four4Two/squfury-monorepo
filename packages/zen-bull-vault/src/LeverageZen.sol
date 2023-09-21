@@ -2,8 +2,8 @@
 pragma solidity =0.7.6;
 
 // interface
-import { IController } from "squeeth-monorepo/interfaces/IController.sol";
-import { IWETH9 } from "squeeth-monorepo/interfaces/IWETH9.sol";
+import { IController } from "squfury-monorepo/interfaces/IController.sol";
+import { IWETH9 } from "squfury-monorepo/interfaces/IWETH9.sol";
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
 import { IEulerMarkets } from "./interface/IEulerMarkets.sol";
 import { IEulerEToken } from "./interface/IEulerEToken.sol";
@@ -11,7 +11,7 @@ import { IEulerDToken } from "./interface/IEulerDToken.sol";
 // contract
 import { Ownable } from "openzeppelin/access/Ownable.sol";
 // lib
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol";
 import { UniOracle } from "./UniOracle.sol";
 
 /**

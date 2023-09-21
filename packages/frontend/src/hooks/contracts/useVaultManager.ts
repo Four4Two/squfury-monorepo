@@ -4,10 +4,10 @@ import BigNumber from 'bignumber.js'
 import { useAtomValue } from 'jotai'
 
 import { toTokenAmount } from '@utils/calculations'
-import { OSQUEETH_DECIMALS } from '../../constants/'
-import { VAULTS_QUERY, VAULTS_SUBSCRIPTION } from '../../queries/squeeth/vaultsQuery'
-import { Vaults } from '../../queries/squeeth/__generated__/Vaults'
-import { squeethClient } from '../../utils/apollo-client'
+import { OSQUFURY_DECIMALS } from '../../constants/'
+import { VAULTS_QUERY, VAULTS_SUBSCRIPTION } from '../../queries/squfury/vaultsQuery'
+import { Vaults } from '../../queries/squfury/__generated__/Vaults'
+import { squfuryClient } from '../../utils/apollo-client'
 import { addressAtom, networkIdAtom } from 'src/state/wallet/atoms'
 import useAppEffect from '@hooks/useAppEffect'
 import useAppMemo from '@hooks/useAppMemo'
@@ -25,7 +25,7 @@ export const useVaultManager = () => {
   const [isPolling, setIsPolling] = useState(false)
 
   const { data, loading, subscribeToMore, startPolling, stopPolling } = useQuery<Vaults>(VAULTS_QUERY, {
-    client: squeethClient[networkId],
+    client: squfuryClient[networkId],
     fetchPolicy: 'cache-and-network',
     variables: {
       ownerId: address ?? '',
@@ -84,7 +84,7 @@ export const useVaultManager = () => {
       id,
       NFTCollateralId: NftCollateralId,
       collateralAmount: toTokenAmount(new BigNumber(collateralAmount), 18),
-      shortAmount: toTokenAmount(new BigNumber(shortAmount), OSQUEETH_DECIMALS),
+      shortAmount: toTokenAmount(new BigNumber(shortAmount), OSQUFURY_DECIMALS),
       operator,
     }))
 

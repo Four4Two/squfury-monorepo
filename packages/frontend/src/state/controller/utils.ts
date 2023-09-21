@@ -3,7 +3,7 @@ import { Contract } from 'web3-eth-contract'
 import { Position } from '@uniswap/v3-sdk'
 import fzero from 'fzero'
 
-import { BIG_ZERO, OSQUEETH_DECIMALS } from '../../constants'
+import { BIG_ZERO, OSQUFURY_DECIMALS } from '../../constants'
 import { toTokenAmount } from '@utils/calculations'
 import { Vault } from '../../types'
 import { FUNDING_PERIOD, INDEX_SCALE } from '../../constants'
@@ -35,7 +35,7 @@ export const calculateLiquidationPriceForLP = (
     : new BigNumber(1).div(position?.token0PriceLower.toSignificant(18) || 0)
 
   const maxEth = liquidity.times(pb.sqrt().minus(pa.sqrt()))
-  const maxSqth = liquidity.times(new BigNumber(1).div(pa.sqrt()).minus(new BigNumber(1).div(pb.sqrt())))
+  const maxSqfu = liquidity.times(new BigNumber(1).div(pa.sqrt()).minus(new BigNumber(1).div(pb.sqrt())))
 
   const divider = shortAmount.times(1.5).times(normFactor)
 
@@ -47,7 +47,7 @@ export const calculateLiquidationPriceForLP = (
       .div(INDEX_SCALE)
 
     if (p.lt(pa)) {
-      return maxSqth.times(p)
+      return maxSqfu.times(p)
     }
     if (p.gt(pb)) {
       return maxEth
@@ -77,7 +77,7 @@ export async function getVault(vaultId: number, contract: Contract | null): Prom
     id: vaultId,
     NFTCollateralId: NftCollateralId,
     collateralAmount: toTokenAmount(new BigNumber(collateralAmount), 18),
-    shortAmount: toTokenAmount(new BigNumber(shortAmount), OSQUEETH_DECIMALS),
+    shortAmount: toTokenAmount(new BigNumber(shortAmount), OSQUFURY_DECIMALS),
     operator,
   }
 }
@@ -144,11 +144,11 @@ export async function getCurrentImpliedFunding(contract: Contract | null) {
   return Math.log(currMark.dividedBy(currIndex).toNumber()) / FUNDING_PERIOD
 }
 
-export async function getOsqthRefVol() {
-  const response = await fetch(`/api/currentsqueethvol`).then((res) => res.json())
+export async function getOsqfuRefVol() {
+  const response = await fetch(`/api/currentsqufuryvol`).then((res) => res.json())
 
   if (response.status === 'error') {
-    console.log('Error fetching squeeth vol', response.status)
+    console.log('Error fetching squfury vol', response.status)
   }
 
   return response * 100

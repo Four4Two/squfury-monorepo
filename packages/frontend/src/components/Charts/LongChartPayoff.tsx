@@ -125,17 +125,17 @@ function LongChartPayoff() {
   const longEthPNL = query.data?.longEthPNL
   const longSeries = query.data?.longSeries
   const positionSizeSeries = query.data?.positionSizeSeries
-  const squeethIsLive = query.data?.squeethIsLive
+  const squfuryIsLive = query.data?.squfuryIsLive
 
   const classes = useStyles()
 
   // plot line data
   const lineSeries = useAppMemo(() => {
-    if (!longEthPNL || !longSeries || longSeries.length === 0 || !positionSizeSeries || !squeethIsLive) return
+    if (!longEthPNL || !longSeries || longSeries.length === 0 || !positionSizeSeries || !squfuryIsLive) return
 
     const liveIndex = Math.max(
       0,
-      squeethIsLive.findIndex((val: boolean) => val),
+      squfuryIsLive.findIndex((val: boolean) => val),
     ) // return 0 when there is no live data
 
     return [
@@ -148,14 +148,14 @@ function LongChartPayoff() {
       },
       {
         data: longSeries.slice(0, liveIndex),
-        legend: `Long Squeeth PNL (%) Simulated incl. premiums`,
+        legend: `Long SquFury PNL (%) Simulated incl. premiums`,
         options: {
           color: '#00E396',
         },
       },
       {
         data: longSeries.slice(liveIndex),
-        legend: `Long Squeeth PNL (%) LIVE (incl. premiums)`,
+        legend: `Long SquFury PNL (%) LIVE (incl. premiums)`,
         options: {
           color: '#70E3F6',
         },
@@ -163,7 +163,7 @@ function LongChartPayoff() {
     ]
 
     return []
-  }, [longEthPNL, longSeries, positionSizeSeries, squeethIsLive])
+  }, [longEthPNL, longSeries, positionSizeSeries, squfuryIsLive])
 
   const chartOptions = useAppMemo(() => {
     return {
@@ -237,11 +237,11 @@ function LongChartPayoff() {
             {lineSeries && lineSeries[1].data.length > 0 && (
               <LegendBox
                 bgColor="#00E396"
-                text="Squeeth Simulated PnL"
-                tooltip="The Squeeth Simulated PnL comes from using at the money implied vol from Deribit"
+                text="SquFury Simulated PnL"
+                tooltip="The SquFury Simulated PnL comes from using at the money implied vol from Deribit"
               />
             )}
-            {lineSeries && lineSeries[2].data.length > 0 && <LegendBox bgColor="#70E3F6" text="Squeeth PNL" />}
+            {lineSeries && lineSeries[2].data.length > 0 && <LegendBox bgColor="#70E3F6" text="SquFury PNL" />}
           </div>
         </div>
       </div>

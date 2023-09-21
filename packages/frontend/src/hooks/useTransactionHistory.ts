@@ -35,7 +35,7 @@ const getTransactionType = (c: any) => {
 }
 
 export const useTransactionHistory = () => {
-  const { squeethPool, shortHelper, swapRouter } = useAtomValue(addressesAtom)
+  const { squfuryPool, shortHelper, swapRouter } = useAtomValue(addressesAtom)
   const address = useAtomValue(addressAtom)
   const isWethToken0 = useAtomValue(isWethToken0Atom)
   const ethPriceMap = useEthPriceMap()
@@ -44,7 +44,7 @@ export const useTransactionHistory = () => {
 
   const { data, loading } = useQuery<transactions, transactionsVariables>(TRANSACTIONS_QUERY, {
     variables: {
-      poolAddress: squeethPool,
+      poolAddress: squfuryPool,
       owner: address || '',
       origin: address || '',
       recipients: [shortHelper, address || '', swapRouter],
@@ -62,7 +62,7 @@ export const useTransactionHistory = () => {
     (data?.positionSnapshots || []).map(
       (transaction: transactions_positionSnapshots, index: number, array: transactions_positionSnapshots[]) => {
         const transactionDetails = {
-          squeethAmount: new BigNumber(isWethToken0 ? transaction.depositedToken1 : transaction.depositedToken0),
+          squfuryAmount: new BigNumber(isWethToken0 ? transaction.depositedToken1 : transaction.depositedToken0),
           ethAmount: new BigNumber(isWethToken0 ? transaction.depositedToken0 : transaction.depositedToken1),
           usdValue: bigZero,
           timestamp: transaction.transaction.timestamp,
@@ -71,39 +71,39 @@ export const useTransactionHistory = () => {
           ethPriceAtDeposit: bigZero,
         }
 
-        const squeethDepositedAmount = new BigNumber(
+        const squfuryDepositedAmount = new BigNumber(
           isWethToken0 ? transaction.depositedToken1 : transaction.depositedToken0,
         )
         const ethDepositedAmount = new BigNumber(
           isWethToken0 ? transaction.depositedToken0 : transaction.depositedToken1,
         )
-        const squeethWithdrawnAmount = new BigNumber(
+        const squfuryWithdrawnAmount = new BigNumber(
           isWethToken0 ? transaction.withdrawnToken1 : transaction.withdrawnToken0,
         )
         const ethWithdrawnAmount = new BigNumber(
           isWethToken0 ? transaction.withdrawnToken0 : transaction.withdrawnToken1,
         )
 
-        const prevSqueethDepositedAmount = new BigNumber(
+        const prevSquFuryDepositedAmount = new BigNumber(
           // Index + 1 here is because the array is ordered from latest to oldest
           isWethToken0 ? array[index + 1]?.depositedToken1 : array[index + 1]?.depositedToken0,
         )
         const prevEthDepositedAmount = new BigNumber(
           isWethToken0 ? array[index + 1]?.depositedToken0 : array[index + 1]?.depositedToken1,
         )
-        const prevSqueethWithdrawnAmount = new BigNumber(
+        const prevSquFuryWithdrawnAmount = new BigNumber(
           isWethToken0 ? array[index + 1]?.withdrawnToken1 : array[index + 1]?.withdrawnToken0,
         )
         const prevEthWithdrawnAmount = new BigNumber(
           isWethToken0 ? array[index + 1]?.withdrawnToken0 : array[index + 1]?.withdrawnToken1,
         )
 
-        if (squeethDepositedAmount.isGreaterThan(prevSqueethDepositedAmount)) {
-          transactionDetails.squeethAmount = squeethDepositedAmount.minus(prevSqueethDepositedAmount)
+        if (squfuryDepositedAmount.isGreaterThan(prevSquFuryDepositedAmount)) {
+          transactionDetails.squfuryAmount = squfuryDepositedAmount.minus(prevSquFuryDepositedAmount)
           transactionDetails.ethAmount = ethDepositedAmount.minus(prevEthDepositedAmount)
           transactionDetails.transactionType = TransactionType.ADD_LIQUIDITY
-        } else if (squeethWithdrawnAmount.isGreaterThan(prevSqueethWithdrawnAmount)) {
-          transactionDetails.squeethAmount = squeethWithdrawnAmount.minus(prevSqueethWithdrawnAmount)
+        } else if (squfuryWithdrawnAmount.isGreaterThan(prevSquFuryWithdrawnAmount)) {
+          transactionDetails.squfuryAmount = squfuryWithdrawnAmount.minus(prevSquFuryWithdrawnAmount)
           transactionDetails.ethAmount = ethWithdrawnAmount.minus(prevEthWithdrawnAmount)
           transactionDetails.transactionType = TransactionType.REMOVE_LIQUIDITY
         }
@@ -118,21 +118,21 @@ export const useTransactionHistory = () => {
   const transactions =
     ethPriceMap &&
     (swaps || []).map((s) => {
-      const squeethAmount = new BigNumber(isWethToken0 ? s.amount1 : s.amount0)
+      const squfuryAmount = new BigNumber(isWethToken0 ? s.amount1 : s.amount0)
       const ethAmount = new BigNumber(isWethToken0 ? s.amount0 : s.amount1)
       const time = new Date(Number(s.timestamp) * 1000).setUTCHours(0, 0, 0) / 1000
       const usdValue = ethAmount.multipliedBy(ethPriceMap[time]).abs()
 
       let transactionType = TransactionType.BUY
-      if (squeethAmount.isPositive() && s.recipient.toLowerCase() !== shortHelper.toLowerCase()) {
+      if (squfuryAmount.isPositive() && s.recipient.toLowerCase() !== shortHelper.toLowerCase()) {
         transactionType = TransactionType.SELL
       } else if (s.recipient.toLowerCase() === shortHelper.toLowerCase()) {
-        if (squeethAmount.isNegative()) transactionType = TransactionType.BURN_SHORT
-        if (squeethAmount.isPositive()) transactionType = TransactionType.MINT_SHORT
+        if (squfuryAmount.isNegative()) transactionType = TransactionType.BURN_SHORT
+        if (squfuryAmount.isPositive()) transactionType = TransactionType.MINT_SHORT
       }
 
       return {
-        squeethAmount: squeethAmount.abs(),
+        squfuryAmount: squfuryAmount.abs(),
         ethAmount: ethAmount.abs(),
         usdValue,
         timestamp: s.timestamp,
@@ -147,11 +147,11 @@ export const useTransactionHistory = () => {
       c.type === CrabStrategyTxType.FLASH_DEPOSIT
         ? TransactionType.CRAB_FLASH_DEPOSIT
         : TransactionType.CRAB_FLASH_WITHDRAW
-    const { oSqueethAmount: squeethAmount, ethAmount, ethUsdValue: usdValue, timestamp } = c
+    const { oSquFuryAmount: squfuryAmount, ethAmount, ethUsdValue: usdValue, timestamp } = c
 
     return {
       transactionType,
-      squeethAmount: squeethAmount.abs(),
+      squfuryAmount: squfuryAmount.abs(),
       ethAmount: ethAmount.abs(),
       usdValue,
       timestamp,
@@ -162,11 +162,11 @@ export const useTransactionHistory = () => {
   const crabV2Transactions = (crabV2Data || [])?.map((c) => {
     const transactionType = getTransactionType(c)
 
-    const { oSqueethAmount: squeethAmount, ethAmount, ethUsdValue: usdValue, timestamp } = c
+    const { oSquFuryAmount: squfuryAmount, ethAmount, ethUsdValue: usdValue, timestamp } = c
 
     return {
       transactionType,
-      squeethAmount: squeethAmount.abs(),
+      squfuryAmount: squfuryAmount.abs(),
       ethAmount: ethAmount.abs(),
       usdValue,
       timestamp,
@@ -183,7 +183,7 @@ export const useTransactionHistory = () => {
 
     return {
       transactionType,
-      squeethAmount: BIG_ZERO,
+      squfuryAmount: BIG_ZERO,
       ethAmount: ethAmount.abs(),
       usdValue,
       timestamp,

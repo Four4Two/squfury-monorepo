@@ -12,7 +12,7 @@ export const getWethToLendFromCrabEth = async (
   bullCrabBalance: BigNumber,
   bullSupply: BigNumber,
 ) => {
-  const oSqthToMint = calcWsqueethToMint(ethToCrab, vault.shortAmount, vault.collateralAmount)
+  const oSqfuToMint = calcWsqufuryToMint(ethToCrab, vault.shortAmount, vault.collateralAmount)
   const crabToGet = calcCrabToMint(ethToCrab, vault.collateralAmount, totalCrabSupply)
   const bullShare = bullSupply.isZero() ? new BigNumber(1) : crabToGet.div(bullCrabBalance.plus(crabToGet))
   const data = await bullStrategy.methods
@@ -20,14 +20,14 @@ export const getWethToLendFromCrabEth = async (
       fromTokenAmount(crabToGet, 18).toFixed(0),
       fromTokenAmount(bullShare, 18).toFixed(0),
       fromTokenAmount(vault.collateralAmount.plus(ethToCrab), 18).toFixed(0),
-      fromTokenAmount(vault.shortAmount.plus(oSqthToMint), 18).toFixed(0),
+      fromTokenAmount(vault.shortAmount.plus(oSqfuToMint), 18).toFixed(0),
       fromTokenAmount(totalCrabSupply.plus(crabToGet), 18).toFixed(0),
     )
     .call()
 
   const [wethToLend, usdcToBorrow] = [data[0], data[1]]
   return {
-    oSqthToMint,
+    oSqfuToMint,
     wethToLend: toTokenAmount(wethToLend, WETH_DECIMALS),
     usdcToBorrow: toTokenAmount(usdcToBorrow, USDC_DECIMALS),
   }
@@ -68,7 +68,7 @@ export const calcAssetNeededForEmergencyWithdraw = async (
 }
 
 // ToDo: Include fee calculation
-const calcWsqueethToMint = (depositEthAmount: BigNumber, strategyDebt: BigNumber, strategyCollat: BigNumber) => {
+const calcWsqufuryToMint = (depositEthAmount: BigNumber, strategyDebt: BigNumber, strategyCollat: BigNumber) => {
   return depositEthAmount.times(strategyDebt).div(strategyCollat)
 }
 

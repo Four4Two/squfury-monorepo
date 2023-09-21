@@ -7,9 +7,9 @@ import TICKS_QUERY from '../queries/uniswap/ticksQuery'
 import { addressesAtom } from 'src/state/positions/atoms'
 
 const useUniswapTicks = () => {
-  const { squeethPool } = useAtomValue(addressesAtom)
+  const { squfuryPool } = useAtomValue(addressesAtom)
   const { data, loading } = useQuery<ticks, ticksVariables>(TICKS_QUERY, {
-    variables: { poolAddress: squeethPool },
+    variables: { poolAddress: squfuryPool },
   })
 
   const ticks = data?.ticks

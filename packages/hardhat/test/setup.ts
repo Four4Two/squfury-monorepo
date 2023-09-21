@@ -147,10 +147,10 @@ export const getPoolAddress = async (
 } 
 
 /**
- * Deploy controller, squeeth token and vaultNFT
+ * Deploy controller, squfury token and vaultNFT
  * @returns 
  */
- export const deploySqueethCoreContracts= async(weth: Contract, dai: Contract, positionManager: Contract, uniswapFactory: Contract, wsqueethEthPrice?: number, ethDaiPrice?: number ) => {
+ export const deploySquFuryCoreContracts= async(weth: Contract, dai: Contract, positionManager: Contract, uniswapFactory: Contract, wsqufuryEthPrice?: number, ethDaiPrice?: number ) => {
   // const { deployer } = await getNamedAccounts();
 
   const ABDK = await ethers.getContractFactory("ABDKMath64x64")
@@ -168,60 +168,60 @@ export const getPoolAddress = async (
   const oracle = (await OracleContract.deploy()) as Oracle;
 
   const NFTContract = await ethers.getContractFactory("ShortPowerPerp");
-  const shortSqueeth = (await NFTContract.deploy('short Squeeth', 'sSQU')) as ShortPowerPerp;
+  const shortSquFury = (await NFTContract.deploy('short SquFury', 'sSQU')) as ShortPowerPerp;
 
   const WPowerPerpContract = await ethers.getContractFactory("WPowerPerp");
-  const wsqueeth = (await WPowerPerpContract.deploy('Wrapped Squeeth', 'wSQU')) as WPowerPerp;
+  const wsqufury = (await WPowerPerpContract.deploy('Wrapped SquFury', 'wSQU')) as WPowerPerp;
 
-  // 1 squeeth is 3000 eth
-  const squeethPriceInEth = wsqueethEthPrice || 0.3
-  const wsqueethEthPool = await createUniPool(squeethPriceInEth, weth, wsqueeth, positionManager, uniswapFactory) as Contract
+  // 1 squfury is 3000 eth
+  const squfuryPriceInEth = wsqufuryEthPrice || 0.3
+  const wsqufuryEthPool = await createUniPool(squfuryPriceInEth, weth, wsqufury, positionManager, uniswapFactory) as Contract
   // 1 weth is 3000 dai
   const ethPriceInDai = ethDaiPrice || 3000
   const ethDaiPool = await createUniPool(ethPriceInDai, dai, weth, positionManager, uniswapFactory) as Contract
 
-  await wsqueethEthPool.increaseObservationCardinalityNext(500) 
+  await wsqufuryEthPool.increaseObservationCardinalityNext(500) 
   await ethDaiPool.increaseObservationCardinalityNext(500) 
 
   const controller = (await ControllerContract.deploy(oracle.address, 
-    shortSqueeth.address, 
-    wsqueeth.address,
+    shortSquFury.address, 
+    wsqufury.address,
     weth.address, 
     dai.address, 
     ethDaiPool.address, 
-    wsqueethEthPool.address, 
+    wsqufuryEthPool.address, 
     positionManager.address,
     3000,
   )) as Controller;
   
-  await shortSqueeth.init(controller.address);
-  await wsqueeth.init(controller.address);
+  await shortSquFury.init(controller.address);
+  await wsqufury.init(controller.address);
   
-  return { controller, wsqueeth, shortSqueeth, ethDaiPool, wsqueethEthPool, oracle }
+  return { controller, wsqufury, shortSquFury, ethDaiPool, wsqufuryEthPool, oracle }
 }
 
-export const addSqueethLiquidity = async(
-  squeethPriceInETH: number, 
-  initLiquiditySqueethAmount: string, 
+export const addSquFuryLiquidity = async(
+  squfuryPriceInETH: number, 
+  initLiquiditySquFuryAmount: string, 
   collateralAmount: string,
   deployer: string,
-  squeeth: WPowerPerp, 
+  squfury: WPowerPerp, 
   weth: WETH9,
   positionManager: Contract,
   controller: Controller,
   feeTier = 3000
   ) => {
 
-    const isWethToken0 = parseInt(weth.address, 16) < parseInt(squeeth.address, 16)
+    const isWethToken0 = parseInt(weth.address, 16) < parseInt(squfury.address, 16)
 
-    const token0 = isWethToken0 ? weth.address : squeeth.address
-    const token1 = isWethToken0 ? squeeth.address : weth.address
+    const token0 = isWethToken0 ? weth.address : squfury.address
+    const token1 = isWethToken0 ? squfury.address : weth.address
     
-    const liquiditySqueethAmount = ethers.utils.parseEther(initLiquiditySqueethAmount) 
-    const wethAmount = parseFloat(initLiquiditySqueethAmount) * squeethPriceInETH
+    const liquiditySquFuryAmount = ethers.utils.parseEther(initLiquiditySquFuryAmount) 
+    const wethAmount = parseFloat(initLiquiditySquFuryAmount) * squfuryPriceInETH
     const liquidityWethAmount = ethers.utils.parseEther(wethAmount.toString()) 
 
-    let wsqueethBalance = await squeeth.balanceOf(deployer)
+    let wsqufuryBalance = await squfury.balanceOf(deployer)
     let wethBalance = await weth.balanceOf(deployer)
     const is3000Fee = feeTier===3000 
 
@@ -230,16 +230,16 @@ export const addSqueethLiquidity = async(
       wethBalance = await weth.balanceOf(deployer)
     }
   
-    if (wsqueethBalance.lt(liquiditySqueethAmount)) {
-      // use {collateralAmount} eth to mint squeeth
-      await controller.mintWPowerPerpAmount(0, liquiditySqueethAmount.sub(wsqueethBalance), 0, {value: ethers.utils.parseEther(collateralAmount)}) 
-      wsqueethBalance = await squeeth.balanceOf(deployer)
+    if (wsqufuryBalance.lt(liquiditySquFuryAmount)) {
+      // use {collateralAmount} eth to mint squfury
+      await controller.mintWPowerPerpAmount(0, liquiditySquFuryAmount.sub(wsqufuryBalance), 0, {value: ethers.utils.parseEther(collateralAmount)}) 
+      wsqufuryBalance = await squfury.balanceOf(deployer)
     }
 
     await weth.approve(positionManager.address, ethers.constants.MaxUint256)
-    await squeeth.approve(positionManager.address, ethers.constants.MaxUint256)
+    await squfury.approve(positionManager.address, ethers.constants.MaxUint256)
     
-    const liquidityWSqueethAmount = wsqueethBalance
+    const liquidityWSquFuryAmount = wsqufuryBalance
 
     const mintParam = {
       token0,
@@ -247,8 +247,8 @@ export const addSqueethLiquidity = async(
       fee: feeTier,
       tickLower: is3000Fee ? -887220: -887200,// int24 min tick used when selecting full range
       tickUpper: is3000Fee ? 887220: 887200,// int24 max tick used when selecting full range
-      amount0Desired: isWethToken0 ? liquidityWethAmount : liquidityWSqueethAmount,
-      amount1Desired: isWethToken0 ? liquidityWSqueethAmount : liquidityWethAmount,
+      amount0Desired: isWethToken0 ? liquidityWethAmount : liquidityWSquFuryAmount,
+      amount1Desired: isWethToken0 ? liquidityWSquFuryAmount : liquidityWethAmount,
       amount0Min: 1,
       amount1Min: 1,
       recipient: deployer,// address
@@ -331,10 +331,10 @@ function delay(ms: number) {
   return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
-export const buyWSqueeth = async(router: Contract, wsqueeth: Contract, weth: Contract, recipient: string, amountIn: BigNumber, deadline: number) => {
+export const buyWSquFury = async(router: Contract, wsqufury: Contract, weth: Contract, recipient: string, amountIn: BigNumber, deadline: number) => {
   const swapParam = {
     tokenIn: weth.address,
-    tokenOut: wsqueeth.address,
+    tokenOut: wsqufury.address,
     fee: 3000,
     recipient,
     deadline,
@@ -349,9 +349,9 @@ export const buyWSqueeth = async(router: Contract, wsqueeth: Contract, weth: Con
   await router.exactInputSingle(swapParam);
 }
 
-export const buyWeth = async(router: Contract, wsqueeth: Contract, weth: Contract, recipient: string, amountIn: BigNumber, deadline: number) => {
+export const buyWeth = async(router: Contract, wsqufury: Contract, weth: Contract, recipient: string, amountIn: BigNumber, deadline: number) => {
   const swapParam = {
-    tokenIn: wsqueeth.address,
+    tokenIn: wsqufury.address,
     tokenOut: weth.address,
     fee: 3000,
     recipient,
@@ -361,7 +361,7 @@ export const buyWeth = async(router: Contract, wsqueeth: Contract, weth: Contrac
     sqrtPriceLimitX96: 0
   }
   
-  await wsqueeth.approve(router.address, amountIn);
+  await wsqufury.approve(router.address, amountIn);
 
   await router.exactInputSingle(swapParam);
 }

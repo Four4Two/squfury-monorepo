@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client'
-import { userCrabTxes, userCrabTxesVariables } from '../queries/squeeth/__generated__/userCrabTxes'
-import USER_CRAB_TX_QUERY from '../queries/squeeth/userCrabTxQuery'
+import { userCrabTxes, userCrabTxesVariables } from '../queries/squfury/__generated__/userCrabTxes'
+import USER_CRAB_TX_QUERY from '../queries/squfury/userCrabTxQuery'
 import { toTokenAmount } from '@utils/calculations'
-import { WETH_DECIMALS, OSQUEETH_DECIMALS } from '../constants'
-import { squeethClient } from '@utils/apollo-client'
+import { WETH_DECIMALS, OSQUFURY_DECIMALS } from '../constants'
+import { squfuryClient } from '@utils/apollo-client'
 import { CrabStrategyTxType } from '../types/index'
 import { useUsdAmount } from './useUsdAmount'
 import { networkIdAtom } from 'src/state/wallet/atoms'
@@ -25,7 +25,7 @@ export const useUserCrabTxHistory = (user: string, isDescending?: boolean) => {
     USER_CRAB_TX_QUERY,
     {
       fetchPolicy: 'cache-and-network',
-      client: squeethClient[networkId],
+      client: squfuryClient[networkId],
       variables: {
         ownerId: user ?? '',
         orderDirection: isDescending ? 'desc' : 'asc',
@@ -37,13 +37,13 @@ export const useUserCrabTxHistory = (user: string, isDescending?: boolean) => {
     const ethAmount = toTokenAmount(tx.ethAmount, WETH_DECIMALS)
     const ethUsdValue = getUsdAmt(ethAmount, tx.timestamp)
     const lpAmount = toTokenAmount(tx.lpAmount, WETH_DECIMALS)
-    const oSqueethAmount = toTokenAmount(tx.wSqueethAmount, OSQUEETH_DECIMALS)
+    const oSquFuryAmount = toTokenAmount(tx.wSquFuryAmount, OSQUFURY_DECIMALS)
 
     return {
       ...tx,
       ethAmount,
       lpAmount,
-      oSqueethAmount,
+      oSquFuryAmount,
       ethUsdValue,
       txTitle: getTxTitle(tx.type),
     }

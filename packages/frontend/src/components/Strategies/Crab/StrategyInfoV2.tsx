@@ -114,7 +114,7 @@ export const StrategyInfo: React.FC = () => {
         {(profitableMovePercent * 100).toFixed(2)}% in either direction before the next hedge. The implied premium which
         you deposit at impacts your profitability. Depositing at a high premium increases likelihood of profitability.
         <br /> <br />
-        If the Squeeth premium to ETH increases, the strategy will incur a loss because it will be more expensive to
+        If the SquFury premium to ETH increases, the strategy will incur a loss because it will be more expensive to
         close the position. Crab aims to be profitable in USD terms.
         <a
           className={classes.link}

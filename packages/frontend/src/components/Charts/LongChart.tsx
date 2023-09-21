@@ -18,8 +18,8 @@ import React, { memo } from 'react'
 import ComparisonChart from '../../../public/images/ComparisonChart.svg'
 import { graphOptions } from '../../constants/diagram'
 import { Links, Tooltips } from '../../constants/enums'
-import { SqueethTab, SqueethTabs } from '../Tabs'
-import LongSqueethPayoff from './LongSqueethPayoff'
+import { SquFuryTab, SquFuryTabs } from '../Tabs'
+import LongSquFuryPayoff from './LongSquFuryPayoff'
 import FundingChart from './FundingChart'
 import { useETHPrice } from '@hooks/useETHPrice'
 import { daysAtom, useLongChartData } from 'src/state/ethPriceCharts/atoms'
@@ -131,15 +131,15 @@ function LongChart() {
   const longEthPNL = query.data?.longEthPNL
   const longSeries = query.data?.longSeries
   const positionSizeSeries = query.data?.positionSizeSeries
-  const squeethIsLive = query.data?.squeethIsLive
+  const squfuryIsLive = query.data?.squfuryIsLive
 
   // plot line data
   const lineSeries = useAppMemo(() => {
-    if (!longEthPNL || !longSeries || longSeries.length === 0 || !positionSizeSeries || !squeethIsLive) return
+    if (!longEthPNL || !longSeries || longSeries.length === 0 || !positionSizeSeries || !squfuryIsLive) return
 
     const liveIndex = Math.max(
       0,
-      squeethIsLive.findIndex((val: boolean) => val),
+      squfuryIsLive.findIndex((val: boolean) => val),
     ) // return 0 when there is no live data
 
     if (mode === ChartType.PNL)
@@ -147,16 +147,16 @@ function LongChart() {
         { data: longEthPNL, legend: 'Long ETH PNL (%)' },
         {
           data: longSeries.slice(0, liveIndex),
-          legend: `Long Squeeth PNL (%) Simulated incl. premiums`,
+          legend: `Long SquFury PNL (%) Simulated incl. premiums`,
         },
         {
           data: longSeries.slice(liveIndex),
-          legend: `Long Squeeth PNL (%) (incl. premiums)`,
+          legend: `Long SquFury PNL (%) (incl. premiums)`,
         },
       ]
     if (mode === ChartType.PositionSize) return [{ data: positionSizeSeries, legend: 'Position Size' }]
     return []
-  }, [longEthPNL, longSeries, mode, positionSizeSeries, squeethIsLive])
+  }, [longEthPNL, longSeries, mode, positionSizeSeries, squfuryIsLive])
 
   const chartOptions = useAppMemo(() => {
     // if (mode === ChartType.Funding || mode === ChartType.PositionSize)
@@ -192,7 +192,7 @@ function LongChart() {
       {/* show button tabs and enable price chart only during research mode */}
       {/* {researchMode && ( */}
       <div className={classes.navDiv}>
-        <SqueethTabs
+        <SquFuryTabs
           style={{ background: 'transparent' }}
           className={classes.chartNav}
           value={tradeType}
@@ -201,15 +201,15 @@ function LongChart() {
           scrollButtons="auto"
           variant="scrollable"
         >
-          <SqueethTab label={`Historical ${days}D PNL`} />
-          {/* <SqueethTab label="Price" /> */}
-          {/* <SqueethTab label="Funding" /> */}
-          <SqueethTab label="Payoff" />
-          {/* <SqueethTab label="Comparison" /> */}
-          {/* <SqueethTab label="Details" /> */}
-          <SqueethTab label="Premium" />
-          <SqueethTab label="Risks" />
-        </SqueethTabs>
+          <SquFuryTab label={`Historical ${days}D PNL`} />
+          {/* <SquFuryTab label="Price" /> */}
+          {/* <SquFuryTab label="Funding" /> */}
+          <SquFuryTab label="Payoff" />
+          {/* <SquFuryTab label="Comparison" /> */}
+          {/* <SquFuryTab label="Details" /> */}
+          <SquFuryTab label="Premium" />
+          <SquFuryTab label="Risks" />
+        </SquFuryTabs>
         {/* <Hidden smDown> */}
         {mode === ChartType.PNL ? (
           <TextField
@@ -239,7 +239,7 @@ function LongChart() {
 
       {mode === ChartType.Payoff ? (
         <div className={classes.payoffContainer}>
-          <LongSqueethPayoff ethPrice={ethPrice.toNumber()} />
+          <LongSquFuryPayoff ethPrice={ethPrice.toNumber()} />
           <Hidden smDown>
             <Image src={ComparisonChart} alt="Comparison Chart" height={340} width={600} />
           </Hidden>
@@ -247,16 +247,16 @@ function LongChart() {
       ) : mode === ChartType.Details ? (
         <div style={{ overflow: 'auto', maxHeight: '370px' }}>
           <Typography className={classes.cardTitle} variant="h6">
-            What is squeeth?
+            What is squfury?
           </Typography>
           <Typography variant="body2" className={classes.cardDetail}>
-            Long squeeth (ETH&sup2;) gives you a leveraged position with unlimited upside, protected downside, and no
+            Long squfury (ETH&sup2;) gives you a leveraged position with unlimited upside, protected downside, and no
             liquidations. Compared to a 2x leveraged position, you make more when ETH goes up and lose less when ETH
-            goes down (excluding premiums). Eg. If ETH goes up 5x, squeeth goes up 25x. You pay a premium for this
+            goes down (excluding premiums). Eg. If ETH goes up 5x, squfury goes up 25x. You pay a premium for this
             position. Enter the position by purchasing an ERC20 token.{' '}
             <a
               className={classes.header}
-              href="https://opyn.gitbook.io/squeeth-faq/squeeth/beginner-squeeth-faq"
+              href="https://opyn.gitbook.io/squfury-faq/squfury/beginner-squfury-faq"
               target="_blank"
               rel="noreferrer"
             >
@@ -268,11 +268,11 @@ function LongChart() {
             Risks
           </Typography>
           <Typography variant="body2" className={classes.cardDetail}>
-            Funding is paid out of your position, meaning you sell a small amount of squeeth at funding, reducing your
+            Funding is paid out of your position, meaning you sell a small amount of squfury at funding, reducing your
             position size. Holding the position for a long period of time without upward movements in ETH can lose
             considerable funds to funding payments.
             <br /> <br />
-            Squeeth smart contracts are currently unaudited. This is experimental technology and we encourage caution
+            SquFury smart contracts are currently unaudited. This is experimental technology and we encourage caution
             only risking funds you can afford to lose.
             <br /> <br />
             If ETH goes down considerably, you may lose some or all of your initial investment.
@@ -284,20 +284,20 @@ function LongChart() {
             Risks
           </Typography>
           <Typography variant="body2" className={classes.cardDetail}>
-            Premiums are paid out of your position, similar to selling a small amount of squeeth as you earn premiums,
+            Premiums are paid out of your position, similar to selling a small amount of squfury as you earn premiums,
             reducing your position size. Holding the position for a long period of time without upward movements in ETH
             can lose considerable funds to premium payments.
             <br /> <br />
-            Squeeth smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts
+            SquFury smart contracts have been audited by Trail of Bits, Akira, and Sherlock. However, smart contracts
             are experimental technology and we encourage caution only risking funds you can afford to lose.
             <br /> <br />
             Profitability also depends on the price you enter and exit, which is dependent on implied volatility (the
-            premium of squeeth to ETH). If the squeeth premium to ETH decreases, without a change in ETH price, a long
+            premium of squfury to ETH). If the squfury premium to ETH decreases, without a change in ETH price, a long
             position will incur a loss because it is not worth as much ETH. If ETH goes down considerably, you may lose
             some or all of your initial investment.
             <a
               className={classes.header}
-              href="https://opyn.gitbook.io/squeeth-faq/squeeth/risks"
+              href="https://opyn.gitbook.io/squfury-faq/squfury/risks"
               target="_blank"
               rel="noreferrer"
             >
@@ -337,26 +337,26 @@ function LongChart() {
               {lineSeries && lineSeries[1].data.length > 0 && (
                 <LegendBox
                   bgColor="#00E396"
-                  text="Squeeth Simulated PnL"
-                  tooltip="The Squeeth Simulated PnL comes from using at the money implied vol from Deribit"
+                  text="SquFury Simulated PnL"
+                  tooltip="The SquFury Simulated PnL comes from using at the money implied vol from Deribit"
                 />
               )}
-              {lineSeries && lineSeries[2].data.length > 0 && <LegendBox bgColor="#FEB01B" text="Squeeth LIVE PNL" />}
+              {lineSeries && lineSeries[2].data.length > 0 && <LegendBox bgColor="#FEB01B" text="SquFury LIVE PNL" />}
             </div>
           </div>
 
           <div className={classes.intro}>
             <Typography className={classes.cardTitle} variant="h6">
-              What is squeeth?
+              What is squfury?
             </Typography>
             <Typography variant="body2" className={classes.cardDetail} style={{ fontSize: '14px' }}>
-              Long squeeth (ETH&sup2;) gives you a leveraged position with unlimited upside, protected downside, and no
+              Long squfury (ETH&sup2;) gives you a leveraged position with unlimited upside, protected downside, and no
               liquidations. Compared to a 2x leveraged position, you make more when ETH goes up and lose less when ETH
-              goes down (excluding premiums). Eg. If ETH goes up 5x, squeeth goes up 25x. You pay premiums for this
+              goes down (excluding premiums). Eg. If ETH goes up 5x, squfury goes up 25x. You pay premiums for this
               position. Enter the position by purchasing an ERC20 token.{' '}
               <a
                 className={classes.header}
-                href="https://opyn.gitbook.io/squeeth-faq/squeeth/beginner-squeeth-faq"
+                href="https://opyn.gitbook.io/squfury-faq/squfury/beginner-squfury-faq"
                 target="_blank"
                 rel="noreferrer"
               >

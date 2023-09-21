@@ -1,4 +1,4 @@
-import { BIG_ZERO, BULL_START_DATE, OSQUEETH_DECIMALS, USDC_DECIMALS } from '@constants/index'
+import { BIG_ZERO, BULL_START_DATE, OSQUFURY_DECIMALS, USDC_DECIMALS } from '@constants/index'
 import { indexAtom, currentImpliedFundingAtom } from '@state/controller/atoms'
 import { crabUSDValueAtom } from '@state/crab/atoms'
 import { toTokenAmount } from '@utils/calculations'
@@ -40,7 +40,7 @@ export const eulerETHLendRateAtom = atom(new BigNumber(0.1))
 export const bullEulerUSDCDebtAtom = atom(BIG_ZERO)
 
 export const bullCurrentFundingAtom = atom((get) => {
-  const ethPrice = toTokenAmount(get(indexAtom), OSQUEETH_DECIMALS).sqrt()
+  const ethPrice = toTokenAmount(get(indexAtom), OSQUFURY_DECIMALS).sqrt()
   const usdRate = get(eulerUsdcBorrowRateAtom)
   const ethRate = get(eulerETHLendRateAtom)
   const usdDebt = get(bullEulerUSDCDebtAtom)
@@ -52,9 +52,9 @@ export const bullCurrentFundingAtom = atom((get) => {
   const ethInterest = ethCollatInUsd.times(Math.exp(ethRate.div(365 / 2).toNumber())).minus(ethCollatInUsd)
   const totalRate = ethInterest.minus(usdInterest)
   const interestFunding = totalRate.div(dollarValueOfCrabInBull).div(2) // Divided by 2 because we are calculating for 2 days
-  const squeethFunding = get(currentImpliedFundingAtom)
+  const squfuryFunding = get(currentImpliedFundingAtom)
 
-  return interestFunding.plus(squeethFunding).toNumber()
+  return interestFunding.plus(squfuryFunding).toNumber()
 })
 
 export const bullThresholdAtom = atom((get) => {

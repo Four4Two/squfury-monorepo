@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_wSqueethController",
+        "name": "_wSquFuryController",
         "type": "address"
       },
       {
@@ -23,7 +23,7 @@
       },
       {
         "internalType": "address",
-        "name": "_ethWSqueethPool",
+        "name": "_ethWSquFuryPool",
         "type": "address"
       },
       {
@@ -92,7 +92,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wSqueethAmount",
+        "name": "wSquFuryAmount",
         "type": "uint256"
       },
       {
@@ -117,7 +117,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wSqueethBought",
+        "name": "wSquFuryBought",
         "type": "uint256"
       },
       {
@@ -148,7 +148,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wSqueethSold",
+        "name": "wSquFurySold",
         "type": "uint256"
       },
       {
@@ -210,7 +210,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wSqueethAmount",
+        "name": "wSquFuryAmount",
         "type": "uint256"
       }
     ],
@@ -247,7 +247,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wSqueethHedgeTargetAmount",
+        "name": "wSquFuryHedgeTargetAmount",
         "type": "uint256"
       },
       {
@@ -284,7 +284,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wSqueethHedgeTargetAmount",
+        "name": "wSquFuryHedgeTargetAmount",
         "type": "uint256"
       },
       {
@@ -371,7 +371,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "minWSqueeth",
+        "name": "minWSquFury",
         "type": "uint256"
       },
       {
@@ -458,7 +458,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "minWSqueeth",
+        "name": "minWSquFury",
         "type": "uint256"
       },
       {
@@ -514,7 +514,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "wSqueethAmount",
+        "name": "wSquFuryAmount",
         "type": "uint256"
       },
       {
@@ -766,7 +766,7 @@
   },
   {
     "inputs": [],
-    "name": "ethWSqueethPool",
+    "name": "ethWSquFuryPool",
     "outputs": [
       {
         "internalType": "address",
@@ -870,7 +870,7 @@
         "type": "uint256"
       }
     ],
-    "name": "getWsqueethFromCrabAmount",
+    "name": "getWsqufuryFromCrabAmount",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1031,7 +1031,7 @@
       },
       {
         "internalType": "bool",
-        "name": "_isStrategySellingWSqueeth",
+        "name": "_isStrategySellingWSquFury",
         "type": "bool"
       },
       {
@@ -1054,7 +1054,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_minWSqueeth",
+        "name": "_minWSquFury",
         "type": "uint256"
       },
       {
@@ -1144,7 +1144,7 @@
     "inputs": [
       {
         "internalType": "bool",
-        "name": "_isStrategySellingWSqueeth",
+        "name": "_isStrategySellingWSquFury",
         "type": "bool"
       },
       {
@@ -1162,7 +1162,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_minWSqueeth",
+        "name": "_minWSquFury",
         "type": "uint256"
       },
       {

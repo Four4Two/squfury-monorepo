@@ -1,5 +1,5 @@
 # NettingLib
-[Git Source](https://github.com/opynfinance/squeeth-monorepo/blob/334783aa87db73939fb00d5b133216b0033dfece/src/NettingLib.sol)
+[Git Source](https://github.com/opynfinance/squfury-monorepo/blob/334783aa87db73939fb00d5b133216b0033dfece/src/NettingLib.sol)
 
 
 ## Functions
@@ -7,7 +7,7 @@
 
 transfer WETH from market maker to netting contract
 
-*this is executed during the deposit auction, MM buying OSQTH for WETH*
+*this is executed during the deposit auction, MM buying OSQFU for WETH*
 
 
 ```solidity
@@ -15,7 +15,7 @@ function transferWethFromMarketMakers(
     address _weth,
     address _trader,
     uint256 _quantity,
-    uint256 _oSqthToMint,
+    uint256 _oSqfuToMint,
     uint256 _clearingPrice
 ) external returns (bool, uint256);
 ```
@@ -25,24 +25,24 @@ function transferWethFromMarketMakers(
 |----|----|-----------|
 |`_weth`|`address`|WETH address|
 |`_trader`|`address`|market maker address|
-|`_quantity`|`uint256`|oSQTH quantity|
-|`_oSqthToMint`|`uint256`|remaining amount of the total oSqthToMint|
+|`_quantity`|`uint256`|oSQFU quantity|
+|`_oSqfuToMint`|`uint256`|remaining amount of the total oSqfuToMint|
 |`_clearingPrice`|`uint256`|auction clearing price|
 
 
-### transferOsqthToMarketMakers
+### transferOsqfuToMarketMakers
 
-transfer oSQTH to market maker
+transfer oSQFU to market maker
 
-*this is executed during the deposit auction, MM buying OSQTH for WETH*
+*this is executed during the deposit auction, MM buying OSQFU for WETH*
 
 
 ```solidity
-function transferOsqthToMarketMakers(
-    address _oSqth,
+function transferOsqfuToMarketMakers(
+    address _oSqfu,
     address _trader,
     uint256 _bidId,
-    uint256 _oSqthBalance,
+    uint256 _oSqfuBalance,
     uint256 _quantity
 ) external returns (bool, uint256);
 ```
@@ -50,25 +50,25 @@ function transferOsqthToMarketMakers(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_oSqth`|`address`|oSQTH address|
+|`_oSqfu`|`address`|oSQFU address|
 |`_trader`|`address`|market maker address|
 |`_bidId`|`uint256`|MM's bid ID|
-|`_oSqthBalance`|`uint256`|remaining netting contracts's oSQTH balance|
-|`_quantity`|`uint256`|oSQTH quantity in market maker order|
+|`_oSqfuBalance`|`uint256`|remaining netting contracts's oSQFU balance|
+|`_quantity`|`uint256`|oSQFU quantity in market maker order|
 
 
-### transferOsqthFromMarketMakers
+### transferOsqfuFromMarketMakers
 
-transfer oSQTH from market maker
+transfer oSQFU from market maker
 
-*this is executed during the withdraw auction, MM selling OSQTH for WETH*
+*this is executed during the withdraw auction, MM selling OSQFU for WETH*
 
 
 ```solidity
-function transferOsqthFromMarketMakers(
-    address _oSqth,
+function transferOsqfuFromMarketMakers(
+    address _oSqfu,
     address _trader,
-    uint256 _remainingOsqthToPull,
+    uint256 _remainingOsqfuToPull,
     uint256 _quantity
 ) internal returns (uint256);
 ```
@@ -76,17 +76,17 @@ function transferOsqthFromMarketMakers(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_oSqth`|`address`|oSQTH address|
+|`_oSqfu`|`address`|oSQFU address|
 |`_trader`|`address`|market maker address|
-|`_remainingOsqthToPull`|`uint256`|remaining amount of oSQTH from the total oSQTH amount to transfer from order array|
-|`_quantity`|`uint256`|oSQTH quantity in market maker order|
+|`_remainingOsqfuToPull`|`uint256`|remaining amount of oSQFU from the total oSQFU amount to transfer from order array|
+|`_quantity`|`uint256`|oSQFU quantity in market maker order|
 
 
 ### transferWethToMarketMaker
 
 transfer WETH to market maker
 
-*this is executed during the withdraw auction, MM selling OSQTH for WETH*
+*this is executed during the withdraw auction, MM selling OSQFU for WETH*
 
 
 ```solidity
@@ -94,7 +94,7 @@ function transferWethToMarketMaker(
     address _weth,
     address _trader,
     uint256 _bidId,
-    uint256 _remainingOsqthToPull,
+    uint256 _remainingOsqfuToPull,
     uint256 _quantity,
     uint256 _clearingPrice
 ) external returns (uint256);
@@ -106,8 +106,8 @@ function transferWethToMarketMaker(
 |`_weth`|`address`|WETH address|
 |`_trader`|`address`|market maker address|
 |`_bidId`|`uint256`|market maker bid ID|
-|`_remainingOsqthToPull`|`uint256`|total oSQTH to get from orders array|
-|`_quantity`|`uint256`|market maker's oSQTH order quantity|
+|`_remainingOsqfuToPull`|`uint256`|total oSQFU to get from orders array|
+|`_quantity`|`uint256`|market maker's oSQFU order quantity|
 |`_clearingPrice`|`uint256`|auction clearing price|
 
 
@@ -121,8 +121,8 @@ function getCrabPrice(
     address _oracle,
     address _crab,
     address _ethUsdcPool,
-    address _ethSqueethPool,
-    address _oSqth,
+    address _ethSquFuryPool,
+    address _oSqfu,
     address _usdc,
     address _weth,
     address _zenBull,
@@ -136,8 +136,8 @@ function getCrabPrice(
 |`_oracle`|`address`|oracle address|
 |`_crab`|`address`|crab token address|
 |`_ethUsdcPool`|`address`|ETH/USDC Uni v3 pool address|
-|`_ethSqueethPool`|`address`|ETH/oSQTH Uni v3 pool address|
-|`_oSqth`|`address`|oSQTH address|
+|`_ethSquFuryPool`|`address`|ETH/oSQFU Uni v3 pool address|
+|`_oSqfu`|`address`|oSQFU address|
 |`_usdc`|`address`|USDC address|
 |`_weth`|`address`|WETH address|
 |`_zenBull`|`address`|ZenBull strategy address|
@@ -171,13 +171,13 @@ function getZenBullPrice(
 |`_ethUsdcPrice`|`uint256`|ETH/USDC price|
 
 
-### calcOsqthToMintAndEthIntoCrab
+### calcOsqfuToMintAndEthIntoCrab
 
-calculate oSQTH to mint and amount of eth to deposit into Crab v2 based on amount of crab token
+calculate oSQFU to mint and amount of eth to deposit into Crab v2 based on amount of crab token
 
 
 ```solidity
-function calcOsqthToMintAndEthIntoCrab(address _crab, address _zenBull, uint256 _crabAmount)
+function calcOsqfuToMintAndEthIntoCrab(address _crab, address _zenBull, uint256 _crabAmount)
     external
     view
     returns (uint256, uint256);
@@ -216,13 +216,13 @@ function calcWethToLendAndUsdcToBorrow(
 |`_crabAmount`|`uint256`|amount of crab token|
 
 
-### calcOsqthAmount
+### calcOsqfuAmount
 
-calculate amount of oSQTH to get based on amount of ZenBull to Withdraw
+calculate amount of oSQFU to get based on amount of ZenBull to Withdraw
 
 
 ```solidity
-function calcOsqthAmount(address _zenBull, address _crab, uint256 _withdrawsToProcess)
+function calcOsqfuAmount(address _zenBull, address _crab, uint256 _withdrawsToProcess)
     external
     view
     returns (uint256);
@@ -255,22 +255,22 @@ function div(uint256 _x, uint256 _y) internal pure returns (uint256);
 
 ```solidity
 event TransferWethFromMarketMakers(
-    address indexed trader, uint256 quantity, uint256 wethAmount, uint256 remainingOsqthBalance, uint256 clearingPrice
+    address indexed trader, uint256 quantity, uint256 wethAmount, uint256 remainingOsqfuBalance, uint256 clearingPrice
 );
 ```
 
-### TransferOsqthToMarketMakers
+### TransferOsqfuToMarketMakers
 
 ```solidity
-event TransferOsqthToMarketMakers(
-    address indexed trader, uint256 bidId, uint256 quantity, uint256 remainingOsqthBalance
+event TransferOsqfuToMarketMakers(
+    address indexed trader, uint256 bidId, uint256 quantity, uint256 remainingOsqfuBalance
 );
 ```
 
-### TransferOsqthFromMarketMakers
+### TransferOsqfuFromMarketMakers
 
 ```solidity
-event TransferOsqthFromMarketMakers(address indexed trader, uint256 quantity, uint256 oSqthRemaining);
+event TransferOsqfuFromMarketMakers(address indexed trader, uint256 quantity, uint256 oSqfuRemaining);
 ```
 
 ### TransferWethToMarketMaker
@@ -281,7 +281,7 @@ event TransferWethToMarketMaker(
     uint256 bidId,
     uint256 quantity,
     uint256 wethAmount,
-    uint256 oSqthRemaining,
+    uint256 oSqfuRemaining,
     uint256 clearingPrice
 );
 ```

@@ -11,7 +11,7 @@ import { Quoter } from "v3-periphery/lens/Quoter.sol";
 import { EmergencyWithdraw } from "../../src/EmergencyWithdraw.sol";
 import { ZenBullStrategy } from "../../src/ZenBullStrategy.sol";
 import { TestUtil } from "../util/TestUtil.t.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol";
 
 contract EmergencyWithdrawScenarios is Test {
     using StrategyMath for uint256;
@@ -23,7 +23,7 @@ contract EmergencyWithdrawScenarios is Test {
     address payable public constant CRAB = 0x3B960E47784150F5a63777201ee2B15253D713e8;
     address public constant UNI_FACTORY = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
     address public constant WPOWERPERP = 0xf1B99e3E573A1a9C5E6B2Ce818b617F0E664E86B;
-    address public constant ETH_SQUEETH_POOL = 0x82c427AdFDf2d245Ec51D8046b41c4ee87F0d29C;
+    address public constant ETH_SQUFURY_POOL = 0x82c427AdFDf2d245Ec51D8046b41c4ee87F0d29C;
     address public constant QUOTER = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
     address public constant ZEN_BULL_OWNER = 0xAfE66363c27EedB597a140c28B70b32F113fd5a8;
     address public constant E_TOKEN = 0x1b808F49ADD4b8C6b5117d9681cF7312Fcf0dC1D;
@@ -76,7 +76,7 @@ contract EmergencyWithdrawScenarios is Test {
     function testEmergencyWithdrawEthFromCrabWhenEulerIsNotWorking() public {
         uint256 bullToRedeem = IERC20(ZEN_BULL).balanceOf(user1);
         (uint256 wPowerPerpToRedeem,) = _calcWPowerPerpAndCrabNeededForWithdraw(bullToRedeem);
-        // transfer some oSQTH from some squeether
+        // transfer some oSQFU from some squfuryer
         vm.prank(0x493dd8a5654549726ABA0a4D8882DA5Cd43EaF25);
         IERC20(WPOWERPERP).transfer(user1, 1000e18);
 
@@ -104,7 +104,7 @@ contract EmergencyWithdrawScenarios is Test {
             (uint256 ethInCrab,) = ZenBullStrategy(ZEN_BULL).getCrabVaultDetails();
             uint256 ethToWithdrawFromCrab =
                 crabToRedeem.wdiv(IERC20(CRAB).totalSupply()).wmul(ethInCrab);
-            // transfer some oSQTH from some squeether
+            // transfer some oSQFU from some squfuryer
             vm.prank(0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9);
             IERC20(WPOWERPERP).transfer(user2, wPowerPerpToRedeem);
 
@@ -134,7 +134,7 @@ contract EmergencyWithdrawScenarios is Test {
                 emergencyWithdraw.redeemedZenBullAmountForCrabWithdrawal();
             uint256 user1BullBalanceBefore = IERC20(ZEN_BULL).balanceOf(user1);
 
-            uint256 maxWethForOsqth;
+            uint256 maxWethForOsqfu;
             {
                 uint256 bullShare = user1BullBalanceBefore.wdiv(
                     IERC20(ZEN_BULL).totalSupply().sub(emergencyRedeemedBull)
@@ -145,14 +145,14 @@ contract EmergencyWithdrawScenarios is Test {
                 uint256 wPowerPerpToRedeem =
                     crabToRedeem.wmul(wPowerPerpInCrab).wdiv(IERC20(CRAB).totalSupply());
 
-                maxWethForOsqth = Quoter(QUOTER).quoteExactOutputSingle(
+                maxWethForOsqfu = Quoter(QUOTER).quoteExactOutputSingle(
                     WETH, WPOWERPERP, 3000, wPowerPerpToRedeem, 0
                 );
             }
 
             vm.startPrank(user1);
             IERC20(ZEN_BULL).approve(address(emergencyWithdraw), type(uint256).max);
-            emergencyWithdraw.emergencyWithdrawEthFromCrab(user1BullBalanceBefore, maxWethForOsqth);
+            emergencyWithdraw.emergencyWithdrawEthFromCrab(user1BullBalanceBefore, maxWethForOsqfu);
             vm.stopPrank();
 
             // user3 emergency withdraw
@@ -169,14 +169,14 @@ contract EmergencyWithdrawScenarios is Test {
                 uint256 wPowerPerpToRedeem =
                     crabToRedeem.wmul(wPowerPerpInCrab).wdiv(IERC20(CRAB).totalSupply());
 
-                maxWethForOsqth = Quoter(QUOTER).quoteExactOutputSingle(
+                maxWethForOsqfu = Quoter(QUOTER).quoteExactOutputSingle(
                     WETH, WPOWERPERP, 3000, wPowerPerpToRedeem, 0
                 );
             }
 
             vm.startPrank(user3);
             IERC20(ZEN_BULL).approve(address(emergencyWithdraw), type(uint256).max);
-            emergencyWithdraw.emergencyWithdrawEthFromCrab(user3BullBalanceBefore, maxWethForOsqth);
+            emergencyWithdraw.emergencyWithdrawEthFromCrab(user3BullBalanceBefore, maxWethForOsqfu);
             vm.stopPrank();
         }
 
@@ -191,7 +191,7 @@ contract EmergencyWithdrawScenarios is Test {
             (uint256 ethInCrab,) = ZenBullStrategy(ZEN_BULL).getCrabVaultDetails();
             uint256 ethToWithdrawFromCrab =
                 crabToRedeem.wdiv(IERC20(CRAB).totalSupply()).wmul(ethInCrab);
-            // transfer some oSQTH from some squeether
+            // transfer some oSQFU from some squfuryer
             vm.prank(0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9);
             IERC20(WPOWERPERP).transfer(user2, wPowerPerpToRedeem);
 
@@ -228,7 +228,7 @@ contract EmergencyWithdrawScenarios is Test {
                 emergencyWithdraw.redeemedZenBullAmountForCrabWithdrawal();
             uint256 user1BullBalanceBefore = IERC20(ZEN_BULL).balanceOf(user1);
 
-            uint256 maxWethForOsqth;
+            uint256 maxWethForOsqfu;
             {
                 uint256 bullShare = user1BullBalanceBefore.wdiv(
                     IERC20(ZEN_BULL).totalSupply().sub(emergencyRedeemedBull)
@@ -239,14 +239,14 @@ contract EmergencyWithdrawScenarios is Test {
                 uint256 wPowerPerpToRedeem =
                     crabToRedeem.wmul(wPowerPerpInCrab).wdiv(IERC20(CRAB).totalSupply());
 
-                maxWethForOsqth = Quoter(QUOTER).quoteExactOutputSingle(
+                maxWethForOsqfu = Quoter(QUOTER).quoteExactOutputSingle(
                     WETH, WPOWERPERP, 3000, wPowerPerpToRedeem, 0
                 );
             }
 
             vm.startPrank(user1);
             IERC20(ZEN_BULL).approve(address(emergencyWithdraw), type(uint256).max);
-            emergencyWithdraw.emergencyWithdrawEthFromCrab(user1BullBalanceBefore, maxWethForOsqth);
+            emergencyWithdraw.emergencyWithdrawEthFromCrab(user1BullBalanceBefore, maxWethForOsqfu);
             vm.stopPrank();
         }
 
@@ -261,7 +261,7 @@ contract EmergencyWithdrawScenarios is Test {
             (uint256 ethInCrab,) = ZenBullStrategy(ZEN_BULL).getCrabVaultDetails();
             uint256 ethToWithdrawFromCrab =
                 crabToRedeem.wdiv(IERC20(CRAB).totalSupply()).wmul(ethInCrab);
-            // transfer some oSQTH from some squeether
+            // transfer some oSQFU from some squfuryer
             vm.prank(0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9);
             IERC20(WPOWERPERP).transfer(user2, wPowerPerpToRedeem);
 
@@ -317,7 +317,7 @@ contract EmergencyWithdrawScenarios is Test {
 
     function _emergencyWithdrawEthFromCrab(address _user, uint256 _zenBullAmount) internal {
         uint256 emergencyRedeemedBull = emergencyWithdraw.redeemedZenBullAmountForCrabWithdrawal();
-        uint256 maxWethForOsqth;
+        uint256 maxWethForOsqfu;
         uint256 ethToWithdrawFromCrab;
         {
             uint256 bullShare =
@@ -328,14 +328,14 @@ contract EmergencyWithdrawScenarios is Test {
             uint256 wPowerPerpToRedeem =
                 crabToRedeem.wmul(wPowerPerpInCrab).wdiv(IERC20(CRAB).totalSupply());
 
-            maxWethForOsqth =
+            maxWethForOsqfu =
                 Quoter(QUOTER).quoteExactOutputSingle(WETH, WPOWERPERP, 3000, wPowerPerpToRedeem, 0);
             ethToWithdrawFromCrab = crabToRedeem.wdiv(IERC20(CRAB).totalSupply()).wmul(ethInCrab);
         }
 
         vm.startPrank(_user);
         IERC20(ZEN_BULL).approve(address(emergencyWithdraw), type(uint256).max);
-        emergencyWithdraw.emergencyWithdrawEthFromCrab(_zenBullAmount, maxWethForOsqth);
+        emergencyWithdraw.emergencyWithdrawEthFromCrab(_zenBullAmount, maxWethForOsqfu);
         vm.stopPrank();
     }
 
@@ -347,8 +347,8 @@ contract EmergencyWithdrawScenarios is Test {
         uint256 share = _bullAmount.wdiv(ZenBullStrategy(ZEN_BULL).totalSupply());
         uint256 crabToRedeem = share.wmul(ZenBullStrategy(ZEN_BULL).getCrabBalance());
         uint256 crabTotalSupply = IERC20(CRAB).totalSupply();
-        (, uint256 squeethInCrab) = testUtil.getCrabVaultDetails();
-        return (crabToRedeem.wmul(squeethInCrab).wdiv(crabTotalSupply), crabToRedeem);
+        (, uint256 squfuryInCrab) = testUtil.getCrabVaultDetails();
+        return (crabToRedeem.wmul(squfuryInCrab).wdiv(crabTotalSupply), crabToRedeem);
     }
 
     function _calcUsdcNeededForWithdraw(uint256 _bullAmount) internal view returns (uint256) {

@@ -60,7 +60,7 @@ const ConfirmGraphic: React.FC<{ type?: ConfirmType }> = ({ type }) => {
       <div className={classes.graphic}>
         <Image
           src="https://media.giphy.com/media/ukLCGEh7kXDJ5wNWT7/giphy.gif"
-          alt="squeeth crab cat"
+          alt="squfury crab cat"
           width={120}
           height={120}
           className={classes.img}
@@ -75,13 +75,13 @@ const ConfirmGraphic: React.FC<{ type?: ConfirmType }> = ({ type }) => {
       <div className={classes.graphic}>
         <Image
           src="https://media.giphy.com/media/eYU60NpFPCONDEItBa/giphy.gif"
-          alt="squeeth cat"
+          alt="squfury cat"
           width={120}
           height={120}
           className={classes.img}
         />
         <Typography variant="body1" component="div">
-          Stay Squeethy!
+          Stay SquFuryy!
         </Typography>
       </div>
     )
@@ -91,7 +91,7 @@ const ConfirmGraphic: React.FC<{ type?: ConfirmType }> = ({ type }) => {
       <div className={classes.graphic}>
         <Image
           src="https://media.giphy.com/media/j2VvomNXigtS1MfeT8/giphy.gif"
-          alt="squeeth bull cat"
+          alt="squfury bull cat"
           width={120}
           height={120}
           className={classes.img}

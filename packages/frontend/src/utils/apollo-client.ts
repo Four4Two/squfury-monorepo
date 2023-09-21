@@ -16,12 +16,12 @@ const httpLinkGL = new HttpLink({
   uri: 'https://api.thegraph.com/subgraphs/name/kmkoushik/uniswap-v3-goerli',
 })
 
-const httpLinkRPSqueeth = new HttpLink({
-  uri: 'https://api.thegraph.com/subgraphs/name/opynfinance/squeeth-ropsten',
+const httpLinkRPSquFury = new HttpLink({
+  uri: 'https://api.thegraph.com/subgraphs/name/opynfinance/squfury-ropsten',
 })
 
-const httpLinkMNSqueeth = new HttpLink({
-  uri: 'https://api.thegraph.com/subgraphs/name/opynfinance/squeeth',
+const httpLinkMNSquFury = new HttpLink({
+  uri: 'https://api.thegraph.com/subgraphs/name/opynfinance/squfury',
   fetch: async (...pl) => {
     const [_, options] = pl
     if (options?.body) {
@@ -38,7 +38,7 @@ const httpLinkMNSqueeth = new HttpLink({
   },
 })
 
-const httpLinkGLSqueeth = new HttpLink({
+const httpLinkGLSquFury = new HttpLink({
   uri: 'https://api.thegraph.com/subgraphs/name/haythem96/squeeth-temp-subgraph',
 })
 
@@ -72,27 +72,27 @@ const wsLinkGL =
       })
     : null
 
-const wsLinkRPSqueeth =
+const wsLinkRPSquFury =
   typeof window !== 'undefined'
     ? new WebSocketLink({
-        uri: 'wss://api.thegraph.com/subgraphs/name/opynfinance/squeeth-ropsten',
+        uri: 'wss://api.thegraph.com/subgraphs/name/opynfinance/squfury-ropsten',
         options: {
           reconnect: false,
         },
       })
     : null
 
-const wsLinkMNSqueeth =
+const wsLinkMNSquFury =
   typeof window !== 'undefined'
     ? new WebSocketLink({
-        uri: 'wss://api.thegraph.com/subgraphs/name/opynfinance/squeeth',
+        uri: 'wss://api.thegraph.com/subgraphs/name/opynfinance/squfury',
         options: {
           reconnect: false,
         },
       })
     : null
 
-const wsLinkGLSqueeth =
+const wsLinkGLSquFury =
   typeof window !== 'undefined'
     ? new WebSocketLink({
         uri: 'wss://api.thegraph.com/subgraphs/name/haythem96/squeeth-temp-subgraph',
@@ -136,25 +136,25 @@ export const uniswapClient = {
   421611: mainnet, // Should be replaced with arbitrum subgraph
 }
 
-const squeethMainnet = new ApolloClient({
-  link: typeof window !== 'undefined' ? ApolloLink.from([splitLink(wsLinkMNSqueeth, httpLinkMNSqueeth)]) : undefined,
+const squfuryMainnet = new ApolloClient({
+  link: typeof window !== 'undefined' ? ApolloLink.from([splitLink(wsLinkMNSquFury, httpLinkMNSquFury)]) : undefined,
   cache: new InMemoryCache(),
 })
 
-const squeethRopsten = new ApolloClient({
-  link: typeof window !== 'undefined' ? splitLink(wsLinkRPSqueeth, httpLinkRPSqueeth) : undefined,
+const squfuryRopsten = new ApolloClient({
+  link: typeof window !== 'undefined' ? splitLink(wsLinkRPSquFury, httpLinkRPSquFury) : undefined,
   cache: new InMemoryCache(),
 })
 
-const squeethGoerli = new ApolloClient({
-  link: typeof window !== 'undefined' ? splitLink(wsLinkGLSqueeth, httpLinkGLSqueeth) : undefined,
+const squfuryGoerli = new ApolloClient({
+  link: typeof window !== 'undefined' ? splitLink(wsLinkGLSquFury, httpLinkGLSquFury) : undefined,
   cache: new InMemoryCache(),
 })
 
-export const squeethClient = {
-  1: squeethMainnet,
-  3: squeethRopsten,
-  5: squeethGoerli,
-  31337: squeethMainnet, // Can be replaced with local graph node if needed
-  421611: squeethMainnet, // Should be replaced with arbitrum subgraph
+export const squfuryClient = {
+  1: squfuryMainnet,
+  3: squfuryRopsten,
+  5: squfuryGoerli,
+  31337: squfuryMainnet, // Can be replaced with local graph node if needed
+  421611: squfuryMainnet, // Should be replaced with arbitrum subgraph
 }

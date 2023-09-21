@@ -4,15 +4,15 @@ import { useAtom, useAtomValue } from 'jotai'
 import { useResetAtom } from 'jotai/utils'
 
 import { isTransactionFirstStepAtom, transactionDataAtom, transactionLoadingAtom } from '@state/wallet/atoms'
-import { ethTradeAmountAtom, openPositionAtom, sqthTradeAmountAtom, tradeTypeAtom } from '@state/trade/atoms'
-import { SqueethTabNew, SqueethTabsNew } from '@components/Tabs'
+import { ethTradeAmountAtom, openPositionAtom, sqfuTradeAmountAtom, tradeTypeAtom } from '@state/trade/atoms'
+import { SquFuryTabNew, SquFuryTabsNew } from '@components/Tabs'
 import { TradeType } from 'src/types'
 import Long from './Long'
 import Short from './Short'
 
 const Trade: React.FC<BoxProps> = (props) => {
   const resetEthTradeAmount = useResetAtom(ethTradeAmountAtom)
-  const resetSqthTradeAmount = useResetAtom(sqthTradeAmountAtom)
+  const resetSqfuTradeAmount = useResetAtom(sqfuTradeAmountAtom)
   const tradeType = useAtomValue(tradeTypeAtom)
   const [openPosition, setOpenPosition] = useAtom(openPositionAtom)
   const resetTransactionData = useResetAtom(transactionDataAtom)
@@ -21,14 +21,14 @@ const Trade: React.FC<BoxProps> = (props) => {
 
   return (
     <Box id="trade-card" {...props}>
-      <SqueethTabsNew
+      <SquFuryTabsNew
         value={openPosition}
         onChange={(evt, val) => {
           setOpenPosition(val)
 
           if (!transactionInProgress || !isTxFirstStep) {
             resetEthTradeAmount()
-            resetSqthTradeAmount()
+            resetSqfuTradeAmount()
             resetTransactionData()
           }
         }}
@@ -36,9 +36,9 @@ const Trade: React.FC<BoxProps> = (props) => {
         centered
         variant="fullWidth"
       >
-        <SqueethTabNew label="Open" id="open-btn" />
-        <SqueethTabNew label="Close" id="close-btn" />
-      </SqueethTabsNew>
+        <SquFuryTabNew label="Open" id="open-btn" />
+        <SquFuryTabNew label="Close" id="close-btn" />
+      </SquFuryTabsNew>
 
       <Box marginTop="32px">
         {tradeType === TradeType.LONG ? <Long open={openPosition === 0} /> : <Short open={openPosition === 0} />}

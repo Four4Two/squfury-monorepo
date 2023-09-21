@@ -4,7 +4,7 @@ import { Contract, BigNumber, providers } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import BigNumberJs from 'bignumber.js'
 import { WETH9, MockErc20, Controller, Oracle, WPowerPerp, CrabStrategyV2, ISwapRouter, Timelock, CrabHelper } from "../../../typechain";
-import { deployUniswapV3, deploySqueethCoreContracts, deployWETHAndDai, addWethDaiLiquidity, addSqueethLiquidity, createUniPool } from '../../setup'
+import { deployUniswapV3, deploySquFuryCoreContracts, deployWETHAndDai, addWethDaiLiquidity, addSquFuryLiquidity, createUniPool } from '../../setup'
 import { isSimilar, wmul, wdiv, one, oracleScaleFactor } from "../../utils"
 
 BigNumberJs.set({ EXPONENTIAL_AT: 30 })
@@ -12,8 +12,8 @@ BigNumberJs.set({ EXPONENTIAL_AT: 30 })
 describe("Crab V2 integration test: ERC20 deposit and withdrawals", function () {
   const startingEthPrice = 3000
   const startingEthPrice1e18 = BigNumber.from(startingEthPrice).mul(one) // 3000 * 1e18
-  const scaledStartingSqueethPrice1e18 = startingEthPrice1e18.mul(11).div(10).div(oracleScaleFactor) // 0.3 * 1e18
-  const scaledStartingSqueethPrice = startingEthPrice * 1.1 / oracleScaleFactor.toNumber() // 0.3
+  const scaledStartingSquFuryPrice1e18 = startingEthPrice1e18.mul(11).div(10).div(oracleScaleFactor) // 0.3 * 1e18
+  const scaledStartingSquFuryPrice = startingEthPrice * 1.1 / oracleScaleFactor.toNumber() // 0.3
 
 
   const hedgeTimeThreshold = 86400  // 24h
@@ -38,9 +38,9 @@ describe("Crab V2 integration test: ERC20 deposit and withdrawals", function () 
   let swapRouter: Contract
   let oracle: Oracle
   let controller: Controller
-  let wSqueethPool: Contract
-  let wSqueethPool2: Contract
-  let wSqueeth: WPowerPerp
+  let wSquFuryPool: Contract
+  let wSquFuryPool2: Contract
+  let wSquFury: WPowerPerp
   let crabStrategy: CrabStrategyV2
   let ethDaiPool: Contract
   let timelock: Timelock;
@@ -68,26 +68,26 @@ describe("Crab V2 integration test: ERC20 deposit and withdrawals", function () 
     swapRouter = uniDeployments.swapRouter
 
     // this will not deploy a new pool, only reuse old onces
-    const squeethDeployments = await deploySqueethCoreContracts(
+    const squfuryDeployments = await deploySquFuryCoreContracts(
       weth,
       dai,
       positionManager,
       uniswapFactory,
-      scaledStartingSqueethPrice,
+      scaledStartingSquFuryPrice,
       startingEthPrice
     )
-    controller = squeethDeployments.controller
-    wSqueeth = squeethDeployments.wsqueeth
-    oracle = squeethDeployments.oracle
-    // shortSqueeth = squeethDeployments.shortSqueeth
-    wSqueethPool = squeethDeployments.wsqueethEthPool
-    ethDaiPool = squeethDeployments.ethDaiPool
+    controller = squfuryDeployments.controller
+    wSquFury = squfuryDeployments.wsqufury
+    oracle = squfuryDeployments.oracle
+    // shortSquFury = squfuryDeployments.shortSquFury
+    wSquFuryPool = squfuryDeployments.wsqufuryEthPool
+    ethDaiPool = squfuryDeployments.ethDaiPool
 
-    wSqueethPool2 = await createUniPool(scaledStartingSqueethPrice, weth, wSqueeth, positionManager, uniswapFactory, 10000) as Contract
-    await wSqueethPool2.increaseObservationCardinalityNext(500) 
+    wSquFuryPool2 = await createUniPool(scaledStartingSquFuryPrice, weth, wSquFury, positionManager, uniswapFactory, 10000) as Contract
+    await wSquFuryPool2.increaseObservationCardinalityNext(500) 
   
-    poolFee = await wSqueethPool.fee()
-    poolFeePool2 = await wSqueethPool2.fee()
+    poolFee = await wSquFuryPool.fee()
+    poolFeePool2 = await wSquFuryPool2.fee()
 
 
     await controller.connect(owner).setFeeRecipient(feeRecipient.address);
@@ -97,7 +97,7 @@ describe("Crab V2 integration test: ERC20 deposit and withdrawals", function () 
     timelock = (await TimelockContract.deploy(owner.address, 3 * 24 * 60 * 60)) as Timelock;
 
     const CrabStrategyContract = await ethers.getContractFactory("CrabStrategyV2");
-    crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, uniswapFactory.address, wSqueethPool.address, timelock.address, crabMigration.address, hedgeTimeThreshold, hedgePriceThreshold)) as CrabStrategyV2;
+    crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, uniswapFactory.address, wSquFuryPool.address, timelock.address, crabMigration.address, hedgeTimeThreshold, hedgePriceThreshold)) as CrabStrategyV2;
   })
 
   this.beforeAll("Seed pool liquidity", async () => {
@@ -117,12 +117,12 @@ describe("Crab V2 integration test: ERC20 deposit and withdrawals", function () 
     await provider.send("evm_increaseTime", [600])
     await provider.send("evm_mine", [])
 
-    await addSqueethLiquidity(
-      scaledStartingSqueethPrice,
+    await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice,
       '1000000',
       '2000000',
       owner.address,
-      wSqueeth,
+      wSquFury,
       weth,
       positionManager,
       controller
@@ -131,12 +131,12 @@ describe("Crab V2 integration test: ERC20 deposit and withdrawals", function () 
     await provider.send("evm_increaseTime", [600])
     await provider.send("evm_mine", [])
 
-    await addSqueethLiquidity(
-      scaledStartingSqueethPrice,
+    await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice,
       '1000000',
       '2000000',
       owner.address,
-      wSqueeth,
+      wSquFury,
       weth,
       positionManager,
       controller,
@@ -157,18 +157,18 @@ describe("Crab V2 integration test: ERC20 deposit and withdrawals", function () 
     const ethToDeposit = ethers.utils.parseUnits("20");
 
     const normFactor = await controller.normalizationFactor();
-    const currentScaledSquethPrice = await oracle.getTwap(
-        wSqueethPool.address,
-        wSqueeth.address,
+    const currentScaledSqfuryPrice = await oracle.getTwap(
+        wSquFuryPool.address,
+        wSquFury.address,
         weth.address,
         300,
         false
     );
     const feeRate = await controller.feeRate();
-    const ethFeePerWSqueeth = currentScaledSquethPrice.mul(feeRate).div(10000);
-    const squeethDelta = scaledStartingSqueethPrice1e18.mul(2); // .66*10^18
-    const debtToMint = wdiv(ethToDeposit, squeethDelta.add(ethFeePerWSqueeth));
-    const expectedEthDeposit = ethToDeposit.sub(debtToMint.mul(ethFeePerWSqueeth).div(one));
+    const ethFeePerWSquFury = currentScaledSqfuryPrice.mul(feeRate).div(10000);
+    const squfuryDelta = scaledStartingSquFuryPrice1e18.mul(2); // .66*10^18
+    const debtToMint = wdiv(ethToDeposit, squfuryDelta.add(ethFeePerWSquFury));
+    const expectedEthDeposit = ethToDeposit.sub(debtToMint.mul(ethFeePerWSquFury).div(one));
 
     const strategyCap = ethers.utils.parseUnits("1000")
 

@@ -16,7 +16,7 @@ const useStyles = makeStyles((theme) =>
     title: {
       marginTop: theme.spacing(10),
     },
-    getSqueethCard: {
+    getSquFuryCard: {
       width: '300px',
       overflow: 'auto',
       margin: 'auto',
@@ -46,7 +46,7 @@ const MintPage: React.FC = () => {
       <Typography align="center" variant="h6" className={classes.title}>
         {optOut ? 'You opted out from Amplitude tracking' : 'Opt out from Amplitude tracking'}
       </Typography>
-      <Box className={classes.getSqueethCard}>
+      <Box className={classes.getSquFuryCard}>
         <PrimaryButton onClick={toggleOptOut}>{optOut ? 'Opt In' : 'Opt out'}</PrimaryButton>
       </Box>
     </>

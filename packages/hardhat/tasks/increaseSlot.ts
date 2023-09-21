@@ -14,16 +14,16 @@ task("increase-slots", "Increase Pool slot")
   const { deployer } = await getNamedAccounts();
   const { uniswapFactory } = await getUniswapDeployments(ethers, deployer, network.name)
 
-  const wsqueeth = await ethers.getContractAt("WPowerPerp", deployer);
+  const wsqufury = await ethers.getContractAt("WPowerPerp", deployer);
   const weth = await getWETH(ethers, deployer, network.name)
 
-  const isWethToken0 = parseInt(weth.address, 16) < parseInt(wsqueeth.address, 16)
-  const token0 = isWethToken0 ? weth.address : wsqueeth.address
-  const token1 = isWethToken0 ? wsqueeth.address : weth.address
+  const isWethToken0 = parseInt(weth.address, 16) < parseInt(wsqufury.address, 16)
+  const token0 = isWethToken0 ? weth.address : wsqufury.address
+  const token1 = isWethToken0 ? wsqufury.address : weth.address
   
   const poolAddr = await uniswapFactory.getPool(token0, token1, 3000)
   const pool = await ethers.getContractAt("IUniswapV3Pool", poolAddr);
-  console.log(`Squeeth Pool Address: ${pool.address.toString()}`)
+  console.log(`SquFury Pool Address: ${pool.address.toString()}`)
   
   const { observationCardinalityNext } =  await pool.slot0()
   console.log(`Current observationCardinalityNext ${observationCardinalityNext.toString()}, adding ${slots} more`)

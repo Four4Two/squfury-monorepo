@@ -7,20 +7,20 @@ import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 //interface
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
-import { IController } from "squeeth-monorepo/interfaces/IController.sol";
+import { IController } from "squfury-monorepo/interfaces/IController.sol";
 import { IEulerMarkets } from "../../src/interface/IEulerMarkets.sol";
 import { IEulerEToken } from "../../src/interface/IEulerEToken.sol";
 import { IEulerDToken } from "../../src/interface/IEulerDToken.sol";
 // contract
 import { TestUtil } from "../util/TestUtil.t.sol";
 import { ZenBullStrategy } from "../../src/ZenBullStrategy.sol";
-import { CrabStrategyV2 } from "squeeth-monorepo/strategy/CrabStrategyV2.sol";
-import { Controller } from "squeeth-monorepo/core/Controller.sol";
+import { CrabStrategyV2 } from "squfury-monorepo/strategy/CrabStrategyV2.sol";
+import { Controller } from "squfury-monorepo/core/Controller.sol";
 import { ZenEmergencyShutdown } from "../../src/ZenEmergencyShutdown.sol";
 import { Quoter } from "v3-periphery/lens/Quoter.sol";
 // lib
-import { VaultLib } from "squeeth-monorepo/libs/VaultLib.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
+import { VaultLib } from "squfury-monorepo/libs/VaultLib.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
 import { UniOracle } from "../../src/UniOracle.sol";
 
 /**
@@ -56,7 +56,7 @@ contract ZenEmergencyShutdownTestFork is Test {
     address internal bullOwner;
     address internal crabOwner;
     address internal controllerOwner;
-    address internal ethWSqueethPool;
+    address internal ethWSquFuryPool;
     address internal ethUsdcPool;
 
     uint256 internal constant WETH_DECIMALS_DIFF = 1e12;
@@ -79,7 +79,7 @@ contract ZenEmergencyShutdownTestFork is Test {
         eulerMarketsModule = 0x3520d5a913427E6F0D6A83E07ccD4A4da316e4d3;
         controller = Controller(0x64187ae08781B09368e6253F9E94951243A493D5);
         controllerOwner = controller.owner();
-        ethWSqueethPool = controller.wPowerPerpPool();
+        ethWSquFuryPool = controller.wPowerPerpPool();
         ethUsdcPool = controller.ethQuoteCurrencyPool();
         crabV2 = CrabStrategyV2(0x3B960E47784150F5a63777201ee2B15253D713e8);
         crabOwner = crabV2.owner();
@@ -116,7 +116,7 @@ contract ZenEmergencyShutdownTestFork is Test {
         vm.label(eulerMarketsModule, "EulerMarkets");
         vm.label(usdc, "USDC");
         vm.label(weth, "WETH");
-        vm.label(wPowerPerp, "oSQTH");
+        vm.label(wPowerPerp, "oSQFU");
         vm.label(address(crabV2), "crabV2");
         vm.label(user2, "User 2");
 
@@ -674,8 +674,8 @@ contract ZenEmergencyShutdownTestFork is Test {
         uint256 share = _bullAmount.wdiv(bullStrategy.totalSupply());
         uint256 crabToRedeem = share.wmul(bullStrategy.getCrabBalance());
         uint256 crabTotalSupply = IERC20(crabV2).totalSupply();
-        (, uint256 squeethInCrab) = testUtil.getCrabVaultDetails();
-        return (crabToRedeem.wmul(squeethInCrab).wdiv(crabTotalSupply), crabToRedeem);
+        (, uint256 squfuryInCrab) = testUtil.getCrabVaultDetails();
+        return (crabToRedeem.wmul(squfuryInCrab).wdiv(crabTotalSupply), crabToRedeem);
     }
 
     function _calcUsdcNeededForWithdraw(uint256 _bullAmount) internal view returns (uint256) {

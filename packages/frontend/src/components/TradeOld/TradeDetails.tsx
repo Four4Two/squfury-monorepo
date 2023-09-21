@@ -22,12 +22,12 @@ const useStyles = makeStyles((theme) =>
       backgroundColor: theme.palette.background.stone,
       textAlign: 'left',
     },
-    squeethExp: {
+    squfuryExp: {
       display: 'flex',
       justifyContent: 'space-between',
       textAlign: 'left',
     },
-    squeethExpTxt: {
+    squfuryExpTxt: {
       fontSize: '20px',
     },
   }),
@@ -38,14 +38,14 @@ const TradeDetails: React.FC<TradeDetailsType> = ({ actionTitle, amount, id, uni
 
   return (
     <div className={classes.container} id={id}>
-      <div className={classes.squeethExp}>
+      <div className={classes.squfuryExp}>
         <div>
           <Typography variant="caption">{actionTitle}</Typography>
-          <Typography className={classes.squeethExpTxt}>{amount}</Typography>
+          <Typography className={classes.squfuryExpTxt}>{amount}</Typography>
         </div>
         <div>
           <Typography variant="caption">${value}</Typography>
-          <Typography className={clsx(classes.squeethExpTxt, 'trade-details-amount')}>{amount}</Typography>
+          <Typography className={clsx(classes.squfuryExpTxt, 'trade-details-amount')}>{amount}</Typography>
         </div>
       </div>
       <Typography variant="caption" color="textSecondary">

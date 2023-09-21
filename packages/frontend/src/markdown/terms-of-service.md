@@ -1,4 +1,4 @@
-### Squeeth User Terms of Service
+### SquFury User Terms of Service
 
 ### Last Updated: April 20, 2023
 

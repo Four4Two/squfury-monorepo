@@ -7,18 +7,18 @@ import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 //interface
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
-import { IController } from "squeeth-monorepo/interfaces/IController.sol";
+import { IController } from "squfury-monorepo/interfaces/IController.sol";
 import { IEulerMarkets } from "../../src/interface/IEulerMarkets.sol";
 import { IEulerEToken } from "../../src/interface/IEulerEToken.sol";
 import { IEulerDToken } from "../../src/interface/IEulerDToken.sol";
 // contract
 import { TestUtil } from "../util/TestUtil.t.sol";
 import { ZenBullStrategy } from "../../src/ZenBullStrategy.sol";
-import { CrabStrategyV2 } from "squeeth-monorepo/strategy/CrabStrategyV2.sol";
-import { Controller } from "squeeth-monorepo/core/Controller.sol";
+import { CrabStrategyV2 } from "squfury-monorepo/strategy/CrabStrategyV2.sol";
+import { Controller } from "squfury-monorepo/core/Controller.sol";
 // lib
-import { VaultLib } from "squeeth-monorepo/libs/VaultLib.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
+import { VaultLib } from "squfury-monorepo/libs/VaultLib.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
 import { UniOracle } from "../../src/UniOracle.sol";
 
 /**
@@ -89,7 +89,7 @@ contract ZenBullStrategyFuzzTest is Test {
         vm.label(eulerMarketsModule, "EulerMarkets");
         vm.label(usdc, "USDC");
         vm.label(weth, "WETH");
-        vm.label(wPowerPerp, "oSQTH");
+        vm.label(wPowerPerp, "oSQFU");
         vm.label(address(crabV2), "crabV2");
 
         vm.deal(user1, 100000000e18);
@@ -151,7 +151,7 @@ contract ZenBullStrategyFuzzTest is Test {
             _calcWPowerPerpAndCrabNeededForWithdraw(bullToMint);
         uint256 usdcToRepay = _calcUsdcNeededForWithdraw(bullToMint);
         uint256 wethToWithdraw = testUtil.calcWethToWithdraw(bullToMint);
-        // transfer some oSQTH from some squeether
+        // transfer some oSQFU from some squfuryer
         vm.prank(0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9);
         IERC20(wPowerPerp).transfer(user1, wPowerPerpToRedeem);
 
@@ -191,7 +191,7 @@ contract ZenBullStrategyFuzzTest is Test {
         assertEq(
             userWPowerPerpBalanceBefore.sub(wPowerPerpToRedeem),
             IERC20(wPowerPerp).balanceOf(user1),
-            "User1 oSQTH balance mismatch"
+            "User1 oSQFU balance mismatch"
         );
         assertEq(
             crabBalanceBefore.sub(crabToRedeem),
@@ -212,8 +212,8 @@ contract ZenBullStrategyFuzzTest is Test {
         uint256 share = _bullAmount.wdiv(bullStrategy.totalSupply());
         uint256 crabToRedeem = share.wmul(bullStrategy.getCrabBalance());
         uint256 crabTotalSupply = IERC20(crabV2).totalSupply();
-        (, uint256 squeethInCrab) = testUtil.getCrabVaultDetails();
-        return (crabToRedeem.wmul(squeethInCrab).wdiv(crabTotalSupply), crabToRedeem);
+        (, uint256 squfuryInCrab) = testUtil.getCrabVaultDetails();
+        return (crabToRedeem.wmul(squfuryInCrab).wdiv(crabTotalSupply), crabToRedeem);
     }
 
     function _calcUsdcNeededForWithdraw(uint256 _bullAmount) internal view returns (uint256) {

@@ -18,7 +18,7 @@ contract BaseSetup is Test {
     FixedERC20 usdc;
     FixedERC20 crab;
     FixedERC20 weth;
-    FixedERC20 sqth;
+    FixedERC20 sqfu;
     CrabNetting netting;
     ISwapRouter public immutable swapRouter = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
@@ -35,7 +35,7 @@ contract BaseSetup is Test {
         usdc = new FixedERC20(10000 * 1e6);
         crab = new FixedERC20(10000 * 1e18);
         weth = new FixedERC20(10000 * 1e18);
-        sqth = new FixedERC20(10000 * 1e18);
+        sqfu = new FixedERC20(10000 * 1e18);
         netting = new CrabNetting(address(crab), address(swapRouter));
 
         ownerPrivateKey = 0xA11CE;

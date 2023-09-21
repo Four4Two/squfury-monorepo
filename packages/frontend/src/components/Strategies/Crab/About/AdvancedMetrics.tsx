@@ -7,7 +7,7 @@ import { useAtomValue } from 'jotai'
 
 import Metric, { MetricLabel } from '@components/Metric'
 import { TextButton } from '@components/Button'
-import { impliedVolAtom, osqthRefVolAtom, currentImpliedFundingAtom } from '@state/controller/atoms'
+import { impliedVolAtom, osqfuRefVolAtom, currentImpliedFundingAtom } from '@state/controller/atoms'
 import { formatNumber } from '@utils/formatter'
 import { Tooltips } from '@constants/enums'
 import useAmplitude from '@hooks/useAmplitude'
@@ -31,7 +31,7 @@ const AdvancedMetrics: React.FC = () => {
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   const impliedVol = useAtomValue(impliedVolAtom)
-  const osqthRefVol = useAtomValue(osqthRefVolAtom)
+  const osqfuRefVol = useAtomValue(osqfuRefVolAtom)
   const currentImpliedFunding = useAtomValue(currentImpliedFundingAtom)
   const { track } = useAmplitude()
 
@@ -71,9 +71,9 @@ const AdvancedMetrics: React.FC = () => {
               value={`${formatNumber(impliedVolPercent)}%`}
             />
             <Metric
-              label={<MetricLabel label="Reference Volatility" tooltipTitle={Tooltips.osqthRefVol} />}
+              label={<MetricLabel label="Reference Volatility" tooltipTitle={Tooltips.osqfuRefVol} />}
               gridGap="4px"
-              value={`${formatNumber(osqthRefVol)}%`}
+              value={`${formatNumber(osqfuRefVol)}%`}
             />
           </Box>
         ) : (

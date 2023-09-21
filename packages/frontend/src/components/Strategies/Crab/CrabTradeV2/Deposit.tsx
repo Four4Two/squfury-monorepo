@@ -26,8 +26,8 @@ import {
   useFlashDepositUSDC,
   useQueueDepositUSDC,
 } from '@state/crab/hooks'
-import { readyAtom } from '@state/squeethPool/atoms'
-import { impliedVolAtom, indexAtom, normFactorAtom, osqthRefVolAtom } from '@state/controller/atoms'
+import { readyAtom } from '@state/squfuryPool/atoms'
+import { impliedVolAtom, indexAtom, normFactorAtom, osqfuRefVolAtom } from '@state/controller/atoms'
 import { addressesAtom } from '@state/positions/atoms'
 import useAppMemo from '@hooks/useAppMemo'
 import { useTokenBalance } from '@hooks/contracts/useTokenBalance'
@@ -82,7 +82,7 @@ const CrabDeposit: React.FC<CrabDepositProps> = ({ onTxnConfirm }) => {
   const [depositPriceImpact, setDepositPriceImpact, resetDepositPriceImpact] = useStateWithReset('0')
   const [borrowEth, setBorrowEth, resetBorrowEth] = useStateWithReset(new BigNumber(0))
   const [uniswapFee, setUniswapFee, resetUniswapFee] = useStateWithReset('0')
-  const [squeethAmountInFromDeposit, setSqueethAmountInFromDeposit, resetSqueethAmountInFromDeposit] =
+  const [squfuryAmountInFromDeposit, setSquFuryAmountInFromDeposit, resetSquFuryAmountInFromDeposit] =
     useStateWithReset(new BigNumber(0))
   const [ethAmountOutFromDeposit, setEthAmountOutFromDeposit, resetEthAmountOutFromDeposit] = useStateWithReset(
     new BigNumber(0),
@@ -128,7 +128,7 @@ const CrabDeposit: React.FC<CrabDepositProps> = ({ onTxnConfirm }) => {
   const vault = useAtomValue(crabStrategyVaultAtomV2)
   const impliedVol = useAtomValue(impliedVolAtom)
   const normFactor = useAtomValue(normFactorAtom)
-  const osqthRefVol = useAtomValue(osqthRefVolAtom)
+  const osqfuRefVol = useAtomValue(osqfuRefVolAtom)
   const { track } = useAmplitude()
 
   const trackUserEnteredDepositAmount = useCallback(
@@ -153,10 +153,10 @@ const CrabDeposit: React.FC<CrabDepositProps> = ({ onTxnConfirm }) => {
   const depositPriceImpactWarning = useAppMemo(() => {
     if (useQueue) return false
 
-    const squeethPrice = ethAmountOutFromDeposit.div(squeethAmountInFromDeposit).times(1.003)
+    const squfuryPrice = ethAmountOutFromDeposit.div(squfuryAmountInFromDeposit).times(1.003)
     const scalingFactor = new BigNumber(INDEX_SCALE)
     const fundingPeriod = new BigNumber(FUNDING_PERIOD).div(YEAR)
-    const log = Math.log(scalingFactor.times(squeethPrice).div(normFactor.times(ethIndexPrice)).toNumber())
+    const log = Math.log(scalingFactor.times(squfuryPrice).div(normFactor.times(ethIndexPrice)).toNumber())
     const executionVol = new BigNumber(log).div(fundingPeriod).sqrt()
 
     const showPriceImpactWarning =
@@ -166,20 +166,20 @@ const CrabDeposit: React.FC<CrabDepositProps> = ({ onTxnConfirm }) => {
         .abs()
         .gt(BigNumber.max(new BigNumber(impliedVol).times(VOL_PERCENT_SCALAR), VOL_PERCENT_FIXED))
     return showPriceImpactWarning
-  }, [impliedVol, ethAmountOutFromDeposit, squeethAmountInFromDeposit, useQueue, ethIndexPrice, normFactor])
+  }, [impliedVol, ethAmountOutFromDeposit, squfuryAmountInFromDeposit, useQueue, ethIndexPrice, normFactor])
 
   const depositFundingWarning = useAppMemo(() => {
     const impliedVolDiff = new BigNumber(-VOL_PERCENT_SCALAR)
     const impliedVolDiffLowVol = new BigNumber(-VOL_PERCENT_FIXED)
     // const dailyHistoricalImpliedVol = new BigNumber(dailyHistoricalFunding.funding).times(YEAR).sqrt()
     const threshold = BigNumber.max(
-      new BigNumber(osqthRefVol / 100).times(new BigNumber(1).plus(impliedVolDiff)),
-      new BigNumber(osqthRefVol / 100).plus(impliedVolDiffLowVol),
+      new BigNumber(osqfuRefVol / 100).times(new BigNumber(1).plus(impliedVolDiff)),
+      new BigNumber(osqfuRefVol / 100).plus(impliedVolDiffLowVol),
     )
 
     const showFundingWarning = new BigNumber(impliedVol).lt(threshold) ? true : false
     return showFundingWarning
-  }, [osqthRefVol, impliedVol])
+  }, [osqfuRefVol, impliedVol])
 
   const depositError = useAppMemo(() => {
     let inputError
@@ -209,7 +209,7 @@ const CrabDeposit: React.FC<CrabDepositProps> = ({ onTxnConfirm }) => {
       resetUniswapFee()
       resetBorrowEth()
       resetEthAmountOutFromDeposit()
-      resetSqueethAmountInFromDeposit()
+      resetSquFuryAmountInFromDeposit()
       return
     }
 
@@ -219,7 +219,7 @@ const CrabDeposit: React.FC<CrabDepositProps> = ({ onTxnConfirm }) => {
       calculateETHtoBorrowFromUniswap(toTokenAmount(usdcq.minAmountOut, WETH_DECIMALS), slippage).then((q) => {
         setBorrowEth(q.ethBorrow)
         setEthAmountOutFromDeposit(q.amountOut)
-        setSqueethAmountInFromDeposit(q.initialWSqueethDebt)
+        setSquFuryAmountInFromDeposit(q.initialWSquFuryDebt)
         let quotePriceImpact = q.priceImpact
         if (q.poolFee) quotePriceImpact = (Number(q.priceImpact) - Number(q.poolFee)).toFixed(2)
 
@@ -450,7 +450,7 @@ const CrabDeposit: React.FC<CrabDepositProps> = ({ onTxnConfirm }) => {
             <div className={classes.infoIcon}>
               <Tooltip
                 title={
-                  'The strategy sells squeeth to earn premium. Premium is currently lower than usual. You can still deposit, but you may be more likely to have negative returns.'
+                  'The strategy sells squfury to earn premium. Premium is currently lower than usual. You can still deposit, but you may be more likely to have negative returns.'
                 }
               >
                 <InfoIcon fontSize="medium" />

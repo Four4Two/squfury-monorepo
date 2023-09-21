@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getCoingeckoETHPricesBetweenTimestamps as getETHPricesBetweenTs } from '@utils/ethPriceCharts'
-import { getLiveVolMap, getSqueethChartWithFunding, getVolForTimestampOrDefault, getVolMap } from '@utils/pricer'
+import { getLiveVolMap, getSquFuryChartWithFunding, getVolForTimestampOrDefault, getVolMap } from '@utils/pricer'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const collatRatio = Number(req.query.collatRatio)
@@ -13,24 +13,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const ethPrices = await getETHPricesBetweenTs(fromTs, toTs)
 
-    const ethSqueethPNLSeriesPromise = getETHSqueethPNLCompounding(ethPrices, volMultiplier, days)
-    const squeethSeriesPromise = getSqueethChartWithFunding(ethPrices, volMultiplier, collatRatio)
+    const ethSquFuryPNLSeriesPromise = getETHSquFuryPNLCompounding(ethPrices, volMultiplier, days)
+    const squfurySeriesPromise = getSquFuryChartWithFunding(ethPrices, volMultiplier, collatRatio)
 
-    const [ethSqueethPNLSeries, squeethSeries] = await Promise.all([ethSqueethPNLSeriesPromise, squeethSeriesPromise])
-    const longEthPNL = ethSqueethPNLSeries.ethPNL.map(({ time, longPNL }) => {
+    const [ethSquFuryPNLSeries, squfurySeries] = await Promise.all([ethSquFuryPNLSeriesPromise, squfurySeriesPromise])
+    const longEthPNL = ethSquFuryPNLSeries.ethPNL.map(({ time, longPNL }) => {
       return { time, value: longPNL }
     })
-    const longSeries = ethSqueethPNLSeries.squeethPNL.map(({ time, longPNL }) => {
+    const longSeries = ethSquFuryPNLSeries.squfuryPNL.map(({ time, longPNL }) => {
       return { time, value: longPNL }
     })
-    const squeethIsLive = ethSqueethPNLSeries.squeethPNL.map(({ isLive }) => {
+    const squfuryIsLive = ethSquFuryPNLSeries.squfuryPNL.map(({ isLive }) => {
       return isLive
     })
-    const positionSizeSeries = squeethSeries.series.map(({ time, positionSize }) => {
+    const positionSizeSeries = squfurySeries.series.map(({ time, positionSize }) => {
       return { time, value: positionSize * 100 }
     })
 
-    const response = { longEthPNL, longSeries, positionSizeSeries, squeethIsLive }
+    const response = { longEthPNL, longSeries, positionSizeSeries, squfuryIsLive }
 
     res.status(200).send(response)
   } catch (error: any) {
@@ -39,15 +39,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function getETHSqueethPNLCompounding(
+async function getETHSquFuryPNLCompounding(
   ethPrices: { time: number; value: number }[],
   volMultiplier = 1.2,
   days = 365,
 ) {
   const timestamps = ethPrices.map(({ time }) => time)
 
-  let cumulativeSqueethLongReturn = 0
-  let cumulativeSqueethCrabReturn = 1
+  let cumulativeSquFuryLongReturn = 0
+  let cumulativeSquFuryCrabReturn = 1
   const volsMap = await getVolMap()
   const liveVolsMap = await getLiveVolMap()
 
@@ -78,7 +78,7 @@ async function getETHSqueethPNLCompounding(
     return { shortPNL, longPNL, time }
   })
 
-  const squeethChartData = annualVolData.map((item, index) => {
+  const squfuryChartData = annualVolData.map((item, index) => {
     const { annualVol, isLive } = item
     const { value: price, time } = ethPrices[index > 0 ? index : 0]
 
@@ -87,18 +87,18 @@ async function getETHSqueethPNLCompounding(
     let vol = annualVol * volMultiplier
     const preEthPrice = ethPrices[index > 0 ? index - 1 : 0].value
     let fundingCost = index === 0 ? 0 : (vol / Math.sqrt(fundingPeriodMultiplier)) ** 2
-    cumulativeSqueethLongReturn += 2 * Math.log(price / preEthPrice) + Math.log(price / preEthPrice) ** 2 - fundingCost
+    cumulativeSquFuryLongReturn += 2 * Math.log(price / preEthPrice) + Math.log(price / preEthPrice) ** 2 - fundingCost
     // crab return
     const crabVolMultiplier = 0.9
     vol = annualVol * crabVolMultiplier
     fundingCost = index === 0 ? 0 : (vol / Math.sqrt(fundingPeriodMultiplier)) ** 2
     const simR = price / preEthPrice - 1
-    cumulativeSqueethCrabReturn *= 1 + -(simR ** 2) + fundingCost
-    const longPNL = Math.round((Math.exp(cumulativeSqueethLongReturn) - 1) * 10000) / 100
-    const shortPNL = Math.round(Math.log(cumulativeSqueethCrabReturn) * 10000) / 100
+    cumulativeSquFuryCrabReturn *= 1 + -(simR ** 2) + fundingCost
+    const longPNL = Math.round((Math.exp(cumulativeSquFuryLongReturn) - 1) * 10000) / 100
+    const shortPNL = Math.round(Math.log(cumulativeSquFuryCrabReturn) * 10000) / 100
 
     return { shortPNL, longPNL, time, isLive }
   })
 
-  return { ethPNL: ethChartData, squeethPNL: squeethChartData }
+  return { ethPNL: ethChartData, squfuryPNL: squfuryChartData }
 }

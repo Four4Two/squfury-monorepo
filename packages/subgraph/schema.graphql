@@ -59,7 +59,7 @@ type VaultHistory @entity {
   txid: String!
   timestamp: BigInt!
   totalEthCollateralAmount: BigInt!
-  oSqthAmount: BigInt!
+  oSqfuAmount: BigInt!
   ethCollateralAmount: BigInt!
   action: Action!
   vaultId: BigInt!
@@ -70,20 +70,20 @@ type CrabStrategyTx @entity {
   type: String!
   lpAmount: BigInt
   ethAmount: BigInt!
-  wSqueethAmount: BigInt
+  wSquFuryAmount: BigInt
   owner: Bytes
-  isSellingSqueeth: Boolean
+  isSellingSquFury: Boolean
   timestamp: BigInt!
   auctionPrice: BigInt
-  wSqueethHedgeTargetAmount: BigInt
+  wSquFuryHedgeTargetAmount: BigInt
   ethHedgeTargetAmount: BigInt
   hedgerPrice: BigInt
 }
 
 type CrabAuction @entity {
   id: ID!
-  isSellingSqueeth: Boolean!
-  squeethAmount: BigInt!
+  isSellingSquFury: Boolean!
+  squfuryAmount: BigInt!
   ethAmount: BigInt!
   isHedgingOnUniswap: Boolean!
   owner: Bytes!
@@ -171,7 +171,7 @@ type CrabUserTx @entity {
   user: Bytes!
   lpAmount: BigInt
   ethAmount: BigInt!
-  wSqueethAmount: BigInt
+  wSquFuryAmount: BigInt
   type: String!
   timestamp: BigInt!
   erc20Token: String
@@ -195,7 +195,7 @@ type BullUserTx @entity {
   ethAmount: BigInt!
   bullAmount: BigInt!
   crabAmount: BigInt
-  wSqueethAmount: BigInt!
+  wSquFuryAmount: BigInt!
   wethLentAmount: BigInt!
   usdcBorrowedAmount: BigInt!
   type: String!

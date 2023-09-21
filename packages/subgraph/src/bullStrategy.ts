@@ -52,7 +52,7 @@ export function loadOrCreateTx(id: string): BullUserTxSchema {
   userTx.type = "TRANSFER"
   userTx.timestamp = BigInt.zero()
   userTx.bullAmount = BigInt.zero()
-  userTx.wSqueethAmount = BigInt.zero()
+  userTx.wSquFuryAmount = BigInt.zero()
   userTx.wethLentAmount = BigInt.zero()
   userTx.usdcBorrowedAmount = BigInt.zero()
 
@@ -61,7 +61,7 @@ export function loadOrCreateTx(id: string): BullUserTxSchema {
 
 export function handleWithdraw(event: Withdraw): void {
   const userTx = loadOrCreateTx(event.transaction.hash.toHex())
-  userTx.wSqueethAmount = event.params.wPowerPerpToRedeem
+  userTx.wSquFuryAmount = event.params.wPowerPerpToRedeem
   userTx.bullAmount = event.params.bullAmount
   userTx.ethAmount = event.params.wethToWithdraw
   userTx.crabAmount = event.params.crabToRedeem
@@ -113,7 +113,7 @@ export function handleSetAuction(event: SetAuction): void {
 export function handleRedeemCrabAndWithdrawEth(event: RedeemCrabAndWithdrawEth): void {
   const userTx = loadOrCreateTx(event.transaction.hash.toHex())
   userTx.ethAmount = event.params.wethBalanceReturned
-  userTx.wSqueethAmount = event.params.wPowerPerpRedeemed
+  userTx.wSquFuryAmount = event.params.wPowerPerpRedeemed
   userTx.crabAmount = event.params.crabToRedeem
   userTx.user = event.transaction.from
   userTx.owner = event.transaction.from

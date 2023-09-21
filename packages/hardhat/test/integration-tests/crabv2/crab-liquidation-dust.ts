@@ -4,7 +4,7 @@ import { Contract, BigNumber, providers } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import BigNumberJs from 'bignumber.js'
 import { WETH9, MockErc20, Controller, Oracle, WPowerPerp, CrabStrategyV2, ISwapRouter, Timelock } from "../../../typechain";
-import { deployUniswapV3, deploySqueethCoreContracts, deployWETHAndDai, addWethDaiLiquidity, addSqueethLiquidity } from '../../setup'
+import { deployUniswapV3, deploySquFuryCoreContracts, deployWETHAndDai, addWethDaiLiquidity, addSquFuryLiquidity } from '../../setup'
 import { isSimilar, wmul, wdiv, one, oracleScaleFactor } from "../../utils"
 
 BigNumberJs.set({ EXPONENTIAL_AT: 30 })
@@ -12,8 +12,8 @@ BigNumberJs.set({ EXPONENTIAL_AT: 30 })
 describe("Crab V2 integration test: crab vault dust liquidation with excess collateral", function () {
   const startingEthPrice = 3000
   const startingEthPrice1e18 = BigNumber.from(startingEthPrice).mul(one) // 3000 * 1e18
-  const scaledStartingSqueethPrice1e18 = startingEthPrice1e18.div(oracleScaleFactor) // 0.3 * 1e18
-  const scaledStartingSqueethPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
+  const scaledStartingSquFuryPrice1e18 = startingEthPrice1e18.div(oracleScaleFactor) // 0.3 * 1e18
+  const scaledStartingSquFuryPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
 
 
   const hedgeTimeThreshold = 86400  // 24h
@@ -36,8 +36,8 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
   let swapRouter: Contract
   let oracle: Oracle
   let controller: Controller
-  let wSqueethPool: Contract
-  let wSqueeth: WPowerPerp
+  let wSquFuryPool: Contract
+  let wSquFury: WPowerPerp
   let crabStrategy: CrabStrategyV2
   let ethDaiPool: Contract
   let timelock: Timelock
@@ -64,28 +64,28 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
     swapRouter = uniDeployments.swapRouter
 
     // this will not deploy a new pool, only reuse old onces
-    const squeethDeployments = await deploySqueethCoreContracts(
+    const squfuryDeployments = await deploySquFuryCoreContracts(
       weth,
       dai,
       positionManager,
       uniswapFactory,
-      scaledStartingSqueethPrice,
+      scaledStartingSquFuryPrice,
       startingEthPrice
     )
-    controller = squeethDeployments.controller
-    wSqueeth = squeethDeployments.wsqueeth
-    oracle = squeethDeployments.oracle
-    // shortSqueeth = squeethDeployments.shortSqueeth
-    wSqueethPool = squeethDeployments.wsqueethEthPool
-    ethDaiPool = squeethDeployments.ethDaiPool
+    controller = squfuryDeployments.controller
+    wSquFury = squfuryDeployments.wsqufury
+    oracle = squfuryDeployments.oracle
+    // shortSquFury = squfuryDeployments.shortSquFury
+    wSquFuryPool = squfuryDeployments.wsqufuryEthPool
+    ethDaiPool = squfuryDeployments.ethDaiPool
 
-    poolFee = await wSqueethPool.fee()
+    poolFee = await wSquFuryPool.fee()
 
     const TimelockContract = await ethers.getContractFactory("Timelock");
     timelock = (await TimelockContract.deploy(owner.address, 3 * 24 * 60 * 60)) as Timelock;
 
     const CrabStrategyContract = await ethers.getContractFactory("CrabStrategyV2");
-    crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, uniswapFactory.address, wSqueethPool.address, timelock.address, crabMigration.address, hedgeTimeThreshold, hedgePriceThreshold)) as CrabStrategyV2;
+    crabStrategy = (await CrabStrategyContract.deploy(controller.address, oracle.address, weth.address, uniswapFactory.address, wSquFuryPool.address, timelock.address, crabMigration.address, hedgeTimeThreshold, hedgePriceThreshold)) as CrabStrategyV2;
   })
 
   this.beforeAll("Seed pool liquidity", async () => {
@@ -102,12 +102,12 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
     await provider.send("evm_increaseTime", [600])
     await provider.send("evm_mine", [])
 
-    await addSqueethLiquidity(
-      scaledStartingSqueethPrice,
+    await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice,
       '1000000',
       '2000000',
       owner.address,
-      wSqueeth,
+      wSquFury,
       weth,
       positionManager,
       controller
@@ -121,15 +121,15 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
     const ethToDeposit = ethers.utils.parseUnits('0.51')
     const msgvalue = ethers.utils.parseUnits('0.51')
     const ethPrice = await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 600, true)
-    const depositorSqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+    const depositorSquFuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
     const normFactor = await controller.normalizationFactor()
     const currentScaledEthPrice = (await oracle.getTwap(ethDaiPool.address, weth.address, dai.address, 300, false)).div(oracleScaleFactor)
     const feeRate = await controller.feeRate()
-    const ethFeePerWSqueeth = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)
-    const squeethDelta = scaledStartingSqueethPrice1e18.mul(2);
-    const debtToMint = wdiv(ethToDeposit, (squeethDelta.add(ethFeePerWSqueeth)));
-    const expectedEthDeposit = ethToDeposit.sub(debtToMint.mul(ethFeePerWSqueeth).div(one))
+    const ethFeePerWSquFury = currentScaledEthPrice.mul(normFactor).mul(feeRate).div(10000).div(one)
+    const squfuryDelta = scaledStartingSquFuryPrice1e18.mul(2);
+    const debtToMint = wdiv(ethToDeposit, (squfuryDelta.add(ethFeePerWSquFury)));
+    const expectedEthDeposit = ethToDeposit.sub(debtToMint.mul(ethFeePerWSquFury).div(one))
 
     const strategyCap = ethers.utils.parseUnits("1000")
 
@@ -139,22 +139,22 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
     expect(strategyCapInContract.eq(strategyCap)).to.be.true
 
     await crabStrategy.connect(crabMigration).transfer(depositor.address, ethToDeposit);
-    await wSqueeth.connect(crabMigration).transfer(depositor.address, debtToMint);
+    await wSquFury.connect(crabMigration).transfer(depositor.address, debtToMint);
     
     const [operator, nftId, collateralAmount, debtAmount] = await crabStrategy.getVaultDetails()
 
     const totalSupply = (await crabStrategy.totalSupply())
     const depositorCrab = (await crabStrategy.balanceOf(depositor.address))
     const strategyVault = await controller.vaults(await crabStrategy.vaultId());
-    const depositorSqueethBalance = await wSqueeth.balanceOf(depositor.address)
-    const strategyContractSqueeth = await wSqueeth.balanceOf(crabStrategy.address)
+    const depositorSquFuryBalance = await wSquFury.balanceOf(depositor.address)
+    const strategyContractSquFury = await wSquFury.balanceOf(crabStrategy.address)
     const lastHedgeTime = await crabStrategy.timeAtLastHedge()
 
     expect(totalSupply.eq(ethToDeposit)).to.be.true
     expect(depositorCrab.eq(ethToDeposit)).to.be.true
     expect(isSimilar(debtAmount.toString(), debtToMint.toString())).to.be.true
-    expect(isSimilar((depositorSqueethBalance.sub(depositorSqueethBalanceBefore)).toString(), (debtToMint).toString())).to.be.true
-    expect(strategyContractSqueeth.eq(BigNumber.from(0))).to.be.true
+    expect(isSimilar((depositorSquFuryBalance.sub(depositorSquFuryBalanceBefore)).toString(), (debtToMint).toString())).to.be.true
+    expect(strategyContractSquFury.eq(BigNumber.from(0))).to.be.true
 
   })
 
@@ -180,15 +180,15 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
       await (swapRouter as ISwapRouter).connect(owner).exactOutputSingle(exactOutputParam)
     })
 
-    before('push squeeth price higher', async () => {
-      // set squeeth price higher by buying 15% of squeeth in the pool
-      const poolSqueethBalance = await wSqueeth.balanceOf(wSqueethPool.address)
+    before('push squfury price higher', async () => {
+      // set squfury price higher by buying 15% of squfury in the pool
+      const poolSquFuryBalance = await wSquFury.balanceOf(wSquFuryPool.address)
 
-      const maxWeth = poolSqueethBalance.mul(scaledStartingSqueethPrice1e18).mul(5).div(one)
+      const maxWeth = poolSquFuryBalance.mul(scaledStartingSquFuryPrice1e18).mul(5).div(one)
 
       const exactOutputParam = {
         tokenIn: weth.address,
-        tokenOut: wSqueeth.address,
+        tokenOut: wSquFury.address,
         fee: 3000,
         recipient: owner.address,
         deadline: (await provider.getBlock(await provider.getBlockNumber())).timestamp + 86400,
@@ -213,7 +213,7 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
       const mintAmount = vaultBefore.shortAmount
       const collateralRequired = mintAmount.mul(newEthPrice).mul(2).div(oracleScaleFactor).div(one).mul(2)
 
-      // mint squeeth to liquidate vault0!
+      // mint squfury to liquidate vault0!
       await controller.connect(liquidator).mintWPowerPerpAmount(0, mintAmount, 0, { value: collateralRequired })
     })
 
@@ -222,27 +222,27 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
       const isVaultSafe = await controller.isVaultSafe((await crabStrategy.vaultId()))
       expect(isVaultSafe).to.be.false
 
-      const newSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 600, false)
+      const newSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 600, false)
 
       const vaultBefore = await controller.vaults(vaultId)
 
       // state before liquidation
-      const liquidatorSqueethBefore = await wSqueeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryBefore = await wSquFury.balanceOf(liquidator.address)
       const liquidatorBalanceBefore = await provider.getBalance(liquidator.address)
 
-      const wSqueethAmountToLiquidate = vaultBefore.shortAmount
+      const wSquFuryAmountToLiquidate = vaultBefore.shortAmount
 
-      await controller.connect(liquidator).liquidate(vaultId, wSqueethAmountToLiquidate);
+      await controller.connect(liquidator).liquidate(vaultId, wSquFuryAmountToLiquidate);
 
       const normFactor = await controller.normalizationFactor()
-      const collateralToGet = newSqueethPrice.mul(wSqueethAmountToLiquidate).div(one).mul(11).div(10)
+      const collateralToGet = newSquFuryPrice.mul(wSquFuryAmountToLiquidate).div(one).mul(11).div(10)
 
       const vaultAfter = await controller.vaults(vaultId)
       const liquidatorBalanceAfter = await provider.getBalance(liquidator.address)
-      const liquidatorSqueethAfter = await wSqueeth.balanceOf(liquidator.address)
+      const liquidatorSquFuryAfter = await wSquFury.balanceOf(liquidator.address)
 
       // expect(collateralToGet.eq(liquidatorBalanceAfter.sub(liquidatorBalanceBefore))).to.be.true
-      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSqueethBefore.sub(liquidatorSqueethAfter))).to.be.true
+      expect(vaultBefore.shortAmount.sub(vaultAfter.shortAmount).eq(liquidatorSquFuryBefore.sub(liquidatorSquFuryAfter))).to.be.true
       expect(vaultAfter.shortAmount.eq(BigNumber.from(0))).to.be.equal
       expect(vaultAfter.collateralAmount.gt(BigNumber.from(0))).to.be.equal
 
@@ -267,7 +267,7 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
       await expect(crabStrategy.connect(depositor2).flashDeposit(ethToDeposit, poolFee, { value: msgvalue })).to.be.revertedWith("AS")
     })
 
-    it("should let user deposit post liquidation, with only ETH, and mint no squeeth for them", async () => {
+    it("should let user deposit post liquidation, with only ETH, and mint no squfury for them", async () => {
       const vaultId = await crabStrategy.vaultId();
       const isVaultSafe = await controller.isVaultSafe((await crabStrategy.vaultId()))
       expect(isVaultSafe).to.be.true
@@ -287,33 +287,33 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
 
       const userEthBalanceBefore = await provider.getBalance(depositor2.address)
       const userCrabBalanceBefore = await crabStrategy.balanceOf(depositor2.address);
-      const userSqueethBalanceBefore = await wSqueeth.balanceOf(depositor2.address)
+      const userSquFuryBalanceBefore = await wSquFury.balanceOf(depositor2.address)
 
       await crabStrategy.connect(depositor2).deposit({ value: msgvalue })
 
       const userEthBalanceAfter = await provider.getBalance(depositor2.address)
       const userCrabBalanceAfter = await crabStrategy.balanceOf(depositor2.address);
-      const userSqueethBalanceAfter = await wSqueeth.balanceOf(depositor2.address)
+      const userSquFuryBalanceAfter = await wSquFury.balanceOf(depositor2.address)
       const [strategyOperatorAfter, strategyNftIdAfter, strategyCollateralAmountAfter, strategyDebtAmountAfter] = await crabStrategy.getVaultDetails()
       const totalSupplyAfter = (await crabStrategy.totalSupply())
 
       // expect((userEthBalanceBefore.sub(userEthBalanceAfter)).eq(msgvalue)).to.be.true
-      expect(userSqueethBalanceBefore.eq(userSqueethBalanceAfter)).to.be.true
+      expect(userSquFuryBalanceBefore.eq(userSquFuryBalanceAfter)).to.be.true
       expect(isSimilar((userCrabBalanceAfter.sub(userCrabBalanceBefore)).toString(), (expectedCrabMint).toString())).to.be.true
       expect(strategyDebtAmountAfter.eq(debtBefore)).to.be.true
       expect(strategyCollateralAmountAfter.eq(collateralBefore.add(msgvalue))).to.be.true
       expect(isSimilar((totalSupplyAfter.sub(totalSupplyBefore)).toString(), (expectedCrabMint).toString())).to.be.true
     })
 
-    it("depositor should revert trying to flashWithdraw with AS due to amount of wSqueeth to buy being 0", async () => {
-      const wSqueethPrice = await oracle.getTwap(wSqueethPool.address, wSqueeth.address, weth.address, 1, false)
+    it("depositor should revert trying to flashWithdraw with AS due to amount of wSquFury to buy being 0", async () => {
+      const wSquFuryPrice = await oracle.getTwap(wSquFuryPool.address, wSquFury.address, weth.address, 1, false)
 
       const userCrabBalanceBefore = await crabStrategy.balanceOf(depositor.address);
       const crabTotalSupply = await crabStrategy.totalSupply()
       const [strategyOperatorBefore, strategyNftIdBefore, strategyCollateralAmountBefore, strategyDebtAmountBefore] = await crabStrategy.getVaultDetails()
       const crabRatio = wdiv(userCrabBalanceBefore, crabTotalSupply);
       const debtToRepay = wmul(crabRatio, strategyDebtAmountBefore);
-      const ethCostOfDebtToRepay = wmul(debtToRepay, wSqueethPrice)
+      const ethCostOfDebtToRepay = wmul(debtToRepay, wSquFuryPrice)
       const userCollateral = wmul(crabRatio, strategyCollateralAmountBefore)
       const ethToWithdraw = userCollateral.sub(ethCostOfDebtToRepay);
       const maxEthToPay = ethToWithdraw.mul(10).div(10)
@@ -322,7 +322,7 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
 
     })
 
-    it("depositor should be able to withdraw and get some ETH, without any wSqueeth", async () => {
+    it("depositor should be able to withdraw and get some ETH, without any wSquFury", async () => {
       const vaultId = await crabStrategy.vaultId();
       const isVaultSafe = await controller.isVaultSafe((await crabStrategy.vaultId()))
       expect(isVaultSafe).to.be.true
@@ -330,7 +330,7 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
       const userCrabBalanceBefore = await crabStrategy.balanceOf(depositor.address);
       const [strategyOperatorBefore, strategyNftIdBefore, strategyCollateralAmountBefore, strategyDebtAmountBefore] = await crabStrategy.getVaultDetails()
       const userEthBalanceBefore = await provider.getBalance(depositor.address)
-      const userSqueethBalanceBefore = await wSqueeth.balanceOf(depositor.address)
+      const userSquFuryBalanceBefore = await wSquFury.balanceOf(depositor.address)
 
       const vaultBefore = await controller.vaults(vaultId)
       const expectedWithdrawal = vaultBefore.collateralAmount.sub(ethers.utils.parseUnits("1"))
@@ -345,7 +345,7 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
 
       const userEthBalanceAfter = await provider.getBalance(depositor.address)
       const userCrabBalanceAfter = await crabStrategy.balanceOf(depositor.address);
-      const userSqueethBalanceAfter = await wSqueeth.balanceOf(depositor.address)
+      const userSquFuryBalanceAfter = await wSquFury.balanceOf(depositor.address)
       const [strategyOperatorAfter, strategyNftIdAfter, strategyCollateralAmountAfter, strategyDebtAmountAfter] = await crabStrategy.getVaultDetails()
 
       const debtAfter = vaultBefore.shortAmount
@@ -354,7 +354,7 @@ describe("Crab V2 integration test: crab vault dust liquidation with excess coll
       // expect(isSimilar((userEthBalanceAfter.sub(userEthBalanceBefore)).toString(),(expectedShareWithdrawal).toString())).to.be.true
       expect(userCrabBalanceAfter.eq(BigNumber.from(0))).to.be.true
       expect(userCrabBalanceBefore.sub(userCrabBalanceAfter).eq(userCrabBalanceBefore)).to.be.true
-      expect(userSqueethBalanceAfter.eq(userSqueethBalanceBefore)).to.be.true
+      expect(userSquFuryBalanceAfter.eq(userSquFuryBalanceBefore)).to.be.true
       // expect(strategyCollateralAmountBefore.sub(strategyCollateralAmountAfter).eq(userEthBalanceAfter.sub(userEthBalanceBefore))).to.be.true
       expect(debtAfter.eq(debtBefore)).to.be.true
       expect(isSimilar((totalSupplyBefore.sub(totalSupplyAfter)).toString(), (userCrabBalanceBefore).toString())).to.be.true

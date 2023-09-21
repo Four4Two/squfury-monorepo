@@ -6,19 +6,19 @@ pragma abicoder v2;
 import "forge-std/Test.sol";
 //interface
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
-import { IController } from "squeeth-monorepo/interfaces/IController.sol";
+import { IController } from "squfury-monorepo/interfaces/IController.sol";
 import { IEulerMarkets } from "../../src/interface/IEulerMarkets.sol";
 import { IEulerEToken } from "../../src/interface/IEulerEToken.sol";
 import { IEulerDToken } from "../../src/interface/IEulerDToken.sol";
 // contract
 import { ZenBullStrategy } from "../../src/ZenBullStrategy.sol";
-import { CrabStrategyV2 } from "squeeth-monorepo/strategy/CrabStrategyV2.sol";
-import { Controller } from "squeeth-monorepo/core/Controller.sol";
+import { CrabStrategyV2 } from "squfury-monorepo/strategy/CrabStrategyV2.sol";
+import { Controller } from "squfury-monorepo/core/Controller.sol";
 // lib
-import { VaultLib } from "squeeth-monorepo/libs/VaultLib.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
+import { VaultLib } from "squfury-monorepo/libs/VaultLib.sol";
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
 import { UniOracle } from "../../src/UniOracle.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
 
 contract TestUtil is Test {
     using StrategyMath for uint256;
@@ -75,17 +75,17 @@ contract TestUtil is Test {
                     TWAP,
                     false
                 );
-                uint256 squeethEthPrice = UniOracle._getTwap(
+                uint256 squfuryEthPrice = UniOracle._getTwap(
                     controller.wPowerPerpPool(),
                     controller.wPowerPerp(),
                     controller.weth(),
                     TWAP,
                     false
                 );
-                (uint256 ethInCrab, uint256 squeethInCrab) = getCrabVaultDetails();
+                (uint256 ethInCrab, uint256 squfuryInCrab) = getCrabVaultDetails();
                 uint256 crabUsdPrice = (
                     ethInCrab.wmul(ethUsdPrice).sub(
-                        squeethInCrab.wmul(squeethEthPrice).wmul(ethUsdPrice)
+                        squfuryInCrab.wmul(squfuryEthPrice).wmul(ethUsdPrice)
                     )
                 ).wdiv(crabV2.totalSupply());
                 wethToLend = zenBullStrategy.TARGET_CR().wmul(_crabToDeposit).wmul(crabUsdPrice)
@@ -116,12 +116,12 @@ contract TestUtil is Test {
             TWAP,
             false
         );
-        uint256 squeethEthPrice = UniOracle._getTwap(
+        uint256 squfuryEthPrice = UniOracle._getTwap(
             controller.wPowerPerpPool(), controller.wPowerPerp(), controller.weth(), TWAP, false
         );
-        (uint256 ethInCrab, uint256 squeethInCrab) = getCrabVaultDetails();
+        (uint256 ethInCrab, uint256 squfuryInCrab) = getCrabVaultDetails();
         uint256 crabUsdPrice = (
-            ethInCrab.wmul(ethUsdPrice).sub(squeethInCrab.wmul(squeethEthPrice).wmul(ethUsdPrice))
+            ethInCrab.wmul(ethUsdPrice).sub(squfuryInCrab.wmul(squfuryEthPrice).wmul(ethUsdPrice))
         ).wdiv(crabV2.totalSupply());
         return crabUsdPrice;
     }
@@ -134,12 +134,12 @@ contract TestUtil is Test {
             TWAP,
             false
         );
-        uint256 squeethEthPrice = UniOracle._getTwap(
+        uint256 squfuryEthPrice = UniOracle._getTwap(
             controller.wPowerPerpPool(), controller.wPowerPerp(), controller.weth(), TWAP, false
         );
-        (uint256 ethInCrab, uint256 squeethInCrab) = getCrabVaultDetails();
+        (uint256 ethInCrab, uint256 squfuryInCrab) = getCrabVaultDetails();
         uint256 crabUsdPrice = (
-            ethInCrab.wmul(ethUsdPrice).sub(squeethInCrab.wmul(squeethEthPrice).wmul(ethUsdPrice))
+            ethInCrab.wmul(ethUsdPrice).sub(squfuryInCrab.wmul(squfuryEthPrice).wmul(ethUsdPrice))
         ).wdiv(crabV2.totalSupply());
         uint256 totalEthDelta = (
             IEulerEToken(eToken).balanceOfUnderlying(address(zenBullStrategy)).wmul(ethUsdPrice)
@@ -193,26 +193,26 @@ contract TestUtil is Test {
         return ethFromCrabRedemption;
     }
 
-    function calcWsqueethToMintAndFee(
+    function calcWsqufuryToMintAndFee(
         uint256 _depositedAmount,
         uint256 _strategyDebtAmount,
         uint256 _strategyCollateralAmount
     ) external view returns (uint256, uint256) {
-        uint256 wSqueethToMint;
-        uint256 wSqueethEthPrice = UniOracle._getTwap(
+        uint256 wSquFuryToMint;
+        uint256 wSquFuryEthPrice = UniOracle._getTwap(
             controller.wPowerPerpPool(), controller.wPowerPerp(), controller.weth(), TWAP, false
         );
 
         uint256 feeRate = IController(zenBullStrategy.powerTokenController()).feeRate();
-        uint256 feeAdjustment = wSqueethEthPrice.mul(feeRate).div(10000);
+        uint256 feeAdjustment = wSquFuryEthPrice.mul(feeRate).div(10000);
 
-        wSqueethToMint = _depositedAmount.wmul(_strategyDebtAmount).wdiv(
+        wSquFuryToMint = _depositedAmount.wmul(_strategyDebtAmount).wdiv(
             _strategyCollateralAmount.add(_strategyDebtAmount.wmul(feeAdjustment))
         );
 
-        uint256 fee = wSqueethToMint.wmul(feeAdjustment);
+        uint256 fee = wSquFuryToMint.wmul(feeAdjustment);
 
-        return (wSqueethToMint, fee);
+        return (wSquFuryToMint, fee);
     }
 
     /**
@@ -240,7 +240,7 @@ contract TestUtil is Test {
         uint256 wethToLend,
         uint256 ethToCrab,
         uint256 usdcToBorrow,
-        uint256 wSqueethToMint
+        uint256 wSquFuryToMint
     ) external view returns (uint256) {
         uint256 ethUsdPrice = UniOracle._getTwap(
             controller.ethQuoteCurrencyPool(),
@@ -249,12 +249,12 @@ contract TestUtil is Test {
             TWAP,
             false
         );
-        uint256 squeethEthPrice = UniOracle._getTwap(
+        uint256 squfuryEthPrice = UniOracle._getTwap(
             controller.wPowerPerpPool(), controller.wPowerPerp(), controller.weth(), TWAP, false
         );
 
         uint256 totalEthToBull = wethToLend.add(ethToCrab).sub(usdcToBorrow.wdiv(ethUsdPrice)).sub(
-            wSqueethToMint.wmul(squeethEthPrice)
+            wSquFuryToMint.wmul(squfuryEthPrice)
         ).add(1e16);
         return totalEthToBull;
     }

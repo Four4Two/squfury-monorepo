@@ -4,7 +4,7 @@ pragma solidity =0.7.6;
 import "forge-std/Test.sol";
 import { ERC20 } from "openzeppelin/token/ERC20/ERC20.sol";
 import { EulerMock } from "./EulerMock.t.sol";
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
 
 contract EulerEtokenMock is ERC20, Test {
     using StrategyMath for uint256;

@@ -5,20 +5,20 @@ import { BigNumber, providers, constants } from "ethers";
 import { Controller, MockWPowerPerp, MockShortPowerPerp, MockOracle, MockUniswapV3Pool, MockErc20, MockUniPositionManager, VaultLibTester, WETH9, ControllerTester, ABDKMath64x64} from '../../typechain'
 import { isEmptyVault } from '../vault-utils'
 import { isSimilar, oracleScaleFactor, one, getNow } from "../utils";
-import { getSqrtPriceAndTickBySqueethPrice } from "../calculator";
+import { getSqrtPriceAndTickBySquFuryPrice } from "../calculator";
 
-const squeethETHPrice = BigNumber.from('3010').mul(one)
-const scaledSqueethPrice = squeethETHPrice.div(oracleScaleFactor)
+const squfuryETHPrice = BigNumber.from('3010').mul(one)
+const scaledSquFuryPrice = squfuryETHPrice.div(oracleScaleFactor)
 
 const ethUSDPrice = BigNumber.from('3000').mul(one)
 const scaledEthPrice = ethUSDPrice.div(oracleScaleFactor)
 
 describe("Controller", function () {
-  let squeeth: MockWPowerPerp;
-  let shortSqueeth: MockShortPowerPerp;
+  let squfury: MockWPowerPerp;
+  let shortSquFury: MockShortPowerPerp;
   let controller: Controller;
   let controllerTester: ControllerTester
-  let squeethEthPool: MockUniswapV3Pool;
+  let squfuryEthPool: MockUniswapV3Pool;
   let ethUSDPool: MockUniswapV3Pool;
   let uniPositionManager: MockUniPositionManager
   let oracle: MockOracle;
@@ -30,7 +30,7 @@ describe("Controller", function () {
   let seller1: SignerWithAddress
   let seller2: SignerWithAddress
   let seller3: SignerWithAddress
-  let seller4: SignerWithAddress // use for burnRSqueeth tests
+  let seller4: SignerWithAddress // use for burnRSquFury tests
   let seller5: SignerWithAddress // settle short vault with nft in it
   let seller6: SignerWithAddress // settle short vault with one-sided nft in it
   let seller7: SignerWithAddress // settle short vault with 0 short
@@ -59,10 +59,10 @@ describe("Controller", function () {
 
   this.beforeAll("Setup environment", async () => {
     const MockSQUContract = await ethers.getContractFactory("MockWPowerPerp");
-    squeeth = (await MockSQUContract.deploy()) as MockWPowerPerp;
+    squfury = (await MockSQUContract.deploy()) as MockWPowerPerp;
 
     const NFTContract = await ethers.getContractFactory("MockShortPowerPerp");
-    shortSqueeth = (await NFTContract.deploy()) as MockShortPowerPerp;
+    shortSquFury = (await NFTContract.deploy()) as MockShortPowerPerp;
 
     const OracleContract = await ethers.getContractFactory("MockOracle");
     oracle = (await OracleContract.deploy()) as MockOracle;
@@ -74,7 +74,7 @@ describe("Controller", function () {
     weth = (await WETHContract.deploy()) as WETH9;
 
     const MockUniswapV3PoolContract = await ethers.getContractFactory("MockUniswapV3Pool");
-    squeethEthPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
+    squfuryEthPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
     ethUSDPool = (await MockUniswapV3PoolContract.deploy()) as MockUniswapV3Pool;
 
     const MockPositionManager = await ethers.getContractFactory("MockUniPositionManager");
@@ -82,11 +82,11 @@ describe("Controller", function () {
 
 
 
-    await squeethEthPool.setPoolTokens(weth.address, squeeth.address);
+    await squfuryEthPool.setPoolTokens(weth.address, squfury.address);
     await ethUSDPool.setPoolTokens(weth.address, usdc.address);
 
 
-    await oracle.connect(random).setPrice(squeethEthPool.address , scaledSqueethPrice) // eth per 1 squeeth
+    await oracle.connect(random).setPrice(squfuryEthPool.address , scaledSquFuryPrice) // eth per 1 squfury
 
     // the oracle should return the exact ETH / USDC price (without scale)
     await oracle.connect(random).setPrice(ethUSDPool.address , ethUSDPrice)  // usdc per 1 eth
@@ -105,7 +105,7 @@ describe("Controller", function () {
 
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
     
-    controller = (await ControllerContract.deploy(oracle.address, shortSqueeth.address, squeeth.address, weth.address, usdc.address, ethUSDPool.address, squeethEthPool.address, uniPositionManager.address, 3000)) as Controller;
+    controller = (await ControllerContract.deploy(oracle.address, shortSquFury.address, squfury.address, weth.address, usdc.address, ethUSDPool.address, squfuryEthPool.address, uniPositionManager.address, 3000)) as Controller;
   });
 
   it("Should revert when oracle is address(0)", async () => {
@@ -121,11 +121,11 @@ describe("Controller", function () {
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
 
     await expect(
-      ControllerContract.deploy(ethers.constants.AddressZero, shortSqueeth.address, squeeth.address, weth.address, usdc.address, ethUSDPool.address, squeethEthPool.address, uniPositionManager.address, 3000)
+      ControllerContract.deploy(ethers.constants.AddressZero, shortSquFury.address, squfury.address, weth.address, usdc.address, ethUSDPool.address, squfuryEthPool.address, uniPositionManager.address, 3000)
     ).to.be.revertedWith("C4");
   });
 
-  it("Should revert when shortSqueeth is address(0)", async () => {
+  it("Should revert when shortSquFury is address(0)", async () => {
     const ABDK = await ethers.getContractFactory("ABDKMath64x64")
     const ABDKLibrary = (await ABDK.deploy()) as ABDKMath64x64;
 
@@ -138,7 +138,7 @@ describe("Controller", function () {
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
 
     await expect(
-      ControllerContract.deploy(oracle.address, ethers.constants.AddressZero, squeeth.address, weth.address, usdc.address, ethUSDPool.address, squeethEthPool.address, uniPositionManager.address, 3000)
+      ControllerContract.deploy(oracle.address, ethers.constants.AddressZero, squfury.address, weth.address, usdc.address, ethUSDPool.address, squfuryEthPool.address, uniPositionManager.address, 3000)
     ).to.be.revertedWith("C5");
   });
 
@@ -155,7 +155,7 @@ describe("Controller", function () {
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
 
     await expect(
-      ControllerContract.deploy(oracle.address, shortSqueeth.address, ethers.constants.AddressZero, weth.address, usdc.address, ethUSDPool.address, squeethEthPool.address, uniPositionManager.address, 3000)
+      ControllerContract.deploy(oracle.address, shortSquFury.address, ethers.constants.AddressZero, weth.address, usdc.address, ethUSDPool.address, squfuryEthPool.address, uniPositionManager.address, 3000)
     ).to.be.revertedWith("C6");
   });
 
@@ -172,7 +172,7 @@ describe("Controller", function () {
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
 
     await expect(
-      ControllerContract.deploy(oracle.address, shortSqueeth.address, squeeth.address, ethers.constants.AddressZero, usdc.address, ethUSDPool.address, squeethEthPool.address, uniPositionManager.address, 3000)
+      ControllerContract.deploy(oracle.address, shortSquFury.address, squfury.address, ethers.constants.AddressZero, usdc.address, ethUSDPool.address, squfuryEthPool.address, uniPositionManager.address, 3000)
     ).to.be.revertedWith("C7");
   });
   
@@ -189,7 +189,7 @@ describe("Controller", function () {
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
 
     await expect(
-      ControllerContract.deploy(oracle.address, shortSqueeth.address, squeeth.address, weth.address, ethers.constants.AddressZero, ethUSDPool.address, squeethEthPool.address, uniPositionManager.address, 3000)
+      ControllerContract.deploy(oracle.address, shortSquFury.address, squfury.address, weth.address, ethers.constants.AddressZero, ethUSDPool.address, squfuryEthPool.address, uniPositionManager.address, 3000)
     ).to.be.revertedWith("C8");
   });
 
@@ -206,11 +206,11 @@ describe("Controller", function () {
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
 
     await expect(
-      ControllerContract.deploy(oracle.address, shortSqueeth.address, squeeth.address, weth.address, usdc.address, ethers.constants.AddressZero, squeethEthPool.address, uniPositionManager.address, 3000)
+      ControllerContract.deploy(oracle.address, shortSquFury.address, squfury.address, weth.address, usdc.address, ethers.constants.AddressZero, squfuryEthPool.address, uniPositionManager.address, 3000)
     ).to.be.revertedWith("C9");
   });
 
-  it("Should revert when squeethEthPool is address(0)", async () => {
+  it("Should revert when squfuryEthPool is address(0)", async () => {
     const ABDK = await ethers.getContractFactory("ABDKMath64x64")
     const ABDKLibrary = (await ABDK.deploy()) as ABDKMath64x64;
 
@@ -223,7 +223,7 @@ describe("Controller", function () {
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
 
     await expect(
-      ControllerContract.deploy(oracle.address, shortSqueeth.address, squeeth.address, weth.address, usdc.address, ethUSDPool.address, ethers.constants.AddressZero, uniPositionManager.address, 3000)
+      ControllerContract.deploy(oracle.address, shortSquFury.address, squfury.address, weth.address, usdc.address, ethUSDPool.address, ethers.constants.AddressZero, uniPositionManager.address, 3000)
     ).to.be.revertedWith("C10");
   });
 
@@ -240,20 +240,20 @@ describe("Controller", function () {
     const ControllerContract = await ethers.getContractFactory("Controller", {libraries: {ABDKMath64x64: ABDKLibrary.address, TickMathExternal: TickMathLibrary.address, SqrtPriceMathPartial: SqrtPriceExternalLibrary.address}});
 
     await expect(
-      ControllerContract.deploy(oracle.address, shortSqueeth.address, squeeth.address, weth.address, usdc.address, ethUSDPool.address, squeethEthPool.address, ethers.constants.AddressZero, 3000)
+      ControllerContract.deploy(oracle.address, shortSquFury.address, squfury.address, weth.address, usdc.address, ethUSDPool.address, squfuryEthPool.address, ethers.constants.AddressZero, 3000)
     ).to.be.revertedWith("C11");
   });
 
   describe("Deployment", async () => {
     it("Check controller deployment", async () => {
-      const squeethAddr = await controller.wPowerPerp();
+      const squfuryAddr = await controller.wPowerPerp();
       const nftAddr = await controller.shortPowerPerp();
 
-      expect(squeethAddr).to.be.eq(
-        squeeth.address,
-        "squeeth address mismatch"
+      expect(squfuryAddr).to.be.eq(
+        squfury.address,
+        "squfury address mismatch"
       );
-      expect(nftAddr).to.be.eq(shortSqueeth.address, "nft address mismatch");
+      expect(nftAddr).to.be.eq(shortSquFury.address, "nft address mismatch");
     });
 
     it("Controller tester deployment", async function () {
@@ -336,8 +336,8 @@ describe("Controller", function () {
         const markPrice = await controller.getDenormalizedMark(30)
         const markPriceForFunding = await controller.getDenormalizedMarkForFunding(30)
 
-        expect(isSimilar(markPrice.toString(), scaledSqueethPrice.mul(scaledEthPrice).div(one).toString())).to.be.true
-        expect(isSimilar(markPriceForFunding.toString(), scaledSqueethPrice.mul(scaledEthPrice).div(one).toString())).to.be.true
+        expect(isSimilar(markPrice.toString(), scaledSquFuryPrice.mul(scaledEthPrice).div(one).toString())).to.be.true
+        expect(isSimilar(markPriceForFunding.toString(), scaledSquFuryPrice.mul(scaledEthPrice).div(one).toString())).to.be.true
         expect(markPrice.gt(markPriceForFunding)).to.be.true
 
         const index = await controller.getIndex(30)
@@ -358,12 +358,12 @@ describe("Controller", function () {
 
     describe("#Mint: Open vault", async () => {
       it("Should be able to open vaults", async () => {
-        vaultId = await shortSqueeth.nextId()
-        const nftBalanceBefore = await shortSqueeth.balanceOf(seller1.address)
+        vaultId = await shortSquFury.nextId()
+        const nftBalanceBefore = await shortSquFury.balanceOf(seller1.address)
         await controller.connect(seller1).mintPowerPerpAmount(0, 0, 0) // putting vaultId = 0 to open vault
 
         // total short position nft should increase
-        const nftBalanceAfter = await shortSqueeth.balanceOf(seller1.address)
+        const nftBalanceAfter = await shortSquFury.balanceOf(seller1.address)
         expect(nftBalanceAfter.eq(nftBalanceBefore.add(1))).is.true;
 
         // the newly created vault should be empty
@@ -419,7 +419,7 @@ describe("Controller", function () {
       });
     });
 
-    describe("#Mint: Mint Squeeth", async () => {
+    describe("#Mint: Mint SquFury", async () => {
       it("Should revert if not called by owner", async () => {
         const mintAmount = ethers.utils.parseUnits('100')
         
@@ -432,20 +432,20 @@ describe("Controller", function () {
           'ERC721: owner query for nonexistent token'
         )
       })
-      it("Should be able to mint squeeth", async () => {
+      it("Should be able to mint squfury", async () => {
         const mintAmount = ethers.utils.parseUnits('100')
         
         const vaultBefore = await controller.vaults(vaultId)
-        const squeethBalanceBefore = await squeeth.balanceOf(seller1.address)
+        const squfuryBalanceBefore = await squfury.balanceOf(seller1.address)
         
         await controller.connect(seller1).mintPowerPerpAmount(vaultId, mintAmount, 0)
 
-        const squeethBalanceAfter = await squeeth.balanceOf(seller1.address)
+        const squfuryBalanceAfter = await squfury.balanceOf(seller1.address)
         const vaultAfter = await controller.vaults(vaultId)
         const normFactor = await controller.normalizationFactor()
 
         expect(vaultBefore.shortAmount.add(mintAmount.mul(one).div(normFactor)).eq(vaultAfter.shortAmount)).to.be.true
-        expect(squeethBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squeethBalanceAfter)).to.be.true
+        expect(squfuryBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squfuryBalanceAfter)).to.be.true
       });
       
       it("Should revert when minting more than allowed", async () => {
@@ -457,7 +457,7 @@ describe("Controller", function () {
 
     });
 
-    describe("#Burn: Burn Squeeth", async () => {
+    describe("#Burn: Burn SquFury", async () => {
       it("Should revert when trying to burn for vault 0", async() => {
         await expect(controller.connect(seller1).burnPowerPerpAmount(0, 0, 0)).to.be.revertedWith(
           'ERC721: owner query for nonexistent token'
@@ -483,14 +483,14 @@ describe("Controller", function () {
         const vault = await controller.vaults(vaultId)
         await expect(controller.connect(seller1).burnWPowerPerpAmount(vaultId, vault.shortAmount.add(1), 0)).to.be.revertedWith('SafeMath: subtraction overflow')
       });
-      // todo: add another case to test burning someone else squeeth while being a seller
-      it("Should revert if trying to burn without having squeeth", async () => {
+      // todo: add another case to test burning someone else squfury while being a seller
+      it("Should revert if trying to burn without having squfury", async () => {
         const vault = await controller.vaults(vaultId)
-        await squeeth.connect(seller1).transfer(random.address, 1)
+        await squfury.connect(seller1).transfer(random.address, 1)
         await expect(controller.connect(seller1).burnWPowerPerpAmount(vaultId, vault.shortAmount, 0)).to.be.revertedWith(
           'ERC20: burn amount exceeds balance'
         )
-        await squeeth.mint(seller1.address, 1)
+        await squfury.mint(seller1.address, 1)
       });
       it('should revert if vault after burning is underwater', async() => {
         const vault = await controller.vaults(vaultId)
@@ -506,8 +506,8 @@ describe("Controller", function () {
         await expect(controller.connect(seller1).withdraw(vaultId, vault.collateralAmount)).to.be.revertedWith('C24')
       })
 
-      it('Should revert if a random account tries to burn squeeth for vault1', async() => {
-        await squeeth.mint(random.address, 1000)
+      it('Should revert if a random account tries to burn squfury for vault1', async() => {
+        await squfury.mint(random.address, 1000)
         await expect(controller.connect(random).burnWPowerPerpAmount(vaultId, 1000, 0)).to.be.revertedWith("C20")
       })
 
@@ -515,20 +515,20 @@ describe("Controller", function () {
         await expect(controller.connect(random).burnWPowerPerpAmount(vaultId, 0, 1000)).to.be.revertedWith('C20')
       })
       
-      it("Should be able to burn squeeth", async () => {
+      it("Should be able to burn squfury", async () => {
         const vaultBefore = await controller.vaults(vaultId)
         const burnAmount = vaultBefore.shortAmount;
-        const squeethBalanceBefore = await squeeth.balanceOf(seller1.address)
+        const squfuryBalanceBefore = await squfury.balanceOf(seller1.address)
         const withdrawAmount = 5
 
         await controller.connect(seller1).burnWPowerPerpAmount(vaultId, burnAmount, withdrawAmount)
 
-        const squeethBalanceAfter = await squeeth.balanceOf(seller1.address)
+        const squfuryBalanceAfter = await squfury.balanceOf(seller1.address)
         const vaultAfter = await controller.vaults(vaultId)
 
         expect(vaultBefore.shortAmount.sub(burnAmount).eq(vaultAfter.shortAmount)).to.be.true
         expect(vaultBefore.collateralAmount.sub(withdrawAmount).eq(vaultAfter.collateralAmount)).to.be.true
-        expect(squeethBalanceBefore.sub(burnAmount).eq(squeethBalanceAfter)).to.be.true
+        expect(squfuryBalanceBefore.sub(burnAmount).eq(squfuryBalanceAfter)).to.be.true
       });
     });
 
@@ -550,7 +550,7 @@ describe("Controller", function () {
       })
 
       it('should revert if trying to remove collateral which produce a vault dust', async() => {
-        // mint little wsqueeth
+        // mint little wsqufury
         const mintAmount = 1000
         await controller.connect(seller1).mintWPowerPerpAmount(vaultId, mintAmount, 0)
 
@@ -580,14 +580,14 @@ describe("Controller", function () {
       it("Should close the vault when it's empty", async () => {
         const vaultBefore = await controller.vaults(vaultId)
         const withdrawAmount = vaultBefore.collateralAmount
-        const nftBalanceBefore = await shortSqueeth.balanceOf(seller1.address)
+        const nftBalanceBefore = await shortSquFury.balanceOf(seller1.address)
         const burnAmount = vaultBefore.shortAmount
         const controllerBalanceBefore = await provider.getBalance(controller.address)
         
         await controller.connect(seller1).burnWPowerPerpAmount(vaultId, burnAmount, withdrawAmount)
         
         const controllerBalanceAfter = await provider.getBalance(controller.address)
-        const nftBalanceAfter = await shortSqueeth.balanceOf(seller1.address)
+        const nftBalanceAfter = await shortSquFury.balanceOf(seller1.address)
 
         expect(controllerBalanceBefore.sub(withdrawAmount).eq(controllerBalanceAfter)).to.be.true
         expect(nftBalanceAfter.eq(nftBalanceBefore)).to.be.true // nft is not burned
@@ -607,26 +607,26 @@ describe("Controller", function () {
           .to.be.revertedWith('C22')
       })
       it('should open vault, deposit and mint in the same tx', async() => {
-        vaultId = await shortSqueeth.nextId()
+        vaultId = await shortSquFury.nextId()
         const mintAmount = ethers.utils.parseUnits('100')
         const collateralAmount = ethers.utils.parseUnits('45') 
 
         const controllerBalanceBefore = await provider.getBalance(controller.address)
-        const nftBalanceBefore = await shortSqueeth.balanceOf(seller1.address)
-        const squeethBalanceBefore = await squeeth.balanceOf(seller1.address)
+        const nftBalanceBefore = await shortSquFury.balanceOf(seller1.address)
+        const squfuryBalanceBefore = await squfury.balanceOf(seller1.address)
 
         // put vaultId as 0 to open vault
         await controller.connect(seller1).mintPowerPerpAmount(0, mintAmount, 0, {value: collateralAmount})
 
         const normFactor = await controller.normalizationFactor()
         const controllerBalanceAfter = await provider.getBalance(controller.address)
-        const nftBalanceAfter = await shortSqueeth.balanceOf(seller1.address)
-        const squeethBalanceAfter = await squeeth.balanceOf(seller1.address)
+        const nftBalanceAfter = await shortSquFury.balanceOf(seller1.address)
+        const squfuryBalanceAfter = await squfury.balanceOf(seller1.address)
         const newVault = await controller.vaults(vaultId)
 
         expect(nftBalanceBefore.add(1).eq(nftBalanceAfter)).to.be.true
         expect(controllerBalanceBefore.add(collateralAmount).eq(controllerBalanceAfter)).to.be.true
-        expect(squeethBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squeethBalanceAfter)).to.be.true
+        expect(squfuryBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squfuryBalanceAfter)).to.be.true
 
         expect(newVault.collateralAmount.eq(collateralAmount)).to.be.true
         expect(newVault.shortAmount.eq(mintAmount.mul(one).div(normFactor))).to.be.true
@@ -636,41 +636,41 @@ describe("Controller", function () {
     describe('Deposit and mint with mintWPowerPerpAmount', () => {
       
       it('Should revert if a random address tries to deposit collateral using mintWPowerPerpAmount', async() => {
-        // mint some other squeeth in vault 2.
+        // mint some other squfury in vault 2.
         const collateralAmount = ethers.utils.parseUnits('4.5')
 
         await expect(controller.connect(random).mintWPowerPerpAmount(vaultId, 0, 0, {value: collateralAmount})).to.be.revertedWith("C20")
       })
 
       it('Should revert if a random address tries to deposit a Uni NFT using mintWPowerPerpAmount', async() => {
-        // mint some other squeeth in vault 2.
+        // mint some other squfury in vault 2.
         const uniTokenId = 100
         
         await expect(controller.connect(random).mintWPowerPerpAmount(vaultId, 0, uniTokenId)).to.be.revertedWith("C20")
       })
       
       it('should deposit and mint in the same tx', async() => {
-        // mint some other squeeth in vault 2.
+        // mint some other squfury in vault 2.
         const normFactor = await controller.normalizationFactor()
-        const mintRSqueethAmount = ethers.utils.parseUnits('1')
-        const mintWSqueethAmount = mintRSqueethAmount.mul(one).div(normFactor)
+        const mintRSquFuryAmount = ethers.utils.parseUnits('1')
+        const mintWSquFuryAmount = mintRSquFuryAmount.mul(one).div(normFactor)
         const collateralAmount = ethers.utils.parseUnits('4.5')
 
         const controllerBalanceBefore = await provider.getBalance(controller.address)
-        const squeethBalanceBefore = await squeeth.balanceOf(seller1.address)
+        const squfuryBalanceBefore = await squfury.balanceOf(seller1.address)
         const vaultBefore = await controller.vaults(vaultId)
 
-        await controller.connect(seller1).mintWPowerPerpAmount(vaultId, mintWSqueethAmount, 0, {value: collateralAmount})
+        await controller.connect(seller1).mintWPowerPerpAmount(vaultId, mintWSquFuryAmount, 0, {value: collateralAmount})
 
         const controllerBalanceAfter = await provider.getBalance(controller.address)
-        const squeethBalanceAfter = await squeeth.balanceOf(seller1.address)
+        const squfuryBalanceAfter = await squfury.balanceOf(seller1.address)
         const vaultAfter = await controller.vaults(vaultId)
 
         expect(controllerBalanceBefore.add(collateralAmount).eq(controllerBalanceAfter)).to.be.true
-        expect(squeethBalanceBefore.add(mintWSqueethAmount).eq(squeethBalanceAfter)).to.be.true
+        expect(squfuryBalanceBefore.add(mintWSquFuryAmount).eq(squfuryBalanceAfter)).to.be.true
 
         expect(vaultBefore.collateralAmount.add(collateralAmount).eq(vaultAfter.collateralAmount)).to.be.true
-        expect(vaultBefore.shortAmount.add(mintWSqueethAmount).eq(vaultAfter.shortAmount)).to.be.true
+        expect(vaultBefore.shortAmount.add(mintWSquFuryAmount).eq(vaultAfter.shortAmount)).to.be.true
       })
 
       it('should just mint if deposit amount is 0', async() => {
@@ -712,23 +712,23 @@ describe("Controller", function () {
         expect(vault.operator).to.be.eq(random.address)
       })
       it('should deposit and mint in the same tx', async() => {
-        // mint some other squeeth in vault 2.
+        // mint some other squfury in vault 2.
         const mintAmount = ethers.utils.parseUnits('100')
         const collateralAmount = ethers.utils.parseUnits('45')
 
         const controllerBalanceBefore = await provider.getBalance(controller.address)
-        const squeethBalanceBefore = await squeeth.balanceOf(random.address)
+        const squfuryBalanceBefore = await squfury.balanceOf(random.address)
         const vaultBefore = await controller.vaults(vaultId)
 
         await controller.connect(random).mintPowerPerpAmount(vaultId, mintAmount, 0, {value: collateralAmount})
 
         const controllerBalanceAfter = await provider.getBalance(controller.address)
-        const squeethBalanceAfter = await squeeth.balanceOf(random.address)
+        const squfuryBalanceAfter = await squfury.balanceOf(random.address)
         const vaultAfter = await controller.vaults(vaultId)
         const normFactor = await controller.normalizationFactor()
 
         expect(controllerBalanceBefore.add(collateralAmount).eq(controllerBalanceAfter)).to.be.true
-        expect(squeethBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squeethBalanceAfter)).to.be.true
+        expect(squfuryBalanceBefore.add(mintAmount.mul(one).div(normFactor)).eq(squfuryBalanceAfter)).to.be.true
 
         expect(vaultBefore.collateralAmount.add(collateralAmount).eq(vaultAfter.collateralAmount)).to.be.true
         expect(vaultBefore.shortAmount.add(mintAmount.mul(one).div(normFactor)).eq(vaultAfter.shortAmount)).to.be.true
@@ -742,8 +742,8 @@ describe("Controller", function () {
 
     describe('Burn and withdraw', () => {
       let seller4VaultId: BigNumber
-      before('mint squeeth for seller4 to withdraw', async() => {
-        seller4VaultId = await shortSqueeth.nextId()
+      before('mint squfury for seller4 to withdraw', async() => {
+        seller4VaultId = await shortSquFury.nextId()
         const mintRAmount = ethers.utils.parseUnits('100')
         const collateralAmount = ethers.utils.parseUnits('45')
         await controller.connect(seller4).mintPowerPerpAmount(0, mintRAmount, 0, {value: collateralAmount})
@@ -752,25 +752,25 @@ describe("Controller", function () {
       it('should burn and withdraw with burnRPowerPerp', async() => {
         const vaultBefore = await controller.vaults(seller4VaultId)
         
-        // the real rSqueeth amount will decrease after funding.
-        const burnRSqueethAmount = ethers.utils.parseUnits('100').div(2)
+        // the real rSquFury amount will decrease after funding.
+        const burnRSquFuryAmount = ethers.utils.parseUnits('100').div(2)
         const withdrawCollateralAmount = ethers.utils.parseUnits('45').div(2)
 
         const controllerBalanceBefore = await provider.getBalance(controller.address)
-        const wsqueethBalanceBefore = await squeeth.balanceOf(seller4.address)
+        const wsqufuryBalanceBefore = await squfury.balanceOf(seller4.address)
 
-        await controller.connect(seller4).burnPowerPerpAmount(seller4VaultId, burnRSqueethAmount, withdrawCollateralAmount)
+        await controller.connect(seller4).burnPowerPerpAmount(seller4VaultId, burnRSquFuryAmount, withdrawCollateralAmount)
 
         const controllerBalanceAfter = await provider.getBalance(controller.address)
-        const wsqueethBalanceAfter = await squeeth.balanceOf(seller4.address)
+        const wsqufuryBalanceAfter = await squfury.balanceOf(seller4.address)
         const vaultAfter = await controller.vaults(seller4VaultId)        
         const normFactor = await controller.normalizationFactor()
 
         expect(controllerBalanceBefore.sub(withdrawCollateralAmount).eq(controllerBalanceAfter)).to.be.true
-        expect(wsqueethBalanceBefore.sub(burnRSqueethAmount.mul(one).div(normFactor)).eq(wsqueethBalanceAfter)).to.be.true
+        expect(wsqufuryBalanceBefore.sub(burnRSquFuryAmount.mul(one).div(normFactor)).eq(wsqufuryBalanceAfter)).to.be.true
 
         expect(vaultBefore.collateralAmount.sub(withdrawCollateralAmount).eq(vaultAfter.collateralAmount)).to.be.true
-        expect(vaultBefore.shortAmount.sub(burnRSqueethAmount.mul(one).div(normFactor)).eq(vaultAfter.shortAmount)).to.be.true
+        expect(vaultBefore.shortAmount.sub(burnRSquFuryAmount.mul(one).div(normFactor)).eq(vaultAfter.shortAmount)).to.be.true
       })
       after('clean up vault4', async() => {
         const vault = await controller.vaults(seller4VaultId)
@@ -787,19 +787,19 @@ describe("Controller", function () {
       expect((await controller.feeRate()).eq(100)).to.be.true
     })
     it('should revert if vault is unable to pay fee amount from attach amount or vault collateral', async() => {
-      vaultId = await shortSqueeth.nextId()
+      vaultId = await shortSquFury.nextId()
       const powerPerpToMint = ethers.utils.parseUnits('0.5')
       await expect(controller.connect(random).mintPowerPerpAmount(0, powerPerpToMint, 0)).to.be.revertedWith('SafeMath: subtraction overflow')
 
     })
     it('should charge fee on mintPowerPerpAmount from deposit amount', async() => {
-      vaultId = await shortSqueeth.nextId()
+      vaultId = await shortSquFury.nextId()
 
       const normFactor = await controller.normalizationFactor()
 
       const powerPerpToMint = ethers.utils.parseUnits('0.5')
       const collateralDeposited = ethers.utils.parseUnits('0.55')
-      const powerPerpInEth =  scaledSqueethPrice.mul(powerPerpToMint).mul(normFactor).div(one).div(one)
+      const powerPerpInEth =  scaledSquFuryPrice.mul(powerPerpToMint).mul(normFactor).div(one).div(one)
       const expectedFee = powerPerpInEth.div(100)
       const totalEthAttached = expectedFee.add(collateralDeposited)
     
@@ -821,7 +821,7 @@ describe("Controller", function () {
       const normFactor = await controller.normalizationFactor()
 
       const powerPerpToMint = ethers.utils.parseUnits('0.5')
-      const powerPerpInEth =  scaledSqueethPrice.mul(powerPerpToMint).mul(normFactor).div(one).div(one)
+      const powerPerpInEth =  scaledSquFuryPrice.mul(powerPerpToMint).mul(normFactor).div(one).div(one)
       const expectedFee = powerPerpInEth.div(100)
     
       const feeRecipientBalanceBefore = await provider.getBalance(feeRecipient.address)
@@ -837,21 +837,21 @@ describe("Controller", function () {
     })
 
     it('should charge fee on mintWPowerPerpAmount from deposit amount', async() => {
-      vaultId = await shortSqueeth.nextId()
+      vaultId = await shortSquFury.nextId()
 
-      const wSqueethToMint = ethers.utils.parseUnits('0.1')
+      const wSquFuryToMint = ethers.utils.parseUnits('0.1')
       const collateralDeposited = ethers.utils.parseUnits('0.55')
       
       const feeRecipientBalanceBefore = await provider.getBalance(feeRecipient.address)
 
-      const powerPerpInEth =  scaledSqueethPrice.mul(wSqueethToMint).div(one)
+      const powerPerpInEth =  scaledSquFuryPrice.mul(wSquFuryToMint).div(one)
       const expectedFee = powerPerpInEth.div(100)
       const totalEthAttached = expectedFee.add(collateralDeposited)
 
       const now = await getNow(provider)
       await provider.send("evm_setNextBlockTimestamp", [now+1]) 
 
-      await controller.connect(random).mintWPowerPerpAmount(0, wSqueethToMint, 0, { value: totalEthAttached })
+      await controller.connect(random).mintWPowerPerpAmount(0, wSquFuryToMint, 0, { value: totalEthAttached })
       
 
       const feeRecipientBalanceAfter = await provider.getBalance(feeRecipient.address)
@@ -865,13 +865,13 @@ describe("Controller", function () {
     it('should charge fee on mintWPowerPerpAmount from vault collateral', async() => {
 
       const vaultBefore = await controller.vaults(vaultId)
-      const wSqueethToMint = ethers.utils.parseUnits('0.1')
+      const wSquFuryToMint = ethers.utils.parseUnits('0.1')
     
       const feeRecipientBalanceBefore = await provider.getBalance(feeRecipient.address)
 
-      await controller.connect(random).mintWPowerPerpAmount(vaultId, wSqueethToMint, 0)
+      await controller.connect(random).mintWPowerPerpAmount(vaultId, wSquFuryToMint, 0)
       
-      const powerPerpInEth =  scaledSqueethPrice.mul(wSqueethToMint).div(one)
+      const powerPerpInEth =  scaledSquFuryPrice.mul(wSquFuryToMint).div(one)
       const expectedFee = powerPerpInEth.div(100)
 
       const feeRecipientBalanceAfter = await provider.getBalance(feeRecipient.address)
@@ -914,19 +914,19 @@ describe("Controller", function () {
     let seller5VaultId: BigNumber
     const seller5NFTId = 1
     
-    let seller3TotalSqueeth: BigNumber
+    let seller3TotalSquFury: BigNumber
 
     let initialTick: string
 
     const ethLiquidityAmount = ethers.utils.parseUnits('30')
-    const squeethLiquidityAmount = ethers.utils.parseUnits('100')
+    const squfuryLiquidityAmount = ethers.utils.parseUnits('100')
     
     let normalizationFactor: BigNumber
     let wethIsToken0: boolean  
     const collateralAmount = ethers.utils.parseEther('50')
     
 
-    // seller 6 is the seller with nft with all squeeth
+    // seller 6 is the seller with nft with all squfury
     let seller6VaultId: BigNumber
     const seller6NFTId = 2
     const s6MintAmount = ethers.utils.parseUnits('0.0001')
@@ -942,12 +942,12 @@ describe("Controller", function () {
     
 
     before('set LP token properties', async() => {
-      wethIsToken0 = parseInt(weth.address, 16) < parseInt(squeeth.address, 16)
-      const token0 = wethIsToken0 ? weth.address : squeeth.address
-      const token1 = wethIsToken0 ? squeeth.address : weth.address
-      const { sqrtPrice: sqrtX96Price, tick } = getSqrtPriceAndTickBySqueethPrice(scaledSqueethPrice, wethIsToken0)
+      wethIsToken0 = parseInt(weth.address, 16) < parseInt(squfury.address, 16)
+      const token0 = wethIsToken0 ? weth.address : squfury.address
+      const token1 = wethIsToken0 ? squfury.address : weth.address
+      const { sqrtPrice: sqrtX96Price, tick } = getSqrtPriceAndTickBySquFuryPrice(scaledSquFuryPrice, wethIsToken0)
       initialTick = tick
-      await oracle.setAverageTick(squeethEthPool.address, tick)
+      await oracle.setAverageTick(squfuryEthPool.address, tick)
 
       
       // infinite price range
@@ -957,11 +957,11 @@ describe("Controller", function () {
         sqrtX96Price,
         nftTickLower,
         nftTickUpper,
-        wethIsToken0 ? ethLiquidityAmount : squeethLiquidityAmount,
-        wethIsToken0 ? squeethLiquidityAmount: ethLiquidityAmount,
+        wethIsToken0 ? ethLiquidityAmount : squfuryLiquidityAmount,
+        wethIsToken0 ? squfuryLiquidityAmount: ethLiquidityAmount,
       )
       
-      await squeethEthPool.setSlot0Data(sqrtX96Price, initialTick)
+      await squfuryEthPool.setSlot0Data(sqrtX96Price, initialTick)
       await uniPositionManager.setMockedProperties(token0, token1, nftTickLower, nftTickUpper, liquidity)
 
       // set amount getting out from position manager
@@ -970,8 +970,8 @@ describe("Controller", function () {
       const token1ToSet = wethIsToken0 ? wPowerPerpAmount : ethAmount
       await uniPositionManager.setAmount0Amount1ToDecrease(token0ToSet, token1ToSet)
 
-      // minting 2x the amount of eth and squeeth as we have 2 nfts to test
-      await squeeth.mint(uniPositionManager.address, wPowerPerpAmount.mul(2));
+      // minting 2x the amount of eth and squfury as we have 2 nfts to test
+      await squfury.mint(uniPositionManager.address, wPowerPerpAmount.mul(2));
       await weth.deposit({value: ethAmount.mul(2)});
       await weth.transfer(uniPositionManager.address, ethAmount.mul(2));
 
@@ -983,21 +983,21 @@ describe("Controller", function () {
     
     before('Prepare a new vault for this test set', async() => {
       // prepare a vault that's gonna go underwater
-      seller2VaultId = await shortSqueeth.nextId()
+      seller2VaultId = await shortSquFury.nextId()
       const mintAmount = ethers.utils.parseUnits('100')
       await controller.connect(seller2).mintPowerPerpAmount(0, mintAmount, 0, { value: collateralAmount })
 
       // prepare a vault that's not gonna go insolvent
-      seller3VaultId = await shortSqueeth.nextId()
+      seller3VaultId = await shortSquFury.nextId()
       const s3MintAmount = ethers.utils.parseUnits('4')
       await controller.connect(seller3).mintPowerPerpAmount(0, s3MintAmount, 0, { value: collateralAmount })
-      seller3TotalSqueeth = await squeeth.balanceOf(seller3.address)
+      seller3TotalSquFury = await squfury.balanceOf(seller3.address)
 
-      // mint a lot of squeeth from seller1 that system can't payout to.
+      // mint a lot of squfury from seller1 that system can't payout to.
       const collateral = ethers.utils.parseUnits('450')
       await controller.connect(seller1).mintPowerPerpAmount(0, ethers.utils.parseUnits('1000'), 0, {value: collateral})
 
-      seller5VaultId = await shortSqueeth.nextId()
+      seller5VaultId = await shortSquFury.nextId()
       const s5MintAmount = ethers.utils.parseUnits('1')
       // mint fake nft for seller5
       await uniPositionManager.mint(seller5.address, seller5NFTId)
@@ -1005,18 +1005,18 @@ describe("Controller", function () {
       await controller.connect(seller5).mintPowerPerpAmount(0, s5MintAmount, seller5NFTId, { value: collateralAmount })   
 
       // prepare a vault with nft for seller 6
-      seller6VaultId = await shortSqueeth.nextId()
+      seller6VaultId = await shortSquFury.nextId()
 
       await uniPositionManager.mint(seller6.address, seller6NFTId)
       await uniPositionManager.connect(seller6).approve(controller.address, seller6NFTId)
       await controller.connect(seller6).mintWPowerPerpAmount(0, s6MintAmount, seller6NFTId, { value: seller6Collateral })      
 
       // prepare a vault with no short for seller 7
-      seller7VaultId = await shortSqueeth.nextId()
+      seller7VaultId = await shortSquFury.nextId()
       await controller.connect(seller7).mintPowerPerpAmount(0, 0, 0, { value: vault7Collateral })      
 
       // prepare an insolvent vault with nft (seller8)
-      seller8VaultId = await shortSqueeth.nextId()
+      seller8VaultId = await shortSquFury.nextId()
       const s8MintAmount = ethers.utils.parseUnits('133')
       await uniPositionManager.mint(seller8.address, seller8NFTId)
       await uniPositionManager.connect(seller8).approve(controller.address, seller8NFTId)
@@ -1184,7 +1184,7 @@ describe("Controller", function () {
       it("Should shutdown the system at a price that it will go insolvent", async () => {
         const ethPrice = settlementPrice
 
-        const { tick, sqrtPrice: newSqrtPrice } = getSqrtPriceAndTickBySqueethPrice(scaledSettlementPrice, wethIsToken0)
+        const { tick, sqrtPrice: newSqrtPrice } = getSqrtPriceAndTickBySquFuryPrice(scaledSettlementPrice, wethIsToken0)
         // update prices in pool and oracle.
         const newTick = tick
 
@@ -1193,11 +1193,11 @@ describe("Controller", function () {
         const token1ToSet = wethIsToken0 ? wPowerPerpAmount : ethAmount
         await uniPositionManager.setAmount0Amount1ToDecrease(token0ToSet, token1ToSet)
 
-        await oracle.connect(random).setPrice(ethUSDPool.address , ethPrice) // eth per 1 squeeth
+        await oracle.connect(random).setPrice(ethUSDPool.address , ethPrice) // eth per 1 squfury
 
-        await squeethEthPool.setSlot0Data(newSqrtPrice, newTick)
-        await oracle.setPrice(squeethEthPool.address, scaledSettlementPrice)
-        await oracle.setAverageTick(squeethEthPool.address, newTick)
+        await squfuryEthPool.setSlot0Data(newSqrtPrice, newTick)
+        await oracle.setPrice(squfuryEthPool.address, scaledSettlementPrice)
+        await oracle.setAverageTick(squfuryEthPool.address, newTick)
         await oracle.setPrice(ethUSDPool.address, settlementPrice)
 
         await controller.connect(owner).shutDown()
@@ -1227,13 +1227,13 @@ describe("Controller", function () {
     });
     describe("Settlement: redeemLong", async () => {
       it("should go insolvent while trying to redeem fair value for seller1 (big holder)", async () => {
-        const seller1Amount = await squeeth.balanceOf(seller1.address)
+        const seller1Amount = await squfury.balanceOf(seller1.address)
         await expect(
           controller.connect(seller1).redeemLong(seller1Amount)
         ).to.be.revertedWith("Address: insufficient balance");
       });
       it("should accept donation from random address", async() => {
-        const settleAmount = await squeeth.totalSupply()
+        const settleAmount = await squfury.totalSupply()
         const expectedPayout = settleAmount.mul(normalizationFactor).mul(settlementPrice).div(one).div(one)
         const controllerEthBalance = await provider.getBalance(controller.address)
         const donorBalance = await provider.getBalance(random.address)
@@ -1244,30 +1244,30 @@ describe("Controller", function () {
       it("should be able to redeem long value for seller2", async () => {
         const controllerEthBefore = await provider.getBalance(controller.address)
         const sellerEthBefore = await provider.getBalance(seller2.address)
-        const redeemAmount = await squeeth.balanceOf(seller2.address)
+        const redeemAmount = await squfury.balanceOf(seller2.address)
         await controller.connect(seller2).redeemLong(redeemAmount)
         
         // this test works because ES doesn't apply funding, so normalizationFactor won't change after shutdown
         const expectedPayout = redeemAmount.mul(normalizationFactor).mul(settlementPrice).div(one).div(one).div(oracleScaleFactor)
         const sellerEthAfter = await provider.getBalance(seller2.address)
         const controllerEthAfter = await provider.getBalance(controller.address)
-        const squeethBalanceAfter = await squeeth.balanceOf(seller2.address)
-        expect(squeethBalanceAfter.isZero()).to.be.true
+        const squfuryBalanceAfter = await squfury.balanceOf(seller2.address)
+        expect(squfuryBalanceAfter.isZero()).to.be.true
         expect(controllerEthBefore.sub(controllerEthAfter).eq(expectedPayout)).to.be.true
         // expect(sellerEthAfter.sub(sellerEthBefore).eq(expectedPayout)).to.be.true
       });
       it("should be able to redeem long value for seller3", async () => {
         const controllerEthBefore = await provider.getBalance(controller.address)
         const sellerEthBefore = await provider.getBalance(seller3.address)
-        const redeemAmount = await squeeth.balanceOf(seller3.address)
+        const redeemAmount = await squfury.balanceOf(seller3.address)
         await controller.connect(seller3).redeemLong(redeemAmount)
         
         // this test works because ES doesn't apply funding, so normalizationFactor won't change after shutdown
         const expectedPayout = redeemAmount.mul(normalizationFactor).mul(settlementPrice).div(one).div(one).div(oracleScaleFactor)
         const sellerEthAfter = await provider.getBalance(seller3.address)
         const controllerEthAfter = await provider.getBalance(controller.address)
-        const squeethBalanceAfter = await squeeth.balanceOf(seller3.address)
-        expect(squeethBalanceAfter.isZero()).to.be.true
+        const squfuryBalanceAfter = await squfury.balanceOf(seller3.address)
+        expect(squfuryBalanceAfter.isZero()).to.be.true
         expect(controllerEthBefore.sub(controllerEthAfter).eq(expectedPayout)).to.be.true
         // expect(sellerEthAfter.sub(sellerEthBefore).eq(expectedPayout)).to.be.true
       });
@@ -1277,16 +1277,16 @@ describe("Controller", function () {
       let currentTick: string
 
       before('set oracle prices', async() => {
-        wethIsToken0 = parseInt(weth.address, 16) < parseInt(squeeth.address, 16)
-        const { sqrtPrice: sqrtX96Price, tick } = getSqrtPriceAndTickBySqueethPrice(scaledSettlementPrice, wethIsToken0)
+        wethIsToken0 = parseInt(weth.address, 16) < parseInt(squfury.address, 16)
+        const { sqrtPrice: sqrtX96Price, tick } = getSqrtPriceAndTickBySquFuryPrice(scaledSettlementPrice, wethIsToken0)
         currentTick = tick
         
-        await oracle.setAverageTick(squeethEthPool.address, currentTick)
-        await oracle.connect(random).setPrice(squeethEthPool.address, scaledSqueethPrice)
+        await oracle.setAverageTick(squfuryEthPool.address, currentTick)
+        await oracle.connect(random).setPrice(squfuryEthPool.address, scaledSquFuryPrice)
 
         await oracle.connect(random).setPrice(ethUSDPool.address, scaledSettlementPrice)
     
-        await squeethEthPool.setSlot0Data(sqrtX96Price, currentTick)
+        await squfuryEthPool.setSlot0Data(sqrtX96Price, currentTick)
 
         // set amount getting out from position manager
         const { ethAmount, wPowerPerpAmount } = await vaultLib.getUniPositionBalances(uniPositionManager.address, seller5NFTId, currentTick, wethIsToken0)
@@ -1294,8 +1294,8 @@ describe("Controller", function () {
         const token1ToSet = wethIsToken0 ? wPowerPerpAmount : ethAmount
         await uniPositionManager.setAmount0Amount1ToDecrease(token0ToSet, token1ToSet)
 
-        // minting 2x the amount of eth and squeeth as we have 2 nfts to test
-        await squeeth.mint(uniPositionManager.address, wPowerPerpAmount.mul(5));
+        // minting 2x the amount of eth and squfury as we have 2 nfts to test
+        await squfury.mint(uniPositionManager.address, wPowerPerpAmount.mul(5));
         await weth.deposit({value: ethAmount.mul(5)});
         await weth.transfer(uniPositionManager.address, ethAmount.mul(5));
 
@@ -1351,8 +1351,8 @@ describe("Controller", function () {
         await controller.connect(seller3).redeemShort(seller3VaultId)
         const vaultAfter = await controller.vaults(seller3VaultId)
         
-        const squeethDebt = seller3TotalSqueeth.mul(normalizationFactor).mul(settlementPrice).div(one).div(one).div(oracleScaleFactor)
-        const shortPayout = vaultBefore.collateralAmount.sub(squeethDebt)
+        const squfuryDebt = seller3TotalSquFury.mul(normalizationFactor).mul(settlementPrice).div(one).div(one).div(oracleScaleFactor)
+        const shortPayout = vaultBefore.collateralAmount.sub(squfuryDebt)
         const sellerEthAfter = await provider.getBalance(seller3.address)
         const controllerEthAfter = await provider.getBalance(controller.address)
         expect(controllerEthBefore.sub(controllerEthAfter).eq(shortPayout)).to.be.true
@@ -1361,58 +1361,58 @@ describe("Controller", function () {
       });
 
       it("should redeem fair value for short side with uni v3 nft (seller 5)", async () => {
-        const { ethAmount: nftEthAmount, wPowerPerpAmount: nftWSqueethAmount } = await vaultLib.getUniPositionBalances(uniPositionManager.address, seller5NFTId, currentTick, wethIsToken0)
-        const token0ToSet = wethIsToken0 ? nftEthAmount : nftWSqueethAmount
-        const token1ToSet = wethIsToken0 ? nftWSqueethAmount : nftEthAmount
+        const { ethAmount: nftEthAmount, wPowerPerpAmount: nftWSquFuryAmount } = await vaultLib.getUniPositionBalances(uniPositionManager.address, seller5NFTId, currentTick, wethIsToken0)
+        const token0ToSet = wethIsToken0 ? nftEthAmount : nftWSquFuryAmount
+        const token1ToSet = wethIsToken0 ? nftWSquFuryAmount : nftEthAmount
         await uniPositionManager.setAmount0Amount1ToDecrease(token0ToSet, token1ToSet)
 
         const vaultBefore = await controller.vaults(seller5VaultId)
         const sellerEthBefore = await provider.getBalance(seller5.address)
-        const squeethBalanceBefore = await squeeth.balanceOf(seller5.address)
+        const squfuryBalanceBefore = await squfury.balanceOf(seller5.address)
 
         await controller.connect(seller5).redeemShort(seller5VaultId)
         const vaultAfter = await controller.vaults(seller5VaultId)
         
-        const amountToReduceDebtBy = (vaultBefore.shortAmount < nftWSqueethAmount) ? vaultBefore.shortAmount : nftWSqueethAmount 
-        const squeethDebt = vaultBefore.shortAmount.sub(amountToReduceDebtBy).mul(normalizationFactor).mul(settlementPrice).div(oracleScaleFactor).div(one).div(one)
-        const shortPayout = vaultBefore.collateralAmount.add(nftEthAmount).sub(squeethDebt)
+        const amountToReduceDebtBy = (vaultBefore.shortAmount < nftWSquFuryAmount) ? vaultBefore.shortAmount : nftWSquFuryAmount 
+        const squfuryDebt = vaultBefore.shortAmount.sub(amountToReduceDebtBy).mul(normalizationFactor).mul(settlementPrice).div(oracleScaleFactor).div(one).div(one)
+        const shortPayout = vaultBefore.collateralAmount.add(nftEthAmount).sub(squfuryDebt)
         const sellerEthAfter = await provider.getBalance(seller5.address)
         
-        const squeethBalanceAfter = await squeeth.balanceOf(seller5.address)
+        const squfuryBalanceAfter = await squfury.balanceOf(seller5.address)
         
-        expect(squeethBalanceAfter.sub(squeethBalanceBefore).eq(nftWSqueethAmount.sub(amountToReduceDebtBy))).to.be.true
+        expect(squfuryBalanceAfter.sub(squfuryBalanceBefore).eq(nftWSquFuryAmount.sub(amountToReduceDebtBy))).to.be.true
         // expect(sellerEthAfter.sub(sellerEthBefore).eq(shortPayout)).to.be.true
         expect(isEmptyVault(vaultAfter)).to.be.true;
       });
 
       it('set seller6 LP token properties', async() => {
-        // amount of wsqueeth worth is now 3x of amount needed
-        const lpWSqueethAmount = s6MintAmount.mul(3)
+        // amount of wsqufury worth is now 3x of amount needed
+        const lpWSquFuryAmount = s6MintAmount.mul(3)
         const lpWethAmount = BigNumber.from(0)
-        const token0ToSet = wethIsToken0 ? lpWethAmount : lpWSqueethAmount
-        const token1ToSet = wethIsToken0 ? lpWSqueethAmount : lpWethAmount
+        const token0ToSet = wethIsToken0 ? lpWethAmount : lpWSquFuryAmount
+        const token1ToSet = wethIsToken0 ? lpWSquFuryAmount : lpWethAmount
         await uniPositionManager.setAmount0Amount1ToDecrease(token0ToSet, token1ToSet)
 
-        await squeeth.mint(uniPositionManager.address, lpWSqueethAmount);
+        await squfury.mint(uniPositionManager.address, lpWSquFuryAmount);
       })
 
       it("should redeem fair value for seller 6 with one-sided nft", async () => {
-        // nft has 3x wsqueeth minted
+        // nft has 3x wsqufury minted
         // redeemShort should remove the whole debt in vault
-        // and send the amount left (2/3) back to seller6 in wsqueeth
+        // and send the amount left (2/3) back to seller6 in wsqufury
         const vaultBefore = await controller.vaults(seller6VaultId)
         const sellerEthBefore = await provider.getBalance(seller6.address)
-        const sellerWsqueethBefore = await squeeth.balanceOf(seller6.address)
+        const sellerWsqufuryBefore = await squfury.balanceOf(seller6.address)
 
         await controller.connect(seller6).redeemShort(seller6VaultId)
         const vaultAfter = await controller.vaults(seller6VaultId)
         
         const sellerEthAfter = await provider.getBalance(seller6.address)
-        const sellerWsqueethAfter = await squeeth.balanceOf(seller6.address)
+        const sellerWsqufuryAfter = await squfury.balanceOf(seller6.address)
 
         // expect(sellerEthAfter.sub(sellerEthBefore).eq(vaultBefore.collateralAmount)).to.be.true
-        // get the remaining 2/3 (2x the initial minted amount) in wsqueeth
-        expect(sellerWsqueethAfter.sub(sellerWsqueethBefore).eq(s6MintAmount.mul(2))).to.be.true
+        // get the remaining 2/3 (2x the initial minted amount) in wsqufury
+        expect(sellerWsqufuryAfter.sub(sellerWsqufuryBefore).eq(s6MintAmount.mul(2))).to.be.true
         expect(isEmptyVault(vaultAfter)).to.be.true;
       });
 

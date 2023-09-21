@@ -2,7 +2,7 @@ import { createStyles, makeStyles } from '@material-ui/core/styles'
 import React, { memo } from 'react'
 import { atom, useAtom, useAtomValue } from 'jotai'
 
-import { SqueethTabNew, SqueethTabsNew } from '@components/Tabs'
+import { SquFuryTabNew, SquFuryTabsNew } from '@components/Tabs'
 import FundingChart from '@components/Charts/FundingChart'
 import { CrabStrategyV2PnLChart } from '@components/Charts/CrabStrategyV2PnLChart'
 
@@ -49,7 +49,7 @@ function StrategyChartsV2() {
     <>
       <div className={classes.container}>
         <div className={classes.navDiv}>
-          <SqueethTabsNew
+          <SquFuryTabsNew
             style={{ background: 'transparent' }}
             className={classes.chartNav}
             value={tradeType}
@@ -58,9 +58,9 @@ function StrategyChartsV2() {
             scrollButtons="auto"
             variant="scrollable"
           >
-            <SqueethTabNew label="PnL" style={{ width: '140px' }} />
-            <SqueethTabNew label="Premium" style={{ width: '140px' }} />
-          </SqueethTabsNew>
+            <SquFuryTabNew label="PnL" style={{ width: '140px' }} />
+            <SquFuryTabNew label="Premium" style={{ width: '140px' }} />
+          </SquFuryTabsNew>
         </div>
 
         {mode === ChartType.PNL ? <CrabStrategyV2PnLChart /> : mode === ChartType.Funding ? <FundingChart /> : null}

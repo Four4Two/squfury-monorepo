@@ -8,7 +8,7 @@ import About from '@components/Strategies/Crab/About'
 import StrategyPerformance from '@components/Strategies/Crab/StrategyPerformance'
 import { useSetStrategyDataV2, useCurrentCrabPositionValueV2 } from '@state/crab/hooks'
 import { useInitCrabMigration } from '@state/crabMigration/hooks'
-import { SQUEETH_BASE_URL } from '@constants/index'
+import { SQUFURY_BASE_URL } from '@constants/index'
 
 const useStyles = makeStyles((theme) =>
   createStyles({
@@ -66,11 +66,11 @@ const Crab: React.FC = () => {
       <NextSeo
         title="Opyn Crab Strategy - Stack USDC"
         description="Stack USDC when ETH is flat"
-        canonical={SQUEETH_BASE_URL}
+        canonical={SQUFURY_BASE_URL}
         openGraph={{
           images: [
             {
-              url: SQUEETH_BASE_URL + '/images/previews/crab.png',
+              url: SQUFURY_BASE_URL + '/images/previews/crab.png',
               width: 1200,
               height: 630,
               alt: 'Crab Strategy',

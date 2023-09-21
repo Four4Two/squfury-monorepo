@@ -27,7 +27,7 @@ export const tradeCompletedAtom = atomWithReset(false)
 export const openPositionAtom = atom(0)
 export const quoteAtom = atomWithReset(quoteEmptyState)
 export const inputQuoteLoadingAtom = atom(false)
-export const squeethExposureAtom = atom(0)
+export const squfuryExposureAtom = atom(0)
 export const confirmedAmountAtom = atom('0')
 export const isOpenPositionAtom = atom((get) => {
   const openPosition = get(openPositionAtom)
@@ -40,7 +40,7 @@ export const inputQuoteAtom = atomWithReset('')
 export const sellCloseQuoteAtom = atomWithReset(sellCloseEmptyState)
 
 export const ethTradeAmountAtom = atomWithReset('0')
-export const sqthTradeAmountAtom = atomWithReset('0')
+export const sqfuTradeAmountAtom = atomWithReset('0')
 export const transactionHashAtom = atomWithReset('')
 
 export const actualTradeTypeAtom = atom((get) => {

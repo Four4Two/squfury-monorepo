@@ -1,14 +1,14 @@
 import { useQuery } from '@apollo/client'
-import { squeethClient } from '@utils/apollo-client'
+import { squfuryClient } from '@utils/apollo-client'
 
-import NORMHISTORY_QUERY from '../queries/squeeth/normHistoryQuery'
+import NORMHISTORY_QUERY from '../queries/squfury/normHistoryQuery'
 import { useEffect, useRef, useState } from 'react'
 import { useAtomValue } from 'jotai'
 import { networkIdAtom } from 'src/state/wallet/atoms'
 import {
   normalizationFactorUpdates,
   normalizationFactorUpdatesVariables,
-} from '@queries/squeeth/__generated__/normalizationFactorUpdates'
+} from '@queries/squfury/__generated__/normalizationFactorUpdates'
 
 export const useNormHistory = () => {
   const networkId = useAtomValue(networkIdAtom)
@@ -21,7 +21,7 @@ export const useNormHistory = () => {
       variables: {
         lastID: '',
       },
-      client: squeethClient[networkId],
+      client: squfuryClient[networkId],
       fetchPolicy: 'cache-and-network',
       notifyOnNetworkStatusChange: true,
     },

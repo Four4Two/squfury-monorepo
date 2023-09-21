@@ -4,9 +4,9 @@ import { Contract, BigNumber, constants, utils } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { Controller, INonfungiblePositionManager, MockErc20, VaultLibTester, ShortPowerPerp, WETH9, WPowerPerp, IUniswapV3Factory } from "../../typechain";
-import { deployUniswapV3, deploySqueethCoreContracts, deployWETHAndDai, addSqueethLiquidity, addWethDaiLiquidity, createUniPool } from '../setup'
+import { deployUniswapV3, deploySquFuryCoreContracts, deployWETHAndDai, addSquFuryLiquidity, addWethDaiLiquidity, createUniPool } from '../setup'
 import { isSimilar, getNow, one, oracleScaleFactor } from "../utils";
-import { getSqrtPriceAndTickBySqueethPrice } from "../calculator";
+import { getSqrtPriceAndTickBySquFuryPrice } from "../calculator";
 
 const TICK_SPACE = 60
 
@@ -16,20 +16,20 @@ BigNumberJs.set({EXPONENTIAL_AT: 30})
 describe("Uniswap Position token integration test", function () {
   let dai: MockErc20
   let weth: WETH9
-  let squeeth: WPowerPerp
-  let shortSqueeth: ShortPowerPerp
+  let squfury: WPowerPerp
+  let shortSquFury: ShortPowerPerp
   let positionManager: INonfungiblePositionManager
   let uniFactory: IUniswapV3Factory
   let controller: Controller
   
-  let squeethPool: Contract
+  let squfuryPool: Contract
   
   let vaultLib: VaultLibTester
 
   const startingEthPrice = 3000
   let isWethToken0: boolean
   
-  const scaledStartingSqueethPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
+  const scaledStartingSquFuryPrice = startingEthPrice / oracleScaleFactor.toNumber() // 0.3
   
   let liquidityProvider: SignerWithAddress
   let seller: SignerWithAddress
@@ -38,14 +38,14 @@ describe("Uniswap Position token integration test", function () {
   const depositAmount = ethers.utils.parseUnits('45.1')
   const mintAmount = ethers.utils.parseUnits(humanReadableMintAmount)
 
-  // vault0: uni position token has both eth and squeeth
+  // vault0: uni position token has both eth and squfury
   let vault0Id: BigNumber
   let vault0LPTokenId: number
 
-  // vault1: uni position token has only squeeth
+  // vault1: uni position token has only squfury
   let vault1Id: BigNumber
   let vault1LPTokenId: number
-  let vault1LpWSqueethAmount: BigNumber
+  let vault1LpWSquFuryAmount: BigNumber
   
 
   // vault2: uni position token has only eth
@@ -71,22 +71,22 @@ describe("Uniswap Position token integration test", function () {
     weth = wethToken
 
     const uniDeployments = await deployUniswapV3(weth)
-    const coreDeployments = await deploySqueethCoreContracts(
+    const coreDeployments = await deploySquFuryCoreContracts(
       weth,
       dai, 
       uniDeployments.positionManager, 
       uniDeployments.uniswapFactory,
-      scaledStartingSqueethPrice,
+      scaledStartingSquFuryPrice,
       startingEthPrice
     )
 
     positionManager = (uniDeployments.positionManager) as INonfungiblePositionManager
     uniFactory = uniDeployments.uniswapFactory as IUniswapV3Factory
 
-    squeeth = coreDeployments.wsqueeth
-    shortSqueeth = coreDeployments.shortSqueeth
+    squfury = coreDeployments.wsqufury
+    shortSquFury = coreDeployments.shortSquFury
     controller = coreDeployments.controller
-    squeethPool = coreDeployments.wsqueethEthPool
+    squfuryPool = coreDeployments.wsqufuryEthPool
 
     const SqrtPriceExternal = await ethers.getContractFactory("SqrtPriceMathPartial")
     const SqrtPriceExternalLibrary = (await SqrtPriceExternal.deploy());
@@ -99,12 +99,12 @@ describe("Uniswap Position token integration test", function () {
   })
 
   this.beforeAll('Add liquidity to both pools', async() => {
-    await addSqueethLiquidity(
-      scaledStartingSqueethPrice, 
+    await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice, 
       '5',
       '30', 
       liquidityProvider.address, 
-      squeeth, 
+      squfury, 
       weth, 
       positionManager, 
       controller
@@ -121,16 +121,16 @@ describe("Uniswap Position token integration test", function () {
   })
 
   this.beforeAll('Prepare vault0 (normal)', async() => {
-    vault0Id = await shortSqueeth.nextId()
+    vault0Id = await shortSquFury.nextId()
 
     await controller.connect(seller).mintPowerPerpAmount(0, mintAmount, 0, {value: depositAmount})
 
-    vault0LPTokenId = await addSqueethLiquidity(
-      scaledStartingSqueethPrice,
+    vault0LPTokenId = await addSquFuryLiquidity(
+      scaledStartingSquFuryPrice,
       humanReadableMintAmount,
       '45.1',
       liquidityProvider.address,
-      squeeth,
+      squfury,
       weth,
       positionManager,
       controller
@@ -143,42 +143,42 @@ describe("Uniswap Position token integration test", function () {
     expect(vault.NftCollateralId === vault0LPTokenId).to.be.true
   })
 
-  this.beforeAll('Prepare vault1 (all squeeth)', async() => {
-    vault1Id = await shortSqueeth.nextId()
+  this.beforeAll('Prepare vault1 (all squfury)', async() => {
+    vault1Id = await shortSquFury.nextId()
 
-    isWethToken0 = parseInt(weth.address, 16) < parseInt(squeeth.address, 16) 
+    isWethToken0 = parseInt(weth.address, 16) < parseInt(squfury.address, 16) 
 
-    // create a uni position that's [4000, 5000], so it's now all squeeth
+    // create a uni position that's [4000, 5000], so it's now all squfury
     const scaledPrice5000 = BigNumber.from('5000').mul(one).div(oracleScaleFactor)
     const scaledPrice4000 = BigNumber.from('4000').mul(one).div(oracleScaleFactor)
-    const { tick: tick4000 } = getSqrtPriceAndTickBySqueethPrice(scaledPrice4000, isWethToken0)
-    const { tick: tick5000 } = getSqrtPriceAndTickBySqueethPrice(scaledPrice5000, isWethToken0)
+    const { tick: tick4000 } = getSqrtPriceAndTickBySquFuryPrice(scaledPrice4000, isWethToken0)
+    const { tick: tick5000 } = getSqrtPriceAndTickBySquFuryPrice(scaledPrice5000, isWethToken0)
     const tickUpper = isWethToken0 ? tick4000 : tick5000;
     const tickLower = isWethToken0 ? tick5000 : tick4000;
     const tickUpperToUse = Math.ceil(parseInt(tickUpper, 10) / TICK_SPACE) * TICK_SPACE
     const tickLowerToUse = Math.ceil(parseInt(tickLower, 10) / TICK_SPACE) * TICK_SPACE
-    const token0 = isWethToken0 ? weth.address : squeeth.address
-    const token1 = isWethToken0 ? squeeth.address : weth.address
+    const token0 = isWethToken0 ? weth.address : squfury.address
+    const token1 = isWethToken0 ? squfury.address : weth.address
 
-    // put all wsqueeth balance into this LP token
-    vault1LpWSqueethAmount = await squeeth.balanceOf(seller.address)
+    // put all wsqufury balance into this LP token
+    vault1LpWSquFuryAmount = await squfury.balanceOf(seller.address)
 
-    // uni position is all wsqueeth
+    // uni position is all wsqufury
     const mintParam = {
       token0,
       token1,
       fee: 3000,
       tickLower: tickLowerToUse,
       tickUpper: tickUpperToUse,
-      amount0Desired: isWethToken0 ? 0 : vault1LpWSqueethAmount,
-      amount1Desired: isWethToken0 ? vault1LpWSqueethAmount : 0,
+      amount0Desired: isWethToken0 ? 0 : vault1LpWSquFuryAmount,
+      amount1Desired: isWethToken0 ? vault1LpWSquFuryAmount : 0,
       amount0Min: 0,
       amount1Min: 0,
       recipient: seller.address,
       deadline: Math.floor(await getNow(ethers.provider) + 8640000),// uint256
     }
 
-    await squeeth.connect(seller).approve(positionManager.address, constants.MaxUint256)
+    await squfury.connect(seller).approve(positionManager.address, constants.MaxUint256)
     const tx = await positionManager.connect(seller).mint(mintParam)
 
     const receipt = await tx.wait();
@@ -192,19 +192,19 @@ describe("Uniswap Position token integration test", function () {
   })
 
   this.beforeAll('Prepare vault2 (all eth)', async() => {
-    vault2Id = await shortSqueeth.nextId()
+    vault2Id = await shortSquFury.nextId()
 
     // create a uni position that's [1000, 2000], so it's now all eth
     const scaledPrice2000 = BigNumber.from('2000').mul(one).div(oracleScaleFactor)
     const scaledPrice1000 = BigNumber.from('1000').mul(one).div(oracleScaleFactor)
-    const { tick: tick1000 } = getSqrtPriceAndTickBySqueethPrice(scaledPrice1000, isWethToken0)
-    const { tick: tick2000 } = getSqrtPriceAndTickBySqueethPrice(scaledPrice2000, isWethToken0)
+    const { tick: tick1000 } = getSqrtPriceAndTickBySquFuryPrice(scaledPrice1000, isWethToken0)
+    const { tick: tick2000 } = getSqrtPriceAndTickBySquFuryPrice(scaledPrice2000, isWethToken0)
     const tickUpper = isWethToken0 ? tick1000 : tick2000;
     const tickLower = isWethToken0 ? tick2000 : tick1000;
     const tickUpperToUse = Math.ceil(parseInt(tickUpper, 10) / TICK_SPACE) * TICK_SPACE
     const tickLowerToUse = Math.ceil(parseInt(tickLower, 10) / TICK_SPACE) * TICK_SPACE
-    const token0 = isWethToken0 ? weth.address : squeeth.address
-    const token1 = isWethToken0 ? squeeth.address : weth.address
+    const token0 = isWethToken0 ? weth.address : squfury.address
+    const token1 = isWethToken0 ? squfury.address : weth.address
 
     // uni position is all ETH
     const mintParam = {
@@ -241,14 +241,14 @@ describe("Uniswap Position token integration test", function () {
       // create a uni position that's [1000, 2000], so it's now all eth
       const scaledPrice2000 = BigNumber.from('2000').mul(one).div(oracleScaleFactor)
       const scaledPrice1000 = BigNumber.from('1000').mul(one).div(oracleScaleFactor)
-      const { tick: tick1000 } = getSqrtPriceAndTickBySqueethPrice(scaledPrice1000, isWethToken0)
-      const { tick: tick2000 } = getSqrtPriceAndTickBySqueethPrice(scaledPrice2000, isWethToken0)
+      const { tick: tick1000 } = getSqrtPriceAndTickBySquFuryPrice(scaledPrice1000, isWethToken0)
+      const { tick: tick2000 } = getSqrtPriceAndTickBySquFuryPrice(scaledPrice2000, isWethToken0)
       const tickUpper = isWethToken0 ? tick1000 : tick2000;
       const tickLower = isWethToken0 ? tick2000 : tick1000;
       const tickUpperToUse = Math.ceil(parseInt(tickUpper, 10) / TICK_SPACE) * TICK_SPACE
       const tickLowerToUse = Math.ceil(parseInt(tickLower, 10) / TICK_SPACE) * TICK_SPACE
-      const token0 = isWethToken0 ? weth.address : squeeth.address
-      const token1 = isWethToken0 ? squeeth.address : weth.address
+      const token0 = isWethToken0 ? weth.address : squfury.address
+      const token1 = isWethToken0 ? squfury.address : weth.address
   
       // uni position is all ETH
       const mintParam = {
@@ -292,10 +292,10 @@ describe("Uniswap Position token integration test", function () {
   })
   describe('Save vault with uni position token', async( )=> {
     
-    it("seller can redeem an Uni Position token for weth and wSqueeth to reduce debt in vault0", async () => {
+    it("seller can redeem an Uni Position token for weth and wSquFury to reduce debt in vault0", async () => {
 
       // get net worth of uni position token
-      const poolContract = await ethers.getContractAt("IUniswapV3Pool", squeethPool.address)
+      const poolContract = await ethers.getContractAt("IUniswapV3Pool", squfuryPool.address)
       
       const {tick} = await poolContract.slot0()
 
@@ -304,45 +304,45 @@ describe("Uniswap Position token integration test", function () {
       // the result we get from here is not accurate
       const {ethAmount, wPowerPerpAmount} = await vaultLib.getUniPositionBalances(positionManager.address, vault0LPTokenId, tick, isWethToken0)
 
-      const wsqueethBefore = await squeeth.balanceOf(seller.address)
+      const wsqufuryBefore = await squfury.balanceOf(seller.address)
 
       await controller.connect(seller).reduceDebt(vault0Id)
 
-      const wsqueethAfter = await squeeth.balanceOf(seller.address)
+      const wsqufuryAfter = await squfury.balanceOf(seller.address)
 
       const vaultAfter = await controller.vaults(vault0Id)
 
-      const wsqueethBurned = vaultBefore.shortAmount.sub(vaultAfter.shortAmount)
-      const wsqueethReceived = wsqueethAfter.sub(wsqueethBefore)
+      const wsqufuryBurned = vaultBefore.shortAmount.sub(vaultAfter.shortAmount)
+      const wsqufuryReceived = wsqufuryAfter.sub(wsqufuryBefore)
       
       expect(vaultAfter.NftCollateralId === 0).to.be.true
       expect(isSimilar(vaultBefore.collateralAmount.add(ethAmount).toString(), vaultAfter.collateralAmount.toString())).to.be.true
-      expect(isSimilar(wsqueethBurned.add(wsqueethReceived).toString(), wPowerPerpAmount.toString())).to.be.true
+      expect(isSimilar(wsqufuryBurned.add(wsqufuryReceived).toString(), wPowerPerpAmount.toString())).to.be.true
     })
-    it("seller can redeem an Uni Position token for wSqueeth to reduce debt in vault1", async () => {
+    it("seller can redeem an Uni Position token for wSquFury to reduce debt in vault1", async () => {
       const vaultBefore = await controller.vaults(vault1Id)
 
-      const wsqueethBefore = await squeeth.balanceOf(seller.address)
+      const wsqufuryBefore = await squfury.balanceOf(seller.address)
       
       await controller.connect(seller).reduceDebt(vault1Id)
       
-      const wsqueethAfter = await squeeth.balanceOf(seller.address)
+      const wsqufuryAfter = await squfury.balanceOf(seller.address)
 
       const vaultAfter = await controller.vaults(vault1Id)
       expect(vaultAfter.NftCollateralId === 0).to.be.true
 
-      const expectedAmountInVault = vault1LpWSqueethAmount.gt(vaultBefore.shortAmount) 
+      const expectedAmountInVault = vault1LpWSquFuryAmount.gt(vaultBefore.shortAmount) 
         ? BigNumber.from(0)
-        : vaultBefore.shortAmount.sub(vault1LpWSqueethAmount)
+        : vaultBefore.shortAmount.sub(vault1LpWSquFuryAmount)
       
-      const expectedWSqueethReceived = vault1LpWSqueethAmount.gt(vaultBefore.shortAmount) 
-        ? vault1LpWSqueethAmount.sub(vaultBefore.shortAmount)
+      const expectedWSquFuryReceived = vault1LpWSquFuryAmount.gt(vaultBefore.shortAmount) 
+        ? vault1LpWSquFuryAmount.sub(vaultBefore.shortAmount)
         : BigNumber.from(0)
 
       // collateral is the same
       expect(vaultBefore.collateralAmount.eq(vaultAfter.collateralAmount)).to.be.true
       expect(isSimilar(expectedAmountInVault.toString(), vaultAfter.shortAmount.toString())).to.be.true
-      expect(isSimilar(wsqueethAfter.sub(wsqueethBefore).toString(), expectedWSqueethReceived.toString(), 4)).to.be.true
+      expect(isSimilar(wsqufuryAfter.sub(wsqufuryBefore).toString(), expectedWSquFuryReceived.toString(), 4)).to.be.true
 
     })
     it("seller can redeem an Uni Position token for eth to reduce debt in vault2", async () => {
@@ -364,15 +364,15 @@ describe("Uniswap Position token integration test", function () {
     // which works with our existing script
     const newFeeTier = 500
     before('create new pool with fee tier = 0.05%', async() => {
-      await createUniPool(scaledStartingSqueethPrice, squeeth, weth, positionManager, uniFactory, newFeeTier)
+      await createUniPool(scaledStartingSquFuryPrice, squfury, weth, positionManager, uniFactory, newFeeTier)
     })
     before('add liquidity to the new pool', async() => {
-      newPoolLPTokenId = await addSqueethLiquidity(
-        scaledStartingSqueethPrice,
+      newPoolLPTokenId = await addSquFuryLiquidity(
+        scaledStartingSquFuryPrice,
         humanReadableMintAmount,
         '45.1',
         liquidityProvider.address,
-        squeeth,
+        squfury,
         weth,
         positionManager,
         controller,

@@ -8,18 +8,18 @@ import "forge-std/Test.sol";
 import { ERC20 } from "openzeppelin/token/ERC20/ERC20.sol";
 import { IUniswapV3Pool } from "v3-core/interfaces/IUniswapV3Pool.sol";
 // contract
-import { MockErc20 } from "squeeth-monorepo/mocks/MockErc20.sol";
+import { MockErc20 } from "squfury-monorepo/mocks/MockErc20.sol";
 import { UniswapV3Factory } from "v3-core/UniswapV3Factory.sol";
 import { UniswapV3Pool } from "v3-core/UniswapV3Pool.sol";
 import { NonfungiblePositionManager } from "v3-periphery/NonfungiblePositionManager.sol";
 import { WETH9Mock } from "../mock/Weth9Mock.t.sol";
-import { ShortPowerPerp } from "squeeth-monorepo/core/ShortPowerPerp.sol";
-import { Controller } from "squeeth-monorepo/core/Controller.sol";
-import { Oracle } from "squeeth-monorepo/core/Oracle.sol";
-import { WPowerPerp } from "squeeth-monorepo/core/WPowerPerp.sol";
-import { CrabStrategyV2 } from "squeeth-monorepo/strategy/CrabStrategyV2.sol";
+import { ShortPowerPerp } from "squfury-monorepo/core/ShortPowerPerp.sol";
+import { Controller } from "squfury-monorepo/core/Controller.sol";
+import { Oracle } from "squfury-monorepo/core/Oracle.sol";
+import { WPowerPerp } from "squfury-monorepo/core/WPowerPerp.sol";
+import { CrabStrategyV2 } from "squfury-monorepo/strategy/CrabStrategyV2.sol";
 // lib
-import { StrategyMath } from "squeeth-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
+import { StrategyMath } from "squfury-monorepo/strategy/base/StrategyMath.sol"; // StrategyMath licensed under AGPL-3.0-only
 
 contract BullStrategyUnitTest is Test {
     using StrategyMath for uint256;
@@ -55,7 +55,7 @@ contract BullStrategyUnitTest is Test {
             new NonfungiblePositionManager(address(uniFactory), address(weth), address(0));
     }
 
-    function _deploySqueethEcosystem(uint256 _squeethEthPrice, uint24 _poolFee) internal {
+    function _deploySquFuryEcosystem(uint256 _squfuryEthPrice, uint24 _poolFee) internal {
         usdc = new MockErc20("USDC", "USDC", 6);
         weth = new WETH9Mock();
 
@@ -64,12 +64,12 @@ contract BullStrategyUnitTest is Test {
         vm.warp(block.timestamp + 1000);
         IUniswapV3Pool(ethUsdcPool).increaseObservationCardinalityNext(500);
 
-        wPowerPerp = new WPowerPerp("oSQTH", "oSQTH");
-        address _shortPowerPerp = address(new ShortPowerPerp("ShortPowerPerp", "sOSQTH"));
+        wPowerPerp = new WPowerPerp("oSQFU", "oSQFU");
+        address _shortPowerPerp = address(new ShortPowerPerp("ShortPowerPerp", "sOSQFU"));
         address _oracle = address(new Oracle());
 
         ethWPowerPerpPool = _createUniPoolAndInitialize(
-            address(weth), address(wPowerPerp), _squeethEthPrice, _poolFee
+            address(weth), address(wPowerPerp), _squfuryEthPrice, _poolFee
         );
         vm.warp(block.timestamp + 1000);
         IUniswapV3Pool(ethWPowerPerpPool).increaseObservationCardinalityNext(500);

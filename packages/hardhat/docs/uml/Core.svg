@@ -58,7 +58,7 @@
 <text text-anchor="start" x="8" y="-1067.1" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;_burnWPowerPerp(_vault: VaultLib.Vault, _account: address, _vaultId: uint256, _wPowerPerpAmount: uint256)</text>
 <text text-anchor="start" x="8" y="-1050.3" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;_liquidate(_vault: VaultLib.Vault, _maxWPowerPerpAmount: uint256, _normalizationFactor: uint256, _liquidator: address): (uint256, uint256)</text>
 <text text-anchor="start" x="8" y="-1033.5" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;_canModifyVault(_vaultId: uint256, _account: address): bool</text>
-<text text-anchor="start" x="8" y="-1016.7" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;_payFee(_vault: VaultLib.Vault, _wSqueethAmount: uint256, _depositAmount: uint256): (uint256, uint256)</text>
+<text text-anchor="start" x="8" y="-1016.7" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;_payFee(_vault: VaultLib.Vault, _wSquFuryAmount: uint256, _depositAmount: uint256): (uint256, uint256)</text>
 <text text-anchor="start" x="8" y="-999.9" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;_redeemUniToken(_uniTokenId: uint256): (uint256, uint256)</text>
 <text text-anchor="start" x="8" y="-983.1" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;_applyFunding(): uint256</text>
 <text text-anchor="start" x="8" y="-966.3" font-family="Times,serif" font-size="14.00" fill="#000000"> &#160;&#160;&#160;_getNewNormalizationFactor(): uint256</text>

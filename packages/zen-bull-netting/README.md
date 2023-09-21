@@ -14,7 +14,7 @@
 To install dependencies and compile contracts:
 
 ```bash
-git clone https://github.com/opynfinance/squeeth-monorepo && cd packages/zen-bull-netting
+git clone https://github.com/opynfinance/squfury-monorepo && cd packages/zen-bull-netting
 ```
 
 To install Foundry (assuming a Linux or macOS system):

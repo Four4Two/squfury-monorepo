@@ -66,14 +66,14 @@ contract CrabMigration is Ownable {
     }
 
     struct FlashMigrateV1toV2 {
-        uint256 v1oSqthToPay;
+        uint256 v1oSqfuToPay;
         uint256 ethToFlashDeposit;
         uint256 crabV1ToWithdraw;
         uint24 poolFee;
     }
 
     struct FlashMigrateAndBuyV1toV2 {
-        uint256 v1oSqthToPay;
+        uint256 v1oSqfuToPay;
         uint256 ethToFlashDeposit;
         uint256 withdrawMaxEthToPay;
         uint256 crabV1ToWithdraw;
@@ -238,12 +238,12 @@ contract CrabMigration is Ownable {
 
             uint256 crabV1Balance = CrabStrategy(crabV1).balanceOf(address(this));
 
-            // 2. mint osqth in crab V2
-            uint256 wSqueethToMint = CrabStrategy(crabV1).getWsqueethFromCrabAmount(crabV1Balance);
+            // 2. mint osqfu in crab V2
+            uint256 wSquFuryToMint = CrabStrategy(crabV1).getWsqufuryFromCrabAmount(crabV1Balance);
             uint256 timeAtLastHedge = CrabStrategy(crabV1).timeAtLastHedge();
             uint256 priceAtLastHedge = CrabStrategy(crabV1).priceAtLastHedge();
             CrabStrategyV2(crabV2).initialize{value: _amount}(
-                wSqueethToMint,
+                wSquFuryToMint,
                 crabV1Balance,
                 timeAtLastHedge,
                 priceAtLastHedge,
@@ -261,7 +261,7 @@ contract CrabMigration is Ownable {
 
             CrabStrategy(crabV1).transferFrom(_initiator, address(this), data.crabV1ToWithdraw);
 
-            IERC20(wPowerPerp).approve(crabV1, data.v1oSqthToPay);
+            IERC20(wPowerPerp).approve(crabV1, data.v1oSqfuToPay);
             CrabStrategy(crabV1).withdraw(data.crabV1ToWithdraw);
 
             // flash deposit remaining ETH, otherwise refund
@@ -294,12 +294,12 @@ contract CrabMigration is Ownable {
             CrabStrategy(crabV1).transferFrom(_initiator, address(this), data.crabV1ToWithdraw);
             CrabStrategyV2(crabV2).deposit{value: _amount}();
 
-            uint256 oSqthToPay = IERC20(wPowerPerp).balanceOf(address(this));
-            IERC20(wPowerPerp).approve(crabV1, oSqthToPay);
+            uint256 oSqfuToPay = IERC20(wPowerPerp).balanceOf(address(this));
+            IERC20(wPowerPerp).approve(crabV1, oSqfuToPay);
 
-            // find crab amount for contract's sqth balance
+            // find crab amount for contract's sqfu balance
             // remaining crab can be withdrawn using flash withdraw
-            uint256 crabV1ToWithdrawRmul = oSqthToPay.wmul(CrabStrategy(crabV1).totalSupply()).rdiv(v1Short);
+            uint256 crabV1ToWithdrawRmul = oSqfuToPay.wmul(CrabStrategy(crabV1).totalSupply()).rdiv(v1Short);
             uint256 crabV1ToWithdraw = crabV1ToWithdrawRmul.floor(10**9) / (10**9);
 
             CrabStrategy(crabV1).withdraw(crabV1ToWithdraw);
@@ -344,7 +344,7 @@ contract CrabMigration is Ownable {
     /**
      * @notice claim crab V2 shares and flash withdraw from crab V2
      * @param _amountToWithdraw V2 shares to claim
-     * @param _maxEthToPay maximum ETH to pay to buy back the owed wSqueeth debt
+     * @param _maxEthToPay maximum ETH to pay to buy back the owed wSquFury debt
      * @param _poolFee Uniswap pool fee for flash withdraw
      */
     function claimAndWithdraw(
@@ -392,7 +392,7 @@ contract CrabMigration is Ownable {
         uint256 _ethToFlashDeposit,
         uint24 _poolFee
     ) external afterMigration {
-        (bool isFlashOnlyMigrate, uint256 ethNeededForV2, uint256 v1oSqthToPay, ) = _flashMigrationDetails(_v1Shares);
+        (bool isFlashOnlyMigrate, uint256 ethNeededForV2, uint256 v1oSqfuToPay, ) = _flashMigrationDetails(_v1Shares);
 
         require(isFlashOnlyMigrate, "M9");
 
@@ -405,7 +405,7 @@ contract CrabMigration is Ownable {
                     callSource: uint8(FLASH_SOURCE.FLASH_MIGRATE_V1_TO_V2),
                     callData: abi.encode(
                         FlashMigrateV1toV2({
-                            v1oSqthToPay: v1oSqthToPay,
+                            v1oSqfuToPay: v1oSqfuToPay,
                             ethToFlashDeposit: _ethToFlashDeposit,
                             crabV1ToWithdraw: _v1Shares,
                             poolFee: _poolFee
@@ -421,7 +421,7 @@ contract CrabMigration is Ownable {
      * @param _v1Shares V1 shares to migrate
      * @param _ethToFlashDeposit flash deposit amount in crab v2 with excess ETH (if 0 will returned to sender)
      * @param _ethToBorrow amount to flash loan to deposit in crab v2
-     * @param _withdrawMaxEthToPay maximum ETH to pay to buy back the owed wSqueeth debt
+     * @param _withdrawMaxEthToPay maximum ETH to pay to buy back the owed wSquFury debt
      * @param _poolFee uniswap pool fee for the optional flash deposit into crab v2
      */
     function flashMigrateAndWithdrawFromV1toV2(
@@ -431,7 +431,7 @@ contract CrabMigration is Ownable {
         uint256 _withdrawMaxEthToPay,
         uint24 _poolFee
     ) external afterMigration {
-        (bool isFlashOnlyMigrate, , uint256 v1oSqthToPay, ) = _flashMigrationDetails(_v1Shares);
+        (bool isFlashOnlyMigrate, , uint256 v1oSqfuToPay, ) = _flashMigrationDetails(_v1Shares);
 
         require(!isFlashOnlyMigrate, "M10");
         require(_ethToBorrow > 0 && _withdrawMaxEthToPay > 0, "M8");
@@ -447,7 +447,7 @@ contract CrabMigration is Ownable {
                         FlashMigrateAndBuyV1toV2({
                             withdrawMaxEthToPay: _withdrawMaxEthToPay,
                             ethToFlashDeposit: _ethToFlashDeposit,
-                            v1oSqthToPay: v1oSqthToPay,
+                            v1oSqfuToPay: v1oSqfuToPay,
                             crabV1ToWithdraw: _v1Shares,
                             poolFeeFlashDeposit: _poolFee
                         })
@@ -474,11 +474,11 @@ contract CrabMigration is Ownable {
         (, , uint256 v1TotalCollateral, uint256 v1TotalShort) = CrabStrategy(crabV1).getVaultDetails();
         (, , uint256 v2TotalCollateral, uint256 v2TotalShort) = CrabStrategyV2(crabV2).getVaultDetails();
 
-        uint256 v1oSqthToPay = v1TotalShort.wmul(_v1Shares).wdiv(CrabStrategy(crabV1).totalSupply());
-        uint256 ethNeededForV2 = v1oSqthToPay.wmul(v2TotalCollateral).rdiv(v2TotalShort).ceil(10**9) / (10**9);
+        uint256 v1oSqfuToPay = v1TotalShort.wmul(_v1Shares).wdiv(CrabStrategy(crabV1).totalSupply());
+        uint256 ethNeededForV2 = v1oSqfuToPay.wmul(v2TotalCollateral).rdiv(v2TotalShort).ceil(10**9) / (10**9);
         uint256 ethToGetFromV1 = _v1Shares.wdiv(CrabStrategy(crabV1).totalSupply()).wmul(v1TotalCollateral);
 
-        return (ethNeededForV2 <= ethToGetFromV1, ethNeededForV2, v1oSqthToPay, ethToGetFromV1);
+        return (ethNeededForV2 <= ethToGetFromV1, ethNeededForV2, v1oSqfuToPay, ethToGetFromV1);
     }
 
     /**

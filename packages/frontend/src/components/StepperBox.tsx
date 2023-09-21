@@ -20,7 +20,7 @@ type StepperBoxProps = {
 
 export const StepperBox: React.FC<StepperBoxProps> = ({
   activeStep = 0,
-  steps = ['Buy Squeeth to LP', 'LP the SQTH-ETH Uniswap Pool'],
+  steps = ['Buy SquFury to LP', 'LP the SQFU-ETH Uniswap Pool'],
 }) => {
   const classes = useStyles()
 

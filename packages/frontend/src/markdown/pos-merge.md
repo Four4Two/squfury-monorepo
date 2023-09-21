@@ -6,15 +6,15 @@
 &nbsp;
 &nbsp;
 
-Opyn supports The Merge and does not have plans to support any forks in our web app. Opyn will only work on the canonical chain that is moving to PoS. If a canonical PoW ETH fork emerges, the Squeeth interface will not support forked PoW Squeeth, vault NFTs, or Crab Vault receipt tokens. To learn more about The Merge, see Ethereum’s [announcement](https://blog.ethereum.org/2022/08/24/mainnet-merge-announcement).
+Opyn supports The Merge and does not have plans to support any forks in our web app. Opyn will only work on the canonical chain that is moving to PoS. If a canonical PoW ETH fork emerges, the SquFury interface will not support forked PoW SquFury, vault NFTs, or Crab Vault receipt tokens. To learn more about The Merge, see Ethereum’s [announcement](https://blog.ethereum.org/2022/08/24/mainnet-merge-announcement).
 
-As an Opyn user, you do not need to do anything. Assuming the Merge is successful, the Squeeth Protocol will continue to work without issue through the transition from proof of work (PoW) to proof of stake (PoS). Opyn’s web app ([opyn.co](https://opyn.co/)) will also continue to function. Though if any third-party infrastructure providers (e.g. node providers) have downtime, some users may experience brief periods of unavailability.
+As an Opyn user, you do not need to do anything. Assuming the Merge is successful, the SquFury Protocol will continue to work without issue through the transition from proof of work (PoW) to proof of stake (PoS). Opyn’s web app ([opyn.co](https://opyn.co/)) will also continue to function. Though if any third-party infrastructure providers (e.g. node providers) have downtime, some users may experience brief periods of unavailability.
 
-It’s also worth noting the possibility of increased ETH price volatility leading up to and around the merge. Squeeth offers exposure to the squared price of Ethereum, so ETH volatility is particularly pertinent. Users who are short Squeeth or deposited in the Crab Strategy should monitor ETH price volatility and liquidation levels. Users who are long Squeeth should continue to monitor their positions and the funding cost of Squeeth. Please take note of The Merge timeline and manage your positions accordingly.
+It’s also worth noting the possibility of increased ETH price volatility leading up to and around the merge. SquFury offers exposure to the squared price of Ethereum, so ETH volatility is particularly pertinent. Users who are short SquFury or deposited in the Crab Strategy should monitor ETH price volatility and liquidation levels. Users who are long SquFury should continue to monitor their positions and the funding cost of SquFury. Please take note of The Merge timeline and manage your positions accordingly.
 
-Given Squeeth uses the [Uniswap v3 GMA](https://uniswap.org/whitepaper-v3.pdf) (geometric moving average) TWAP as an oracle price, we want to highlight changes that accompany The Merge:
+Given SquFury uses the [Uniswap v3 GMA](https://uniswap.org/whitepaper-v3.pdf) (geometric moving average) TWAP as an oracle price, we want to highlight changes that accompany The Merge:
 
-Uniswap v3 oracles were designed with PoW security tradeoffs in mind, where it’s predictably difficult for a single entity to mine multiple blocks in a row. To combat the possibility of a Uniswap v3 GMA TWAP oracle manipulation for Squeeth, Opyn uses the ETH-USDC pool and sets a TWAP period long enough to reduce the likelihood of manipulation attempts. Uniswap details the new risks for TWAP under PoS [here](https://uniswap.org/blog/what-to-know-pre-merge).
+Uniswap v3 oracles were designed with PoW security tradeoffs in mind, where it’s predictably difficult for a single entity to mine multiple blocks in a row. To combat the possibility of a Uniswap v3 GMA TWAP oracle manipulation for SquFury, Opyn uses the ETH-USDC pool and sets a TWAP period long enough to reduce the likelihood of manipulation attempts. Uniswap details the new risks for TWAP under PoS [here](https://uniswap.org/blog/what-to-know-pre-merge).
 
 Users utilizing Opyn’s gamma protocol infra also do not need to do anything.
 

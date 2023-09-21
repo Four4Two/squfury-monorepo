@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server'
 import React from 'react'
 import { Duration, isFuture, intervalToDuration, format, isBefore } from 'date-fns'
 
-import { SQUEETH_BASE_URL, CRABV2_START_DATE, BULL_START_DATE } from '@constants/index'
+import { SQUFURY_BASE_URL, CRABV2_START_DATE, BULL_START_DATE } from '@constants/index'
 
 const OMDB_BASE_URL = process.env.NEXT_PUBLIC_OMDB_BASE_URL as string
 
@@ -97,10 +97,10 @@ const UserPnl: React.FC<UserPnlProps> = ({ strategy, depositTimestamp, pnl, pnlD
         <div tw="flex items-center">
           <div tw="flex text-4xl">
             {strategy === 'crab' && (
-              <img src={`${SQUEETH_BASE_URL}/images/crab-logo.png`} alt="opyn crab logo" height="32px" />
+              <img src={`${SQUFURY_BASE_URL}/images/crab-logo.png`} alt="opyn crab logo" height="32px" />
             )}
             {strategy === 'zenbull' && (
-              <img src={`${SQUEETH_BASE_URL}/images/zenbull-logo.png`} alt="opyn zenbull logo" height="32px" />
+              <img src={`${SQUFURY_BASE_URL}/images/zenbull-logo.png`} alt="opyn zenbull logo" height="32px" />
             )}
           </div>
           <div tw="flex text-4xl text-white font-bold ml-4">
@@ -109,7 +109,7 @@ const UserPnl: React.FC<UserPnlProps> = ({ strategy, depositTimestamp, pnl, pnlD
           </div>
         </div>
         <div tw="flex text-2xl text-white text-opacity-60 ml-5">
-          <img src={`${SQUEETH_BASE_URL}/images/logo.png`} alt="opyn logo" height="68px" />
+          <img src={`${SQUFURY_BASE_URL}/images/logo.png`} alt="opyn logo" height="68px" />
         </div>
       </div>
 

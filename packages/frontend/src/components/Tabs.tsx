@@ -1,7 +1,7 @@
 import { Tab, Tabs } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 
-export const SqueethTabs = withStyles((theme) => {
+export const SquFuryTabs = withStyles((theme) => {
   return {
     root: {
       borderRadius: theme.spacing(1),
@@ -17,7 +17,7 @@ export const SqueethTabs = withStyles((theme) => {
   }
 })(Tabs)
 
-export const SqueethTab = withStyles((theme) => {
+export const SquFuryTab = withStyles((theme) => {
   return {
     root: {
       textTransform: 'initial',
@@ -34,7 +34,7 @@ export const SqueethTab = withStyles((theme) => {
   }
 })(Tab)
 
-export const SqueethTabsNew = withStyles((theme) => {
+export const SquFuryTabsNew = withStyles((theme) => {
   return {
     root: {
       borderRadius: theme.spacing(1),
@@ -50,7 +50,7 @@ export const SqueethTabsNew = withStyles((theme) => {
   }
 })(Tabs)
 
-export const SqueethTabNew = withStyles((theme) => {
+export const SquFuryTabNew = withStyles((theme) => {
   return {
     root: {
       textTransform: 'initial',
